@@ -57,7 +57,7 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 
 | Fonte | Decisão | Motivo |
 |---|---|---|
-| **NASA DONKI** (tempestades solares) | Adiada | A janela do jogo é futura, sem registros. Para usar, seria preciso amostrar um período passado e tratar como cenário, o que pede decisão de design. O endpoint `api.nasa.gov/DONKI/FLR` respondeu 404 na consulta de teste (14/11/2026); a rota e a chave precisam ser revisadas antes. |
+| **NASA DONKI** (tempestades solares) | Feita (seção 3; FLR indisponível, usado GST e SEP) | A janela do jogo é futura, sem registros. Para usar, seria preciso amostrar um período passado e tratar como cenário, o que pede decisão de design. O endpoint `api.nasa.gov/DONKI/FLR` respondeu 404 na consulta de teste (14/11/2026); a rota e a chave precisam ser revisadas antes. |
 | **LOLA / PGDA** (relevo) | Adiada | O modelo de relevo é um raster grande (GeoTIFF). Fica fora do git (`.gitignore`). Entra quando o horizonte local for medido. Enquanto isso, a seção 2 é ilustrativa. |
 
 ## 5. O que é ilustrativo (lista de conferência)
@@ -72,7 +72,7 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 | Item | Valor |
 |---|---|
 | Fonte | NASA DONKI: `GST` (tempestades geomagnéticas, índice Kp de 3 em 3 h, dado da NOAA) e `SEP` (partículas solares energéticas). O endpoint `FLR` respondeu 404 em 14/11/2026, por isso não é usado |
-| Janela | Cenário histórico: 708 h a partir de 09/10/2024 00:00 UTC (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI) (decisão D1 em `docs/arquitetura.md`). Rotulado como cenário na tela. Não é previsão |
+| Janela | Cenário histórico: 708 h a partir de 09/10/2024 09:00 UTC (nascer do Sol no morro) (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI) (decisão D1 em `docs/arquitetura.md`). Rotulado como cenário na tela. Não é previsão |
 | Script | `data-pipeline/fetch_donki.py` (testes em `data-pipeline/tests/test_fetch_donki.py`) |
 | Saída | `src/data/space-weather.json`, lida por `src/engine/space-weather.ts` |
 | Respostas cruas | `data-pipeline/raw/donki_gst.json`, `donki_sep.json` (pequenas; versionadas para auditoria) |
