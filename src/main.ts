@@ -5,6 +5,7 @@ import type { GreenhouseMode, Installation } from './engine/resources';
 import type { TaskKind } from './engine/robot';
 import { isSunlit } from './engine/sun';
 import { SUN } from './data/sun';
+import { TERRAIN } from './data/terrain';
 import { camera, frameForViewport, renderer, scene, updateScene } from './render/scene';
 import { renderHud, ui } from './ui/hud';
 
@@ -69,7 +70,7 @@ ui.restart.addEventListener('click', () => {
 
 /** A base recebe Sol nessa hora? Tabela real, com o horizonte local do site (ilustrativo). */
 function sunlit(hour: number): boolean {
-  return isSunlit(SUN, hour, INSTALLATION.site);
+  return isSunlit(SUN, hour, INSTALLATION.site, TERRAIN);
 }
 
 // ---------- Laço do jogo ----------

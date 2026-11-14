@@ -13,3 +13,5 @@ dist/
 .pytest_cache/
 __pycache__/
 *.pyc
+# Faixa bruta do LOLA (~122 MB): fora do git, ver docs/data-sources.md seção 2
+data-pipeline/raw/*.bin

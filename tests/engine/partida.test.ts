@@ -1,6 +1,6 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Partidas completas com o motor: base passiva perde; plano com robô vence.
-// Sol real: tabela do JPL Horizons (src/data/sun-south-pole.json) e horizonte local ilustrativo.
+// Sol real: tabela do JPL Horizons (src/data/sun-south-pole.json) e horizonte medido no LOLA (src/data/terrain-sites.json).
 // Sem robô, a base perde; com plano razoável, vence com folga (ver asserções).
 import { describe, expect, it } from 'vitest';
 import { MATCH_HOURS } from '../../src/engine/clock';
@@ -9,8 +9,11 @@ import type { Installation } from '../../src/engine/resources';
 import { MAX_PANELS, type TaskKind } from '../../src/engine/robot';
 import { isSunlit, type SunTable } from '../../src/engine/sun';
 import sunJson from '../../src/data/sun-south-pole.json';
+import terrainJson from '../../src/data/terrain-sites.json';
+import type { TerrainTable } from '../../src/engine/terrain';
 
 const SUN = sunJson as SunTable;
+const TERRAIN = terrainJson as TerrainTable;
 
 const INSTALLATION: Installation = {
   rank: 'explorador',
@@ -21,7 +24,7 @@ const INSTALLATION: Installation = {
   greenhouse: 'surplus',
 };
 
-const sunlit = (hour: number): boolean => isSunlit(SUN, hour, INSTALLATION.site);
+const sunlit = (hour: number): boolean => isSunlit(SUN, hour, INSTALLATION.site, TERRAIN);
 
 function enqueue(g: GameState, kind: TaskKind): GameState {
   const r = dispatch(g, { type: 'ENQUEUE_TASK', kind });

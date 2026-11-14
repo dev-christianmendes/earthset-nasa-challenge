@@ -1,7 +1,9 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Sol vindo da tabela gerada por data-pipeline/fetch_sun.py (JPL Horizons). Motor puro.
+// Iluminação do site: elevação do Sol contra o horizonte medido no LOLA (src/engine/terrain.ts).
 // Fonte e método: docs/data-sources.md.
 import type { Site } from './resources';
+import { horizonAt, type TerrainTable } from './terrain';
 
 export interface SunSample {
   /** Azimute aparente do Sol, em graus. */
@@ -17,13 +19,6 @@ export interface SunTable {
   readonly samples: readonly SunSample[];
 }
 
-/**
- * Altura, em graus, que o relevo tapa acima do horizonte plano em cada local.
- * ILUSTRATIVO: valores escolhidos para dar um dia lunar com diferença entre os locais.
- * Serão substituídos por horizontes medidos no relevo LOLA (bloco B2).
- */
-export const SITE_HORIZON_DEG: Record<Site, number> = { peak: 0, slope: 1.2, rim: 1.6 };
-
 /** Amostra da tabela para a hora de jogo `hour`. Para no último ponto. */
 export function sampleAt(table: SunTable, hour: number): SunSample {
   if (!Number.isFinite(hour) || hour < 0) {
@@ -33,7 +28,11 @@ export function sampleAt(table: SunTable, hour: number): SunSample {
   return table.samples[index];
 }
 
-/** O Sol chega à base nessa hora? Elevação acima do horizonte local. */
-export function isSunlit(table: SunTable, hour: number, site: Site): boolean {
-  return sampleAt(table, hour).el > SITE_HORIZON_DEG[site];
+/**
+ * O Sol chega ao site nessa hora? A elevação do Sol tem de passar do horizonte medido
+ * no relevo, na direção do azimute do Sol.
+ */
+export function isSunlit(table: SunTable, hour: number, site: Site, terrain: TerrainTable): boolean {
+  const sample = sampleAt(table, hour);
+  return sample.el > horizonAt(terrain, site, sample.az);
 }

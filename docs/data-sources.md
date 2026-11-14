@@ -20,15 +20,33 @@ Cada número científico do jogo tem origem aqui. O que for ilustrativo está ma
 
 **Limitação:** a tabela é de um único ponto de observação. Não há sombra de relevo nela; o bloqueio é o horizonte local da seção 3.
 
-## 2. Horizonte local (ilustrativo, a substituir)
+## 2. Horizonte local medido (LOLA, C1)
 
-| Local | Horizonte (graus) | Horas com Sol na janela (de 709) |
+| Item | Valor |
+|---|---|
+| Fonte | LRO LOLA, modelo de elevação **LDEM_80S_20M** (NASA PDS, distribuído pelo MIT: `https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG`, com rótulo `.LBL`) |
+| Resolução | 20 m por pixel, projeção polar estereográfica, centro no polo sul (`CENTER_LATITUDE = -90`) |
+| Recorte usado | Faixa de 40 km em volta do polo (2000 linhas, ~122 MB, por HTTP Range). O bruto fica em `data-pipeline/raw/` e **não vai para o git** |
+| Script | `data-pipeline/fetch_lola.py` (testes em `data-pipeline/tests/test_fetch_lola.py`) |
+| Saída | `src/data/terrain-sites.json`, lida por `src/engine/terrain.ts` |
+| Método | Para cada candidato num disco de 3 km em volta do polo, 72 raios (a cada 5°) até 20 km; ângulo máximo do relevo, descontada a curvatura (d²/2R, R = 1737,4 km) |
+| Escolha dos sites | Pelo próprio horizonte: **peak** = o mais exposto (horizonte médio mínimo), **slope** = o mediano, **rim** = o mais sombreado |
+
+**Resultado (14/11/2026):** com o Sol da tabela do JPL Horizons, em 709 horas:
+
+| Site | Horizonte máximo | Horas com Sol |
 |---|---|---|
-| Pico | 0,0 | 709 |
-| Encosta | 1,2 | cerca de 464 |
-| Borda | 1,6 | cerca de 316 |
+| peak (morro) | 4,3° | 448 |
+| slope (encosta, início do jogo) | 25,4° | 182 |
+| rim (borda) | 55,4° | 0 |
 
-Os valores são escolhidos para dar diferença entre os locais. **São ilustrativos**. Serão substituídos por horizontes medidos no modelo de relevo LOLA (ver seção 4). Código: `src/engine/sun.ts`, `SITE_HORIZON_DEG`.
+Consequência para o jogo: o início na encosta tem 182 h de Sol (antes, a tabela ilustrativa dava quase o dia inteiro). O equilíbrio precisa ser revisto com isso (ver `docs/backlog.md`, C1 e B2.3).
+
+**Suposição a verificar (convenção de azimute):** o azimute do Horizons (0° = norte local, sentido horário) foi ligado à projeção com norte = +y (meridiano 0°, afastando-se do polo) e leste = +x, a convenção padrão da estereográfica polar sul (EPSG:3031). Se o sinal de leste estiver invertido, o Sol nasce do lado errado. Verificação pendente: comparar uma direção conhecida do relevo com o nascer do Sol na tabela.
+
+**Limites:** o pixel de 20 m e a escolha de três sites não são medição de um local de pouso real; é um recorte do polo para o jogo. O horizonte de 20 km ignora crateras maiores que isso.
+
+Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido do código nesta etapa.
 
 ## 3. Como o Sol entra no jogo
 

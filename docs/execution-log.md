@@ -173,3 +173,24 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - Captura com os limites temporariamente altos (bateria 90, ar 85) para ver o alerta: `desktop-alerta.png`, com bateria e ar em vermelho. Limites originais restaurados e conferidos com grep.
 - **Commit:** feito localmente, sem push.
 - **Pendências:** B3.1 (revisão de copy); B2.3 (LOLA, DONKI, revisão do equilíbrio com o Sol real); B4 só depois de B2.3 e B3.1.
+
+## 2026-11-14 · Desenho v2 (F0) e C1: horizonte real do LOLA
+
+- **Desenho:** `docs/arquitetura.md` (requisitos E1–E12 do evento e R-… do produto, camadas, fases F0–F6, decisões D1–D3).
+- **F0 (refatoração, sem mudança de comportamento):** `src/main.ts` separado em `src/render/scene.ts`, `src/ui/hud.ts`, `src/data/sun.ts` e `src/main.ts`. Typecheck, 52 testes e build iguais; captura conferida.
+- **C1 (LOLA):**
+  - Fonte: `LDEM_80S_20M.IMG` (MIT/PDS), 20 m por pixel, polar estereográfica, centro no polo. Confirmada em `https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL`.
+  - `data-pipeline/fetch_lola.py`: baixa a faixa de 40 km por HTTP Range (121.660.800 bytes; 7 min 33 s no total, quase tudo na transferência). Calcula 72 raios por posição, com curvatura lunar.
+  - `src/data/terrain-sites.json` gerado. `src/engine/terrain.ts` (`horizonAt`, interpolação e volta de 360°) e `src/engine/sun.ts` (`isSunlit` agora recebe o relevo; `SITE_HORIZON_DEG` removido).
+  - Medido: Sol em 448 h (peak), 182 h (slope), 0 h (rim). O início (slope) começa na sombra, como a captura mostra.
+- **Comandos e resultados:**
+  - `python3 -m unittest discover -s data-pipeline/tests`: 16 testes, OK.
+  - `npx vitest run`: 57 testes, OK (`tests/engine/terrain.test.ts` novo, `sun.test.ts` com contagens fixas, `partida.test.ts` ainda passa).
+  - `npm run typecheck` e `npm run build`: passam. Fronteira do motor (sem three, DOM ou window em `src/engine`): ok.
+  - Captura `desktop-c1.png` com o relevo real: base na sombra na hora 0.
+- **Falhas e decisões:**
+  - Primeira versão do teste de faixa usava meio pixel de tolerância; o arredondamento tirou o muro da malha. Trocado por um pixel inteiro, no teste.
+  - `rim` tem zero horas de Sol. A asserção antiga (`count('rim') > 0`) era premissa do horizonte ilustrativo; trocada pelas contagens medidas.
+  - Convenção de azimute não verificada com dado externo (ver `docs/data-sources.md`).
+- **Pendências:** equilíbrio com o Sol real (B2.3); verificar azimute; C2 (DONKI, cenário D1); C3; V1–V4; I2–I3; F5; F6 (envio, só com pedido).
+- **Commit:** feito localmente, sem push.

@@ -1,7 +1,9 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 import { describe, expect, it } from 'vitest';
-import { SITE_HORIZON_DEG, isSunlit, sampleAt, type SunTable } from '../../src/engine/sun';
+import { isSunlit, sampleAt, type SunTable } from '../../src/engine/sun';
+import type { TerrainTable } from '../../src/engine/terrain';
 import sunJson from '../../src/data/sun-south-pole.json';
+import terrainJson from '../../src/data/terrain-sites.json';
 
 const SYNTHETIC: SunTable = {
   start_utc: '2026-11-15 00:00',
@@ -16,6 +18,14 @@ const SYNTHETIC: SunTable = {
 };
 
 const REAL = sunJson as SunTable;
+const TERRAIN = terrainJson as TerrainTable;
+
+/** Relevo plano: cada site tem horizonte constante (para testar a regra isolada). */
+function flatTerrain(peak: number, slope: number, rim: number): TerrainTable {
+  const site = (h: number) => ({ x_m: 0, y_m: 0, horizon_deg: Array.from({ length: 72 }, () => h) });
+  return { azimuth_step_deg: 5, sites: { peak: site(peak), slope: site(slope), rim: site(rim) } };
+}
+const FLAT = flatTerrain(0, 1.2, 1.6);
 
 describe('amostra do Sol', () => {
   it('devolve a amostra da hora inteira', () => {
@@ -34,13 +44,13 @@ describe('amostra do Sol', () => {
 
 describe('Sol na base', () => {
   it('o pico vê o Sol quando a elevação passa de zero', () => {
-    expect(isSunlit(SYNTHETIC, 0, 'peak')).toBe(true);
-    expect(isSunlit(SYNTHETIC, 3, 'peak')).toBe(false);
+    expect(isSunlit(SYNTHETIC, 0, 'peak', FLAT)).toBe(true);
+    expect(isSunlit(SYNTHETIC, 3, 'peak', FLAT)).toBe(false);
   });
 
   it('a borda exige elevação acima do horizonte local', () => {
-    expect(isSunlit(SYNTHETIC, 0, 'rim')).toBe(false); // 0,5 < 1,6
-    expect(isSunlit(SYNTHETIC, 2, 'rim')).toBe(true); // 1,7 > 1,6
+    expect(isSunlit(SYNTHETIC, 0, 'rim', FLAT)).toBe(false); // 0,5 < 1,6
+    expect(isSunlit(SYNTHETIC, 2, 'rim', FLAT)).toBe(true); // 1,7 > 1,6
   });
 });
 
@@ -51,12 +61,15 @@ describe('tabela real (JPL Horizons)', () => {
     expect(REAL.step_hours).toBe(1);
   });
 
-  it('o horizonte local só reduz o Sol: pico ≥ encosta ≥ borda', () => {
-    const count = (site: keyof typeof SITE_HORIZON_DEG): number =>
-      Array.from({ length: 709 }, (_, h) => isSunlit(REAL, h, site)).filter(Boolean).length;
+  it('o horizonte medido só reduz o Sol: pico ≥ encosta ≥ borda, com contagens fixas', () => {
+    const count = (site: 'peak' | 'slope' | 'rim'): number =>
+      Array.from({ length: 709 }, (_, h) => isSunlit(REAL, h, site, TERRAIN)).filter(Boolean).length;
     expect(count('peak')).toBeGreaterThanOrEqual(count('slope'));
     expect(count('slope')).toBeGreaterThanOrEqual(count('rim'));
-    expect(count('rim')).toBeGreaterThan(0);
-    expect(count('rim')).toBeLessThan(709); // a borda tem noite de verdade
+    // Medido no LOLA (14/11/2026): pico 448 h, encosta 182 h, borda 0 h de Sol.
+    // A borda é o local mais sombreado do polo, com horizonte de até 55°; sem Sol nesse relevo.
+    expect(count('peak')).toBe(448);
+    expect(count('slope')).toBe(182);
+    expect(count('rim')).toBe(0);
   });
 });
