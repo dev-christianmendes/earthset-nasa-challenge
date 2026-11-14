@@ -331,3 +331,9 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** o balanço dos braços e das pernas em movimento. Duas capturas com 1,1 s de diferença mostram o astronauta quase na mesma pose; a animação está no código (`animateCrew`), mas não foi confirmada na imagem.
 - **Comandos:** `npx tsc --noEmit` passou; `npx vitest run`: 68 testes, OK; `npm run build` passou.
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · Sequência de quadros dos astronautas e plano para outra IA
+
+- **Sequência:** `seq-sheet.png`, 4 quadros (1 a 1,5 s de intervalo), câmera aproximada e ajuste temporário desfeito (confirmado com `diff`). No primeiro quadro, braços e pernas do astronauta estão balançando: a animação funciona. Nos outros três, ele está parado. A articulação dos braços parece solta do corpo nesse quadro: problema visual registrado para correção (T1 no plano).
+- **Plano para outra IA:** `docs/PLANO_PARA_AGENTE.md`, com regras, comandos, mapa do código, o que já está feito, tarefas em ordem com critério de aceite e os pontos que só o autor decide.
+- **Commit:** feito localmente, sem push.
