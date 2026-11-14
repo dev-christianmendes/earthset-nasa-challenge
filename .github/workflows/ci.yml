@@ -1,0 +1,70 @@
+# Verificação automática do Earthset: tipos, testes, build, auditoria e fronteira do motor.
+# Regras do projeto: AGENTS.md (seção 6, Verificação).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências (lockfile)
+        run: npm ci
+
+      - name: Verificar tipos
+        run: npm run typecheck
+
+      - name: Testes do motor
+        run: npm run test
+
+      - name: Testes do pipeline de dados (Python)
+        run: python3 -m unittest discover -s data-pipeline/tests -v
+
+      - name: Build de produção
+        run: npm run build
+
+      - name: Auditoria das dependências de produção
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Guardar o build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+          retention-days: 14
+
+  boundary:
+    name: Fronteira do motor
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: src/engine não pode importar three.js, DOM nem window
+        run: |
+          if grep -rEn "from ['\"]three['\"]|document\.|window\.|HTMLElement" src/engine; then
+            echo "::error::src/engine depende de three.js ou do navegador (ver AGENTS.md, regra 1)."
+            exit 1
+          fi
+          echo "Fronteira do motor limpa."
