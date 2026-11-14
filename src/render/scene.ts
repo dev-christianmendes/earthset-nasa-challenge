@@ -76,9 +76,15 @@ export function resetView(): void {
 // Em tela estreita o HUD ocupa a parte de baixo: a cena sobe para a base ficar visível acima dele.
 export function frameForViewport(): void {
   if (window.innerWidth <= 700) {
-    const shift = window.innerHeight * 0.22;
-    camera.setViewOffset(window.innerWidth, window.innerHeight, 0, shift, window.innerWidth, window.innerHeight);
+    // Campo mais aberto compensa a tela estreita; o deslocamento reserva espaço para o HUD inferior.
+    camera.fov = 68;
+    camera.updateProjectionMatrix();
+    const shift = window.innerHeight * 0.2;
+    const horizontalShift = window.innerWidth * 0.36;
+    camera.setViewOffset(window.innerWidth, window.innerHeight, horizontalShift, shift, window.innerWidth, window.innerHeight);
   } else {
+    camera.fov = 50;
+    camera.updateProjectionMatrix();
     camera.clearViewOffset();
   }
 }
@@ -299,6 +305,7 @@ baseAntenna.visible = false;
 base.add(baseAntenna);
 
 const panelMat = new THREE.MeshStandardMaterial({ color: PALETTE.panel, roughness: 0.25, metalness: 0.5, emissive: PALETTE.panelGlow, emissiveIntensity: 0.6 });
+const panelCellMats: THREE.MeshStandardMaterial[] = [];
 const postMat = new THREE.MeshStandardMaterial({ color: PALETTE.metal, metalness: 0.4, roughness: 0.4 });
 const panelMeshes: THREE.Group[] = [];
 for (let i = 0; i < MAX_PANELS; i++) {
@@ -391,10 +398,15 @@ let lastNow = 0;
  * o tempo de viagem é a parte visual do tempo de tarefa.
  * Sem tarefa em andamento (ou depois de cancelar), o rover caminha de volta à base.
  */
-function placeRover(state: GameState, t: number, dt: number): { working: boolean; moving: boolean; workSite: { x: number; z: number } | null } {
+function placeRover(state: GameState, t: number, dt: number, radiation: boolean): { working: boolean; moving: boolean; workSite: { x: number; z: number } | null } {
   const task = state.robot.queue[0];
-  const working = isWorking(state.robot, state.vitals.battery);
-  if (!task || !working) {
+  const working = isWorking(state.robot, state.vitals.battery) && !radiation;
+  // Uma tarefa suspensa mantém o rover onde estava; a fila não avança no motor.
+  if (task && !working) {
+    robot.position.set(roverAt.x, surfaceHeight(roverAt.x, roverAt.z), roverAt.z);
+    return { working: false, moving: false, workSite: null };
+  }
+  if (!task) {
     const dx = DOCK.x - roverAt.x;
     const dz = DOCK.z - roverAt.z;
     const dist = Math.hypot(dx, dz);
@@ -443,8 +455,8 @@ function placeRover(state: GameState, t: number, dt: number): { working: boolean
 interface Crew {
   /** Mixer e clipes do modelo com animação (astronaut_oga). Null se o modelo de fallback estiver em uso. */
   mixer: THREE.AnimationMixer | null;
-  actions: Partial<Record<'idle' | 'run', THREE.AnimationAction>>;
-  current: 'idle' | 'run' | '';
+  actions: Partial<Record<'idle' | 'walk' | 'run' | 'work', THREE.AnimationAction>>;
+  current: 'idle' | 'walk' | 'run' | 'work' | '';
   node: THREE.Object3D | null;
   x: number;
   z: number;
@@ -480,7 +492,7 @@ function walkCrew(member: Crew, tx: number, tz: number, dt: number): void {
 }
 
 /** Troca o clipe do astronauta com transição curta (idle quando parado, run quando anda). */
-function playCrewClip(member: Crew, name: 'idle' | 'run'): void {
+function playCrewClip(member: Crew, name: 'idle' | 'walk' | 'run' | 'work'): void {
   if (!member.mixer || member.current === name) return;
   const next = member.actions[name];
   if (!next) return;
@@ -491,10 +503,10 @@ function playCrewClip(member: Crew, name: 'idle' | 'run'): void {
 
 function animateCrew(member: Crew, t: number, dt: number): void {
   if (member.mixer) {
-    playCrewClip(member, member.moving ? 'run' : 'idle');
-    // O modelo não tem clipe de caminhada: a caminhada usa a corrida em câmera lenta.
+    playCrewClip(member, member.moving ? (member.actions.walk ? 'walk' : 'run') : 'idle');
+    // O modelo antigo não tem clipe de caminhada; reduzimos a corrida como fallback.
     const run = member.actions.run;
-    if (run) run.timeScale = member.moving ? 0.45 : 1;
+    if (run) run.timeScale = member.moving && !member.actions.walk ? 0.45 : 1;
     member.mixer.update(dt);
     return;
   }
@@ -518,44 +530,46 @@ function updateCrew(state: GameState, t: number, dt: number, workSite: { x: numb
   } else {
     walkCrew(keeper, keeper.home.x, keeper.home.z, dt);
   }
-  if (workSite) {
-    walkCrew(helper, workSite.x + 1.1, workSite.z + 0.4, dt);
-  } else {
-    walkCrew(helper, helper.home.x, helper.home.z, dt);
+  if (!radiation) {
+    if (workSite) {
+      walkCrew(helper, workSite.x + 1.1, workSite.z + 0.4, dt);
+    } else {
+      walkCrew(helper, helper.home.x, helper.home.z, dt);
+    }
   }
   for (const member of crew) animateCrew(member, t, dt);
 }
 
 /**
- * Carrega o astronauta com animação (astronaut_oga, CC0; clipes idle e run). Se falhar, usa o modelo de
+ * Carrega o astronauta Earthset (clipes idle, walk e run). Se falhar, usa o modelo CC0 OGA e depois o fallback
  * fallback astronaut.glb com as animações procedurais antigas. Uma cópia por astronauta.
  */
 export function loadCrewModels(): Promise<unknown> {
   return Promise.all(
     crew.map(async (member) => {
       try {
-        const gltf = await loadGltf('astronaut_oga');
+        const gltf = await loadGltf('astronaut_v2');
         // Clone com esqueleto próprio: Object3D.clone() não copia os ossos de um modelo skinado.
         const node = cloneSkinned(gltf.scene);
         node.traverse((obj) => {
           obj.castShadow = true;
           if (obj instanceof THREE.Mesh) {
-            // O modelo vem totalmente metálico (metalness 1), que fica preto sem mapa de ambiente.
-            // Traje de tecido/plástico fosco, com a cor original.
+            // Mantém o traje fosco e legível sob a iluminação lunar.
             const mat = (obj.material as THREE.MeshStandardMaterial).clone();
             mat.metalness = 0.05;
             mat.roughness = 0.7;
             obj.material = mat;
           }
         });
-        // A origem do modelo fica no centro do corpo (±0,96 m): o grupo sobe o modelo para os pés tocarem o chão.
-        node.position.y = 0.96;
+        // A origem do modelo Earthset fica no chão, entre os pés.
+        node.position.y = 0;
+        node.scale.setScalar(1.3);
         const holder = new THREE.Group();
         holder.add(node);
         scene.add(holder);
         member.node = holder;
         const mixer = new THREE.AnimationMixer(node);
-        const byName: Record<string, 'idle' | 'run'> = { default: 'idle', run: 'run' };
+        const byName: Record<string, 'idle' | 'walk' | 'run' | 'work'> = { idle: 'idle', walk: 'walk', run: 'run', work: 'work', default: 'idle' };
         for (const clip of gltf.animations) {
           const key = byName[clip.name];
           if (key) member.actions[key] = mixer.clipAction(clip);
@@ -563,7 +577,26 @@ export function loadCrewModels(): Promise<unknown> {
         member.mixer = mixer;
         playCrewClip(member, 'idle');
       } catch (error) {
-        console.warn('astronaut_oga não carregou; usando o modelo de fallback:', error);
+        console.warn('astronaut_v2 não carregou; tentando astronauta CC0:', error);
+        try {
+          const gltf = await loadGltf('astronaut_oga');
+          const node = cloneSkinned(gltf.scene);
+          node.position.y = 0.96;
+          const holder = new THREE.Group();
+          holder.add(node);
+          scene.add(holder);
+          member.node = holder;
+          const mixer = new THREE.AnimationMixer(node);
+          for (const clip of gltf.animations) {
+            const key = clip.name === 'run' ? 'run' : 'idle';
+            member.actions[key] = mixer.clipAction(clip);
+          }
+          member.mixer = mixer;
+          playCrewClip(member, 'idle');
+          return;
+        } catch (ogaError) {
+          console.warn('astronauta CC0 não carregou; usando o fallback:', ogaError);
+        }
         const source = await loadModel('astronaut');
         const node = source.clone(true);
         node.traverse((obj) => {
@@ -605,7 +638,7 @@ function setInstalled(obj: THREE.Object3D, installed: boolean, now: number): voi
   obj.scale.setScalar(Math.max(0.001, ease));
 }
 
-export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample): void {
+export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true): void {
   // Direção do Sol a partir do azimute (norte = -z, leste = +x) e da elevação reais.
   const { az, el } = sampleAt(SUN, state.clock.hour);
   const azRad = (az * Math.PI) / 180;
@@ -633,13 +666,16 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   setInstalled(baseAntenna, state.robot.antennaInstalled, now);
 
   const t = now / 1000;
-  const dt = lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
+  const dt = !animate || lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
   lastNow = now;
-  const { working, moving, workSite } = placeRover(state, t, dt);
+  const { working, moving, workSite } = placeRover(state, t, dt, weather.radiation);
   updateCrew(state, t, dt, workSite, weather.radiation);
   robotBodyMat.emissiveIntensity = working ? 1 : 0.2;
+  if (rover.bodyMat) rover.bodyMat.emissiveIntensity = working ? 0.45 : 0.08;
   // Tempestade: os painéis perdem brilho na proporção da geração (ver solarFactor).
-  panelMat.emissiveIntensity = 0.6 * solarFactor(stormLevel(weather.kp));
+  const panelGlow = 0.6 * solarFactor(stormLevel(weather.kp));
+  panelMat.emissiveIntensity = panelGlow;
+  for (const mat of panelCellMats) mat.emissiveIntensity = panelGlow;
   // Radiação de partículas solares: o farol do robô fica vermelho enquanto dura.
   rover.beaconMat.color.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
   rover.beaconMat.emissive.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
@@ -654,14 +690,36 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   iceMarker.rotation.y = t * 0.6;
 }
 
+/** Recomeça as posições e a fase das animações após reiniciar a missão. */
+export function resetScenePresentation(initialPanels: number): void {
+  lastNow = 0;
+  panelMeshes.forEach((unit, index) => {
+    unit.visible = index < initialPanels;
+    unit.scale.setScalar(1);
+    unit.userData.installedAt = -INSTALL_SECONDS;
+  });
+  baseAntenna.visible = false;
+  baseAntenna.scale.setScalar(1);
+  roverAt.x = DOCK.x;
+  roverAt.z = DOCK.z;
+  robot.position.set(DOCK.x, surfaceHeight(DOCK.x, DOCK.z), DOCK.z);
+  for (const member of crew) {
+    member.x = member.home.x;
+    member.z = member.home.z;
+    member.moving = false;
+    member.node?.position.set(member.x, surfaceHeight(member.x, member.z), member.z);
+  }
+}
+
 // ---------- Modelos 3D (assets-src/blender) ----------
 
 /** Peças do rover que a animação usa. Começam como as formas provisórias e são trocadas pelo modelo. */
 export const rover: {
   beacon: THREE.Object3D;
   beaconMat: THREE.MeshStandardMaterial;
+  bodyMat: THREE.MeshStandardMaterial | null;
   wheels: THREE.Object3D[];
-} = { beacon, beaconMat, wheels: [] };
+} = { beacon, beaconMat, bodyMat: null, wheels: [] };
 
 /** Troca as formas provisórias pelos modelos GLB. Enquanto carregam, o código continua funcionando. */
 export function loadBaseModels(): Promise<unknown> {
@@ -669,8 +727,28 @@ export function loadBaseModels(): Promise<unknown> {
     attachModel(habitat, 'habitat'),
     attachModel(greenhouse, 'greenhouse'),
     attachModel(baseAntenna, 'antenna'),
-    ...panelMeshes.map((unit) => attachModel(unit, 'solar_panel')),
+    ...panelMeshes.map((unit) => attachModel(unit, 'solar_panel').then((model) => {
+      model.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+        const original = object.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
+        const prepare = (mat: THREE.MeshStandardMaterial): THREE.MeshStandardMaterial => {
+          if (mat.name !== 'panel_cell') return mat;
+          const cell = mat.clone();
+          cell.emissive.setHex(PALETTE.panelGlow);
+          panelCellMats.push(cell);
+          return cell;
+        };
+        object.material = Array.isArray(original) ? original.map(prepare) : prepare(original);
+      });
+    })),
     attachModel(robot, 'rover').then((model) => {
+      const chassisNode = model.getObjectByName('chassis');
+      if (chassisNode instanceof THREE.Mesh) {
+        const mat = (chassisNode.material as THREE.MeshStandardMaterial).clone();
+        mat.emissive.setHex(0x402800);
+        chassisNode.material = mat;
+        rover.bodyMat = mat;
+      }
       const beaconNode = model.getObjectByName('beacon');
       if (beaconNode instanceof THREE.Mesh) {
         const mat = (beaconNode.material as THREE.MeshStandardMaterial).clone();
