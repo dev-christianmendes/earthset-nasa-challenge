@@ -420,7 +420,7 @@ interface Crew {
 }
 
 const crew: Crew[] = [
-  { node: null, x: -3.6, z: 4.4, home: { x: -3.6, z: 4.4 }, moving: false, legs: [], arms: [] },
+  { node: null, x: -3.0, z: 5.2, home: { x: -3.0, z: 5.2 }, moving: false, legs: [], arms: [] },
   { node: null, x: 2.6, z: 4.6, home: { x: 2.6, z: 4.6 }, moving: false, legs: [], arms: [] },
 ];
 const CREW_WALK_SPEED = 1.3; // m/s
@@ -454,7 +454,8 @@ function updateCrew(state: GameState, t: number, dt: number, workSite: { x: numb
   const [keeper, helper] = crew;
   if (greenhouseRunning) {
     const phase = Math.floor(t / 4) % 2 === 0;
-    walkCrew(keeper, phase ? -3.9 : -4.8, phase ? 4.7 : 5.6, dt);
+    // Caminho fora da cúpula (centro em -5.5, 3; raio 2.4): os dois pontos ficam a mais de 3 m do centro.
+    walkCrew(keeper, phase ? -3.0 : -4.0, phase ? 5.2 : 6.6, dt);
   } else {
     walkCrew(keeper, keeper.home.x, keeper.home.z, dt);
   }

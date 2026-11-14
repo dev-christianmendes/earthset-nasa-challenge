@@ -322,3 +322,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** marcador do gelo (aparece sobreposto ao rover); caminhada dos astronautas em movimento; pausa na tela (não capturada).
 - **Commit:** feito localmente, sem push.
 
+
+## 2026-11-14 · Captura da pausa e dos astronautas andando
+
+- **Pausa:** `pause-m.png` (ajuste temporário: começa já pausado, desfeito). Sobreposição "Paused" com continuar, controles e menu principal; cena escurecida ao fundo. Verificado.
+- **Astronautas:** o astronauta da estufa aparece na captura, mas o caminho dele estava **dentro da cúpula** (ponto a 2,4 m do centro, raio da cúpula 2,4 m). Corrigido: casa em (−3,0; 5,2) e caminho entre (−3,0; 5,2) e (−4,0; 6,6), a mais de 3 m do centro.
+- **Erro de ferramenta, corrigido:** o primeiro ajuste temporário quebrou a sintaxe de `main.ts` (parêntese perdido na substituição); a captura saiu com o erro do Vite. O arquivo foi restaurado e conferido com `diff` antes de seguir.
+- **Não verificado:** o balanço dos braços e das pernas em movimento. Duas capturas com 1,1 s de diferença mostram o astronauta quase na mesma pose; a animação está no código (`animateCrew`), mas não foi confirmada na imagem.
+- **Comandos:** `npx tsc --noEmit` passou; `npx vitest run`: 68 testes, OK; `npm run build` passou.
+- **Commit:** feito localmente, sem push.
