@@ -1,6 +1,7 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Cena three.js: relevo, céu, base, robô e luz. Só desenha o estado recebido; regra fica no motor.
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GameState } from '../engine/game';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 import { MAX_PANELS, isWorking } from '../engine/robot';
@@ -44,9 +45,29 @@ scene.background = new THREE.Color(PALETTE.space);
 scene.fog = new THREE.Fog(PALETTE.space, 60, 220);
 
 export const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 600);
-camera.position.set(2, 17, 30);
-// Olha um pouco à esquerda: a base aparece à direita do painel de HUD.
-camera.lookAt(-8, 1, 0);
+// Enquadramento padrão: olha um pouco à esquerda, para a base aparecer à direita do painel de HUD.
+const DEFAULT_CAMERA_POSITION = new THREE.Vector3(2, 17, 30);
+const DEFAULT_TARGET = new THREE.Vector3(-8, 1, 0);
+camera.position.copy(DEFAULT_CAMERA_POSITION);
+
+// Câmera orbital em torno da base: arrastar gira, roda ou pinça aproxima, limites de distância e inclinação.
+export const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(DEFAULT_TARGET);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enablePan = false;
+controls.minDistance = 10;
+controls.maxDistance = 70;
+controls.minPolarAngle = THREE.MathUtils.degToRad(20);
+controls.maxPolarAngle = THREE.MathUtils.degToRad(82);
+controls.update();
+
+/** Volta à visão padrão da base (botão "Visão da base"). */
+export function resetView(): void {
+  camera.position.copy(DEFAULT_CAMERA_POSITION);
+  controls.target.copy(DEFAULT_TARGET);
+  controls.update();
+}
 
 // Em tela estreita o HUD ocupa a parte de baixo: a cena sobe para a base ficar visível acima dele.
 export function frameForViewport(): void {
@@ -112,13 +133,30 @@ function buildTerrain(): THREE.BufferGeometry {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  // Variação de cor decorativa: terreno mais alto um pouco mais claro, com ruído fixo (sem alterar a geometria medida).
+  const colors = new Float32Array(n * n * 3);
+  let minH = Infinity;
+  let maxH = -Infinity;
+  for (const h of heights_m) {
+    minH = Math.min(minH, h);
+    maxH = Math.max(maxH, h);
+  }
+  for (let k = 0; k < n * n; k++) {
+    const t = (heights_m[k] - minH) / Math.max(1e-6, maxH - minH);
+    const grain = 0.92 + 0.08 * Math.sin(k * 12.9898) * Math.cos(k * 0.37);
+    const shade = (0.86 + 0.14 * t) * grain;
+    colors[3 * k] = shade;
+    colors[3 * k + 1] = shade * 0.99;
+    colors[3 * k + 2] = shade * 0.97;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
   geo.setIndex(index);
   geo.computeVertexNormals();
   return geo;
 }
 const ground = new THREE.Mesh(
   buildTerrain(),
-  new THREE.MeshStandardMaterial({ color: 0xffffff, map: regolithTexture(), roughness: 1, metalness: 0 }),
+  new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, map: regolithTexture(), roughness: 1, metalness: 0 }),
 );
 ground.receiveShadow = true;
 scene.add(ground);

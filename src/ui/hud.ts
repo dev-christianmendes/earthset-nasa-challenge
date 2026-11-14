@@ -46,6 +46,8 @@ export const ui = {
 };
 const schoolToggle = el<HTMLInputElement>('school-mode');
 const langButton = el<HTMLButtonElement>('lang');
+/** Última fila desenhada (referência). Zerada ao trocar de idioma, para reescrever os textos. */
+let lastQueue: unknown = null;
 
 // ---------- Idioma ----------
 
@@ -102,6 +104,7 @@ export function applyLanguage(lang: Lang): void {
   for (const node of document.querySelectorAll<HTMLElement>('[data-hint]')) fillHint(node, lang);
   applySchoolMode(schoolToggle.checked);
   langButton.textContent = t('hud.lang');
+  lastQueue = null;
 }
 
 schoolToggle.addEventListener('change', () => applySchoolMode(schoolToggle.checked));
@@ -147,6 +150,30 @@ export function renderHud(state: GameState, weather: SpaceWeatherSample): void {
   ui.space.classList.toggle('storm', level > 0 || weather.radiation);
   ui.greenhouse.value = installation.greenhouse;
 
+  // A fila só é reconstruída quando muda (ou quando o idioma muda): evita trabalho de DOM a cada atualização.
+  if (r.queue !== lastQueue) {
+    lastQueue = r.queue;
+    rebuildQueue(state);
+  }
+
+  const full = r.queue.length >= MAX_QUEUE;
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-task]')) {
+    button.disabled = outcomeOf(state) !== 'playing' || full;
+  }
+
+  const outcome = outcomeOf(state);
+  ui.overlay.hidden = outcome === 'playing';
+  if (outcome === 'lost') {
+    ui.overlayTitle.textContent = t('overlay.lost.title');
+    ui.overlayText.textContent = t('overlay.lost.text', { hour: Math.floor(clock.hour) });
+  } else if (outcome === 'won') {
+    ui.overlayTitle.textContent = t('overlay.won.title');
+    ui.overlayText.textContent = t('overlay.won.text', { hours: MATCH_HOURS, hearts });
+  }
+}
+
+function rebuildQueue(state: GameState): void {
+  const r = state.robot;
   const taskLabel = (kind: TaskKind): string => t(`task.${kind}`);
   ui.queue.replaceChildren();
   if (r.queue.length === 0) {
@@ -172,18 +199,4 @@ export function renderHud(state: GameState, weather: SpaceWeatherSample): void {
     ui.queue.appendChild(li);
   });
 
-  const full = r.queue.length >= MAX_QUEUE;
-  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-task]')) {
-    button.disabled = outcomeOf(state) !== 'playing' || full;
-  }
-
-  const outcome = outcomeOf(state);
-  ui.overlay.hidden = outcome === 'playing';
-  if (outcome === 'lost') {
-    ui.overlayTitle.textContent = t('overlay.lost.title');
-    ui.overlayText.textContent = t('overlay.lost.text', { hour: Math.floor(clock.hour) });
-  } else if (outcome === 'won') {
-    ui.overlayTitle.textContent = t('overlay.won.title');
-    ui.overlayText.textContent = t('overlay.won.text', { hours: MATCH_HOURS, hearts });
-  }
 }

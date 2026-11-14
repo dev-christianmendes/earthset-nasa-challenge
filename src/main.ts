@@ -8,7 +8,7 @@ import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
 import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
-import { camera, frameForViewport, renderer, scene, updateScene } from './render/scene';
+import { camera, controls, frameForViewport, renderer, resetView, scene, updateScene } from './render/scene';
 import { renderHud, ui } from './ui/hud';
 import { t } from './i18n';
 import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
@@ -71,6 +71,8 @@ ui.queue.addEventListener('click', (event) => {
   if (index !== undefined) act({ type: 'CANCEL_TASK', index: Number(index) });
 });
 
+document.getElementById('reset-view')?.addEventListener('click', () => resetView());
+
 ui.restart.addEventListener('click', () => {
   game = createGame({ installation: INSTALLATION });
   ui.greenhouse.value = INSTALLATION.greenhouse;
@@ -95,6 +97,9 @@ function sunlit(hour: number): boolean {
 // ---------- Laço do jogo ----------
 
 let last: number | null = null;
+let hudDueAt = 0;
+/** Intervalo de atualização do HUD (ms). Ações do jogador atualizam na hora. */
+const HUD_INTERVAL_MS = 100;
 
 const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, INSTALLATION.site);
 
@@ -106,7 +111,12 @@ function frame(now: number): void {
   last = now;
   updateScene(game, now, sunlit(game.clock.hour), currentWeather());
   updateHorizon(game.clock.hour);
-  renderHud(game, currentWeather());
+  controls.update();
+  // O HUD é atualizado a cada HUD_INTERVAL_MS, não a cada quadro: a cena continua na taxa do navegador.
+  if (now >= hudDueAt) {
+    renderHud(game, currentWeather());
+    hudDueAt = now + HUD_INTERVAL_MS;
+  }
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }

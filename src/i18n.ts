@@ -22,6 +22,7 @@ const DICT: Record<string, Record<Lang, string>> = {
   'hud.greenhouse.aria': { en: 'Greenhouse mode', pt: 'Modo da estufa' },
   'hud.cancel': { en: 'Cancel {task}', pt: 'Cancelar {task}' },
   'hud.queueItem': { en: '{n}. {task} · {hours} h', pt: '{n}. {task} · {hours} h' },
+  'hud.reset': { en: 'Base view', pt: 'Visão da base' },
   'hud.school': { en: 'School mode', pt: 'Modo escola' },
   'hud.lang': { en: 'Português', pt: 'English' },
   'task.ice': { en: 'Ice', pt: 'Gelo' },

@@ -267,3 +267,19 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Pendências:** a decisão de 1000 é de jogo: o autor pode trocá-la. A tela não foi capturada de novo, porque só o número da capacidade mudou.
 - **Commit:** feito localmente, sem push.
 
+
+## 2026-11-14 · Direção visual, fase 1 (documentação) e fase 2 (fundação)
+
+- **Inspeção:** Blender **não** instalado neste ambiente (não é possível modelar em Blender agora). OrbitControls disponível em `three/examples/jsm`. Confirmado: `renderHud` era chamado a cada quadro e reconstruía a fila do robô no DOM.
+- **Documentação criada:** `docs/VISUAL_DIRECTION.md`, `docs/ART_ASSET_PIPELINE.md`, `docs/RENDERING_ARCHITECTURE.md`, `docs/UI_UX_SPECIFICATION.md`. Descrevem o que existe e marcam o que não existe.
+- **Implementado:**
+  - Câmera orbital (`OrbitControls`, amortecimento, distância 10 a 70, inclinação 20° a 82°, sem pan) e botão flutuante "Visão da base" (`src/render/scene.ts`, `src/main.ts`, `index.html`).
+  - HUD atualizado a cada 100 ms; fila do robô reconstruída só quando muda (`src/main.ts`, `src/ui/hud.ts`).
+  - Tokens de cor (CSS) aplicados às barras: âmbar (bateria), azul-água (água), verde (comida), azul-teal (ar).
+  - Variação de cor decorativa no terreno, por altura e ruído fixo; geometria medida intocada.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou. `npx vitest run`: 66 testes, OK. `python3 -m unittest`: 22 testes, OK. `npm run build`: passou.
+  - Capturas: `desktop-f1.png`, `mobile-f1.png` (botão no painel: empurrava os pedidos para baixo no celular, corrigido) e `mobile-f2.png`, `desktop-f2.png` (botão flutuante no topo central). Sem erros de console no Chrome headless.
+- **Não verificado:** arrastar, zoom e toque da câmera (headless não simula o mouse). Desempenho não medido em máquina real.
+- **Não feito (fases 3 a 5):** modelos GLB (depende de Blender ou de ativos licenciados), astronautas, itens de missão, tela inicial, preparação, pausa, vitória e derrota redesenhadas, animações do rover, efeitos de tempestade além do brilho dos painéis.
+- **Commit:** feito localmente, sem push.

@@ -16,6 +16,16 @@
         --ok: #6fe39a;
         --warn: #ffcf6b;
         --bad: #ff7a7a;
+        /* Tokens de docs/VISUAL_DIRECTION.md */
+        --space-navy: #172536;
+        --lunar-gray: #78818b;
+        --habitat-white: #e8e5da;
+        --solar-amber: #f3a847;
+        --life-teal: #56b9a4;
+        --water-blue: #6d9fe8;
+        --growth-green: #83b96c;
+        --alert-coral: #e47767;
+        --science-violet: #b5a0e8;
       }
       html, body {
         margin: 0;
@@ -50,10 +60,12 @@
       .hearts { color: var(--bad); font-size: 18px; letter-spacing: 2px; }
       .bar { height: 8px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; margin-top: 4px; }
       .bar > i { display: block; height: 100%; width: 0; border-radius: 6px; transition: width 0.25s ease; }
-      .bar.battery > i { background: linear-gradient(90deg, #ffcf6b, #6fe39a); }
-      .bar.air > i { background: var(--accent); }
-      .bar.water > i { background: #5aa8ff; }
-      .bar.food > i { background: var(--ok); }
+      .bar.battery > i { background: linear-gradient(90deg, var(--solar-amber), var(--growth-green)); }
+      .bar.air > i { background: var(--life-teal); }
+      .bar.water > i { background: var(--water-blue); }
+      .bar.food > i { background: var(--growth-green); }
+      /* Botão flutuante no topo central: não empurra o painel do HUD, funciona em qualquer largura. */
+      #reset-view { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; font-size: 12px; min-height: 36px; padding: 6px 14px; background: var(--panel); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
       .meters .meter:first-child .row { margin-top: 0; }
       /* Modo escola (B3.4): explicações ao lado de cada recurso. */
       .school-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 8px 0 8px; cursor: pointer; user-select: none; }
@@ -181,6 +193,8 @@
         <select id="greenhouse" data-i18n-aria="hud.greenhouse.aria" aria-label="Greenhouse mode"></select>
       </div>
     </aside>
+
+    <button type="button" id="reset-view" data-i18n="hud.reset">Base view</button>
 
     <aside id="horizon" class="panel" data-i18n-aria="horizon.aria" aria-label="Measured horizon at the peak">
       <h2 data-i18n="horizon.title">Real horizon</h2>
