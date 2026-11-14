@@ -93,6 +93,30 @@ with sync_playwright() as p:
         pg.mouse.click(pos[0], pos[1]); pg.wait_for_timeout(300)
         check("tocar no astronauta seleciona o astronauta", title() == "Astronaut 1", f"{title()} em {pos}")
 
+    # 5b. Missão do rover pelo painel contextual (P2): ordem, etapas, entrega e recompensa
+    click_on('rover'); pg.wait_for_timeout(300)
+    water0 = pg.evaluate("parseFloat(document.getElementById('val-water').textContent)")
+    pg.evaluate("window.__t0 = performance.now(); window.__seen = null; new MutationObserver(()=>{ if(!window.__seen && document.querySelector('.ctx-mission:not([hidden])')) window.__seen = performance.now() }).observe(document.getElementById('ctx-body'), {childList:true, subtree:true, attributes:true})")
+    pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].find(b=>b.textContent.includes('Lunar ice')).click()")
+    pg.wait_for_timeout(150)
+    seen = pg.evaluate("window.__seen ? window.__seen - window.__t0 : null")
+    check("missão do rover mostra as etapas em ate 150 ms", seen is not None and seen <= 150, f"{seen}")
+    labels = []
+    for _ in range(12):
+        labels.append(pg.evaluate("document.querySelector('.ctx-mission .phase-label')?.textContent || ''"))
+        pg.wait_for_timeout(700)
+    seq = [l for i, l in enumerate(labels) if l and (i == 0 or l != labels[i - 1])]
+    check("as etapas avançam (preparo, ida, escavação, volta, descarga)", len(seq) >= 4, " > ".join(seq))
+    pg.wait_for_function("document.querySelector('.ctx-mission')?.hidden === true", timeout=30000)
+    water1 = pg.evaluate("parseFloat(document.getElementById('val-water').textContent)")
+    check("a água sobe depois da entrega do gelo", water1 > water0, f"{water0} -> {water1}")
+    # cancelar uma missão em andamento: o rover volta e a fila esvazia
+    pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].find(b=>b.textContent.includes('Solar array')).click()")
+    pg.wait_for_timeout(1500)
+    pg.evaluate("document.querySelector('#ctx-body .ctx-queue li button').click()")
+    pg.wait_for_timeout(300)
+    check("cancelar a missão esvazia a fila", pg.evaluate("document.querySelectorAll('#ctx-body .ctx-queue li').length") == 0)
+
     # 6. Abrir uma ferramenta fecha o painel contextual
     pg.click("[data-tool=energy]"); pg.wait_for_timeout(300)
     check("abrir um painel de ferramenta fecha o contextual", title() == "", title())

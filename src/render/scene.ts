@@ -391,6 +391,11 @@ function setRover(x: number, z: number, heading: number, bob = 0): void {
  * deslocamento pela rota, operação no local, volta e entrega. Tarefa suspensa (radiação ou sem bateria):
  * o rover fica parado onde estava, como o motor.
  */
+/** Aceleração e frenagem suaves nos trechos de ida e volta: o rover não parte nem para de uma vez. */
+function smoothstep(k: number): number {
+  return k * k * (3 - 2 * k);
+}
+
 function placeRover(state: GameState, t: number, dt: number, radiation: boolean): RoverView {
   const task = state.robot.queue[0];
   const working = !!task && isWorking(state.robot, state.vitals.battery) && !radiation;
@@ -422,14 +427,14 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
     const h = roverAt.heading + (first.heading - roverAt.heading) * Math.min(1, dt * 3);
     setRover(DOCK.x, DOCK.z, h);
   } else if (phase === 'travel') {
-    const p = along(route, k);
+    const p = along(route, smoothstep(k));
     setRover(p.x, p.z, p.heading, 0.015 * Math.sin(t * 22));
     moving = true;
   } else if (phase === 'operate') {
     const p = along(route, 1);
     setRover(p.x, p.z, roverAt.heading);
   } else if (phase === 'return') {
-    const p = along(back, k);
+    const p = along(back, smoothstep(k));
     setRover(p.x, p.z, p.heading, 0.015 * Math.sin(t * 22));
     moving = true;
   } else {

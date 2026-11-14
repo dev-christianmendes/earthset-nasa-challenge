@@ -26,7 +26,8 @@ import {
   type Care,
 } from '../engine/greenhouse';
 import { GREENHOUSE } from '../engine/resources';
-import { taskProgress } from '../engine/mission';
+import { PHASES, missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
+import { MAX_PANELS, type TaskKind } from '../engine/robot';
 import { t } from '../i18n';
 import type { SelectableId } from '../render/picking';
 import type { Tool } from './hud';
@@ -52,6 +53,8 @@ let selected: SelectableId | null = null;
 let signature = '';
 let updaters: Updater[] = [];
 let shelteredNow = false;
+let radiationNow = false;
+let speedNow = 1;
 
 const TOOL_FOR: Partial<Record<SelectableId, Tool>> = {
   habitat: 'crew',
@@ -254,26 +257,94 @@ function crewView(state: GameState, index: number): View {
   };
 }
 
+const ROVER_KINDS: readonly TaskKind[] = ['ice', 'panel', 'antenna'];
+const PHASE_INDEX: Record<MissionPhase, number> = { prep: 0, travel: 1, operate: 2, return: 3, deliver: 4 };
+
+function phaseLabel(phase: MissionPhase, kind: TaskKind): string {
+  return phase === 'operate' || phase === 'deliver' ? t(`phase.${phase}.${kind}`) : t(`phase.${phase}`);
+}
+
+function missionDetail(kind: TaskKind, state: GameState): string {
+  if (kind === 'panel') return t('mission.panel.count', { n: state.installation.panels, max: MAX_PANELS });
+  return t(`mission.${kind}.time`);
+}
+
+/** Etapas da missão em andamento: cinco barras (preparo, ida, operação, volta, entrega) e o texto da etapa. */
+function missionSteps(): HTMLElement {
+  const box = make('div', 'ctx-mission');
+  const bars = make('div', 'phases');
+  const fills = PHASES.map(() => {
+    const span = make('span');
+    const fill = make('i');
+    span.append(fill);
+    bars.append(span);
+    return { span, fill };
+  });
+  const label = make('div', 'phase-label');
+  const eta = make('div', 'ctx-hint');
+  box.append(bars, label, eta);
+  updaters.push((s) => {
+    const task = s.robot.queue[0];
+    box.hidden = !task;
+    if (!task) return;
+    const phase = missionPhase(task);
+    fills.forEach(({ span, fill }, i) => {
+      span.classList.toggle('done', i < PHASE_INDEX[phase]);
+      fill.style.width = i === PHASE_INDEX[phase] ? `${Math.round(phaseProgress(task) * 100)}%` : '0%';
+    });
+    const waiting = radiationNow || s.vitals.battery <= 0;
+    label.classList.toggle('waiting', waiting);
+    label.textContent = waiting ? t(radiationNow ? 'phase.wait.radiation' : 'phase.wait.battery') : phaseLabel(phase, task.kind);
+    eta.textContent = t('ctx.rover.eta', { h: Math.ceil(task.hoursLeft), s: Math.max(1, Math.round(task.hoursLeft / speedNow)), speed: speedNow });
+  });
+  return box;
+}
+
 function roverView(state: GameState): View {
-  const first = state.robot.queue[0];
+  const queue = state.robot.queue;
+  const blocked = ROVER_KINDS.map((k) => `${k}:${whyNot(state, { type: 'ENQUEUE_TASK', kind: k }) ?? ''}`).join('|');
   return {
     title: t('ctx.rover'),
-    signature: `rover/${first ? first.kind : '-'}/${state.robot.queue.length}`,
-    build: () => {
+    signature: `rover/${queue.map((q) => q.kind).join(',')}/${blocked}/${state.installation.panels}`,
+    build: (s) => {
       const status = make('ul', 'status-list');
       status.append(
         row(t('ctx.status'), (v, st) => {
-          v.textContent = st.robot.queue[0] ? t('ctx.rover.busy') : t('ctx.rover.idle');
-        }),
-        row(t('ctx.rover.queue'), (v, st) => {
-          v.textContent = `${st.robot.queue.length}`;
+          const task = st.robot.queue[0];
+          v.textContent = !task ? t('ctx.rover.idle') : radiationNow ? t('phase.wait.radiation') : st.vitals.battery <= 0 ? t('phase.wait.battery') : phaseLabel(missionPhase(task), task.kind);
         }),
       );
-      const cancel = make('button', undefined, t('ctx.rover.cancel'));
-      cancel.type = 'button';
-      cancel.hidden = !first;
-      cancel.addEventListener('click', () => handlers.act({ type: 'CANCEL_TASK', index: 0 }));
-      return [status, bar((st) => (st.robot.queue[0] ? taskProgress(st.robot.queue[0]) : 0), 'amber'), cancel];
+      const missions = make('div', 'ctx-tasks');
+      for (const kind of ROVER_KINDS) {
+        const action: GameAction = { type: 'ENQUEUE_TASK', kind };
+        const why = whyNot(s, action);
+        const button = make('button', 'ctx-task');
+        button.type = 'button';
+        button.append(make('b', undefined, t(`mission.${kind}`)), make('small', undefined, `${t(`mission.${kind}.p`)} ${missionDetail(kind, s)}`));
+        if (why) {
+          button.disabled = true;
+          button.title = why;
+          button.append(make('em', undefined, why));
+        } else {
+          button.classList.add('primary');
+          button.addEventListener('click', () => handlers.act(action));
+        }
+        missions.append(button);
+      }
+      const list = make('ol', 'ctx-queue');
+      queue.forEach((task, index) => {
+        const item = make('li');
+        const cancel = make('button', undefined, '✕');
+        cancel.type = 'button';
+        cancel.setAttribute('aria-label', t('hud.cancel', { task: t(`mission.${task.kind}`) }));
+        cancel.addEventListener('click', () => handlers.act({ type: 'CANCEL_TASK', index }));
+        item.append(make('span', undefined, `${index === 0 ? '' : `${t('queue.next')} · `}${t(`mission.${task.kind}`)}`), cancel);
+        list.append(item);
+      });
+      const follow = make('button', 'ctx-link', t('ctx.rover.follow'));
+      follow.type = 'button';
+      follow.addEventListener('click', () => handlers.focus('rover'));
+      return [status, missionSteps(), heading(t('ctx.missions')), missions, ...(queue.length ? [heading(t('rover.queue')), list] : []), follow];
     },
   };
 }
@@ -327,8 +398,10 @@ export function showContext(id: SelectableId | null): void {
 }
 
 /** Atualiza o painel: reconstrói só quando algo discreto mudou; barras e números mudam no lugar. */
-export function renderContext(state: GameState, radiation: boolean): void {
+export function renderContext(state: GameState, radiation: boolean, speed = 1): void {
   if (!selected) return;
+  radiationNow = radiation;
+  speedNow = speed;
   shelteredNow = radiation || state.crewOrder === 'shelter';
   const view = viewFor(selected, state);
   if (view.signature !== signature) {

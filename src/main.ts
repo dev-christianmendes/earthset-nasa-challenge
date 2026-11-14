@@ -87,7 +87,7 @@ function selectObject(id: SelectableId | null): void {
   if (id) setTool(null);
   showContext(id);
   setHighlight(id);
-  if (id) renderContext(game, weatherNow().radiation);
+  if (id) renderContext(game, weatherNow().radiation, SPEEDS[speedIndex]);
 }
 
 mountContext(document.getElementById('ctx') as HTMLElement, {
@@ -101,6 +101,11 @@ mountContext(document.getElementById('ctx') as HTMLElement, {
     if (action.type === 'ASSIGN_AGENT_TASK') {
       showToast(t('toast.order'), t(`task.${action.kind}`));
       goTo('greenhouse', performance.now(), 0.9);
+    }
+    if (action.type === 'ENQUEUE_TASK') {
+      showToast(t('toast.order'), t(`mission.${action.kind}`));
+      // Primeira missão da fila: a câmera acompanha o rover saindo da garagem (o jogador pode arrastar para soltar).
+      if (game.robot.queue.length === 1) goTo('rover', performance.now(), 0.9);
     }
   },
   openTool(tool) {
@@ -177,7 +182,7 @@ function renderNow(now: number): void {
   const weather = weatherNow();
   const warning = warningNow();
   renderHud(game, { weather, warningHours: warning, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
-  if (started && selectedObject()) renderContext(game, weather.radiation);
+  if (started && selectedObject()) renderContext(game, weather.radiation, SPEEDS[speedIndex]);
   if (started) updateLuma(lumaAdvice(game, warning, MODES[mode].luma), game.clock.hour, now);
 }
 
