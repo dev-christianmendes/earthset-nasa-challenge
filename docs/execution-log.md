@@ -122,3 +122,14 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - `npm run build`: passou.
   - Capturas com Chrome headless em desktop e celular geradas, mas **não revisadas**: a leitura de imagem foi bloqueada pelo hook nesta sessão, e `rtk bulk-read` só aceita texto. Por isso B3.3 não está marcado como feito.
 - **Pendências:** céu, modelos da base, paleta e revisão visual das capturas de B3.3; B3.4.
+
+## 2026-11-14 · B3.3 (ajustes após revisão das capturas)
+
+- **Arquivos alterados:** `src/main.ts` (estrelas e Terra com `fog: false`, porque a névoa de 60 a 220 unidades escondia as estrelas; antena da base que aparece com `antennaInstalled`; robô em escala 1.7), `index.html` (barras de recursos agrupadas em `.meters`, duas colunas no celular; espaçamentos menores só em até 700 px), `docs/backlog.md` (B3.3 atualizado), esta entrada.
+- **Problema visto nas capturas:** no celular, os botões de ação ficavam abaixo da dobra; o robô era pequeno demais; não havia estrelas no céu.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npm run test`: 6 arquivos, 49 testes, todos passaram.
+  - `npm run build`: passou (aviso de chunk acima de 500 kB, já existia).
+  - Vite em `http://localhost:5180/` (título "Earthset · Base no polo sul da Lua"), Chrome headless: `desktop.png` 1280×800 e `mobile.png` 390×844, revisados. Botões Gelo, Painel e Antena visíveis no celular; estrelas visíveis no desktop; robô legível.
+- **Pendências:** B3.3 segue parcial (paleta, modelos extras da base, céu); B3.4.

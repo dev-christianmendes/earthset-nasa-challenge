@@ -230,11 +230,12 @@ for (let i = 0; i < 1400; i++) {
   starPositions.push(r * Math.sin(phi) * Math.cos(theta), Math.abs(r * Math.cos(phi)), r * Math.sin(phi) * Math.sin(theta));
 }
 starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.2, sizeAttenuation: false })));
+// Estrelas e Terra ficam fora da névoa: a névoa escondia tudo além de 220 unidades.
+scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.2, sizeAttenuation: false, fog: false })));
 
 const earth = new THREE.Mesh(
   new THREE.SphereGeometry(7, 48, 32),
-  new THREE.MeshStandardMaterial({ color: 0x2f6fb0, roughness: 0.8, emissive: 0x0a1a33, emissiveIntensity: 0.4 }),
+  new THREE.MeshStandardMaterial({ color: 0x2f6fb0, roughness: 0.8, emissive: 0x0a1a33, emissiveIntensity: 0.4, fog: false }),
 );
 earth.position.set(-70, 60, -150);
 scene.add(earth);
@@ -259,6 +260,25 @@ const greenhouse = new THREE.Mesh(
 greenhouse.position.set(-5.5, 0, 3);
 greenhouse.castShadow = true;
 base.add(greenhouse);
+
+// Antena de comunicação no teto do habitat: aparece quando o robô instala a antena (B1.4).
+const baseAntenna = new THREE.Group();
+const antennaMast = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.06, 0.06, 1.8, 8),
+  new THREE.MeshStandardMaterial({ color: 0xdfe4ec, metalness: 0.4, roughness: 0.4 }),
+);
+antennaMast.position.y = 0.9;
+baseAntenna.add(antennaMast);
+const dish = new THREE.Mesh(
+  new THREE.SphereGeometry(0.7, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+  new THREE.MeshStandardMaterial({ color: 0xe8ecf2, metalness: 0.3, roughness: 0.35, side: THREE.DoubleSide }),
+);
+dish.rotation.x = Math.PI;
+dish.position.y = 1.8;
+baseAntenna.add(dish);
+baseAntenna.position.set(1.2, 4.4, 0);
+baseAntenna.visible = false;
+base.add(baseAntenna);
 
 const panelMat = new THREE.MeshStandardMaterial({ color: 0x3f7fd0, roughness: 0.25, metalness: 0.5, emissive: 0x0c2446, emissiveIntensity: 0.6 });
 const panelMeshes: THREE.Mesh[] = [];
@@ -301,6 +321,8 @@ const beacon = new THREE.Mesh(
 );
 beacon.position.set(0.3, 1.1, 0);
 robot.add(beacon);
+// Escala maior que o modelo original: o robô precisa ser legível na tela de 1280 px.
+robot.scale.setScalar(1.7);
 scene.add(robot);
 
 // ---------- Atualização por quadro ----------
@@ -330,15 +352,17 @@ function updateScene(hour: number, now: number): void {
   }
   greenhouse.visible = game.installation.greenhouse !== 'off';
 
+  baseAntenna.visible = game.robot.antennaInstalled;
+
   const working = isWorking(game.robot, game.vitals.battery);
   const t = now / 1000;
   if (working) {
     const a = t * 0.8;
     // Leve balanço ao andar; a luz do corpo acende e a antena pisca.
-    robot.position.set(Math.cos(a) * 9, 0.3 + Math.abs(Math.sin(t * 6)) * 0.04, Math.sin(a) * 6 + 2);
+    robot.position.set(Math.cos(a) * 9, Math.abs(Math.sin(t * 6)) * 0.05, Math.sin(a) * 6 + 2);
     robot.rotation.y = -a;
   } else {
-    robot.position.set(9, 0.3, 4);
+    robot.position.set(9, 0, 4);
   }
   robotBodyMat.emissiveIntensity = working ? 1 : 0.2;
   beacon.visible = !working || Math.sin(t * 4) > -0.2;

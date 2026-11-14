@@ -54,6 +54,7 @@
       .bar.air > i { background: var(--accent); }
       .bar.water > i { background: #5aa8ff; }
       .bar.food > i { background: var(--ok); }
+      .meters .meter:first-child .row { margin-top: 0; }
       .section { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 12px; }
       .section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
       .buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -96,7 +97,10 @@
       #overlay p { color: var(--muted); line-height: 1.5; margin: 0 0 18px; }
       #overlay button { padding: 12px 22px; }
       @media (max-width: 700px) {
-        #hud { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 46vh; }
+        #hud { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 46vh; padding: 12px 14px; }
+        .meters { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+        .meter .row { margin-top: 6px; }
+        .section { margin-top: 10px; padding-top: 10px; }
         #note { display: none; }
       }
     </style>
@@ -106,14 +110,24 @@
       <h1>Base no polo sul da Lua</h1>
       <div class="sub">Hora de jogo <strong id="hour">0</strong> de 708 · <span id="hearts" class="hearts" aria-label="corações">♥♥♥</span></div>
 
-      <div class="row"><span class="label">Bateria</span><span id="val-battery">0%</span></div>
-      <div class="bar battery"><i id="bar-battery"></i></div>
-      <div class="row"><span class="label">Ar</span><span id="val-air">0</span></div>
-      <div class="bar air"><i id="bar-air"></i></div>
-      <div class="row"><span class="label">Água</span><span id="val-water">0</span></div>
-      <div class="bar water"><i id="bar-water"></i></div>
-      <div class="row"><span class="label">Comida</span><span id="val-food">0</span></div>
-      <div class="bar food"><i id="bar-food"></i></div>
+      <div class="meters">
+        <div class="meter">
+          <div class="row"><span class="label">Bateria</span><span id="val-battery">0%</span></div>
+          <div class="bar battery"><i id="bar-battery"></i></div>
+        </div>
+        <div class="meter">
+          <div class="row"><span class="label">Ar</span><span id="val-air">0</span></div>
+          <div class="bar air"><i id="bar-air"></i></div>
+        </div>
+        <div class="meter">
+          <div class="row"><span class="label">Água</span><span id="val-water">0</span></div>
+          <div class="bar water"><i id="bar-water"></i></div>
+        </div>
+        <div class="meter">
+          <div class="row"><span class="label">Comida</span><span id="val-food">0</span></div>
+          <div class="bar food"><i id="bar-food"></i></div>
+        </div>
+      </div>
       <div class="row"><span class="label">Painéis</span><span id="panels">0</span></div>
 
       <div class="section">
