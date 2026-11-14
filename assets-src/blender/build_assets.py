@@ -315,7 +315,9 @@ def limb(name: str, joint: tuple, length: float, radius: float, mat):
     import mathutils
 
     o = add("cylinder", name, location=joint, scale=(radius, radius, length))
-    bpy.ops.object.transform_apply(scale=True)
+    # Só a escala: manter a origem no ponto de articulação (ombro/quadril) é o que faz o
+    # membro girar preso ao corpo. Aplicar a localização aqui dobraria o deslocamento no GLB.
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     o.data.transform(mathutils.Matrix.Translation((0, 0, -length / 2)))
     o.location = joint
     bevel(o, radius * 0.4, 2)

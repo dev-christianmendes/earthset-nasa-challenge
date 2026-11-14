@@ -345,3 +345,21 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - Nenhum código de jogo foi alterado nesta etapa: só decisões e documentação.
 - **Commit:** feito localmente, sem push.
 
+## 2026-11-14 · T1: articulação dos braços e pernas do astronauta
+
+- **Problema:** no quadro de caminhada, braços e pernas pareciam soltos do corpo e giravam em torno de um ponto errado.
+- **Causa:** em `limb`, `bpy.ops.object.transform_apply(scale=True)` usa `location=True` e `rotation=True` por padrão no Blender. A localização da articulação era aplicada à malha (coordenadas absolutas) e, em seguida, `o.location = joint` aplicava a mesma translação de novo. No GLB, o nó do braço ficava com `translation` no ombro e a malha já deslocada, resultando em membros flutuando acima do corpo. Braço esquerdo antigo: y de 2,17 a 2,72 m (capacete termina em 1,77 m).
+- **Correção:** aplicar só a escala, mantendo a origem no ponto de articulação: `bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)`. A geometria continua descendo `length` a partir do pivô. Nenhuma mudança em `scene.ts` foi necessária: `animateCrew` já girava os nós `arm_L`, `arm_R`, `leg_L` e `leg_R` corretamente.
+- **Arquivos:** `assets-src/blender/build_assets.py`; `public/models/astronaut.glb` regerado. Os demais GLB (habitat, rover, painel, estufa, antena) foram gerados de novo pelo script, comparados com `git show HEAD` (JSON idêntico; só ruído binário) e restaurados para não poluir o diff. `src/main.ts` e `src/render/scene.ts` foram alterados só para as capturas e restaurados dos backups; `diff` confirmou que voltaram ao estado do HEAD.
+- **Verificação do GLB (Node + three.js):**
+  - Braço: pivô em y = 1,36 m; malha local y = −0,55 a 0. Com rotação de 0,55 rad, o topo continua em y ≈ 1,39 (ombro) e a extremidade desce para z ≈ −0,34. Antes: malha em y 2,17 a 2,72 e pivô em 1,36 (topo longe do pivô).
+  - Perna: pivô em y = 0,80 m; malha local y = −0,80 a 0. O topo fica no quadril e o pé no chão; antes a malha ia de 0,80 a 1,60.
+- **Verificação em jogo (instrumentação temporária, restaurada):** com o jogo rodando, no instante t = 8,08 s, nó do astronauta em y = 0,777. Pivô do braço em y = 2,137 (= 0,777 + 1,36) e topo da caixa em 2,16; pivô da perna em y = 1,577 (= 0,777 + 0,80) e base da caixa em 0,775 (chão). Braços e pernas giram presos aos ombros e quadris.
+- **Captura sequencial:** `seq-sheet.png` com 4 quadros (t = 3, 4, 5 e 6 s), câmera perto do astronauta e balanço forçado só para a captura (restaurado em seguida). A diferença entre quadros se concentra nos membros, abaixo da cabeça. O agente desta sessão não tem entrada de imagem e **não revisou visualmente** o `seq-sheet.png`; a confirmação foi numérica (GLB e posições em jogo). O arquivo está em `.scratch-agent/seq-sheet.png` (fora do commit).
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npx vitest run`: 10 arquivos, 68 testes, todos passando.
+  - `npm run build`: passou (aviso já conhecido de chunk acima de 500 kB).
+  - Blender: `~/tools/blender-5.2.2-linux-x64/blender --background --factory-startup --python assets-src/blender/build_assets.py -- public/models` (6 GLB exportados).
+- **Não verificado:** revisão visual humana do `seq-sheet.png`; caminhada em navegador real com mouse/câmera; captura em celular (mudança só de ativo 3D, sem layout).
+- **Commit:** feito localmente, sem push.
