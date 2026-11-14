@@ -33,8 +33,10 @@ export const PALETTE = {
 export const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = false;
 renderer.shadowMap.type = THREE.PCFShadowMap;
+// O mapa de sombra é redesenhado em quadros alternados (ver main.ts): metade do custo, diferença invisível a 60 fps.
+renderer.shadowMap.autoUpdate = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -66,6 +68,7 @@ export function setQuality(high: boolean): void {
   sun.shadow.mapSize.set(high ? 2048 : 1024, high ? 2048 : 1024);
   sun.shadow.map?.dispose();
   sun.shadow.map = null;
+  renderer.shadowMap.needsUpdate = true;
 }
 
 export function resizeRenderer(): void {
@@ -608,13 +611,16 @@ export function crewWave(i: number, on: boolean): void {
 // ---------- Atualização por quadro ----------
 
 let lastNow = 0;
+const sunDir = new THREE.Vector3();
+const dustOffset = new THREE.Vector3();
+const AXIS_Y = new THREE.Vector3(0, 1, 0);
 
 export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true): RoverView {
   // Sol na direção real (azimute a partir do norte = −z, leste = +x).
   const { az, el } = sampleAt(SUN, state.clock.hour);
   const azRad = THREE.MathUtils.degToRad(az);
   const elRad = THREE.MathUtils.degToRad(el);
-  const dir = new THREE.Vector3(Math.sin(azRad) * Math.cos(elRad), Math.sin(elRad), -Math.cos(azRad) * Math.cos(elRad));
+  const dir = sunDir.set(Math.sin(azRad) * Math.cos(elRad), Math.sin(elRad), -Math.cos(azRad) * Math.cos(elRad));
   sun.position.copy(dir).multiplyScalar(120);
   sun.target.position.set(0, 0, 0);
   sun.intensity = lit ? 3.4 : 0;
@@ -637,11 +643,11 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   const drilling = view.working && view.kind === 'ice' && view.phase === 'operate';
   if (rover.drill) rover.drill.rotation.x += ((drilling ? -0.9 : 0) - rover.drill.rotation.x) * Math.min(1, dt * 4);
   if (view.moving && dt > 0 && Math.random() < 0.7) {
-    const back = new THREE.Vector3(-1.2, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), robot.rotation.y);
+    const back = dustOffset.set(-1.2, 0, 0).applyAxisAngle(AXIS_Y, robot.rotation.y);
     emitDust(robot.position.x + back.x, robot.position.y + 0.25, robot.position.z + back.z, 3, 0.8, 1.2);
   }
   if (drilling && dt > 0 && Math.random() < 0.8) {
-    const front = new THREE.Vector3(1.6, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), robot.rotation.y);
+    const front = dustOffset.set(1.6, 0, 0).applyAxisAngle(AXIS_Y, robot.rotation.y);
     emitDust(robot.position.x + front.x, robot.position.y + 0.1, robot.position.z + front.z, 4, 1.1, 1.8);
   }
   updateDust(dt);

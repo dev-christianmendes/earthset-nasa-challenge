@@ -206,7 +206,10 @@ const rockMat = new THREE.MeshStandardMaterial({ color: 0x8a8d93, roughness: 0.9
 const ROCK_COUNT = 140;
 const rocks: THREE.InstancedMesh[] = [];
 function scatterRocks(geos: THREE.BufferGeometry[], material: THREE.Material): void {
-  for (const r of rocks) base.remove(r);
+  for (const r of rocks) {
+    base.remove(r);
+    r.dispose();
+  }
   rocks.length = 0;
   const rand = seeded(20241009);
   const per = Math.ceil(ROCK_COUNT / geos.length);
@@ -321,7 +324,11 @@ for (const x of [-5, 5]) {
 /** Painéis guardados no depósito (caixas): um por painel ainda não instalado. */
 const storedCrates: THREE.Object3D[] = [];
 function buildStoredCrates(source: THREE.Object3D | null): void {
-  for (const c of storedCrates) storage.remove(c);
+  for (const c of storedCrates) {
+    storage.remove(c);
+    // Só as caixas provisórias têm geometria própria; os clones do modelo compartilham a da fonte.
+    if (c instanceof THREE.Mesh) c.geometry.dispose();
+  }
   storedCrates.length = 0;
   for (let i = 0; i < MAX_PANELS; i++) {
     const crate = source ? source.clone(true) : box(1.1, 0.5, 1.6, mat(0x3f6fb0, { metalness: 0.3 }));

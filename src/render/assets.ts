@@ -30,6 +30,20 @@ export function loadModel(name: string): Promise<THREE.Object3D> {
   return pending;
 }
 
+const TINY_SHADOW_SIZE = 0.3;
+const tinyBox = new THREE.Box3();
+const tinySize = new THREE.Vector3();
+
+/** Peças menores que ~30 cm param de projetar sombra: o ganho é desenho, a perda visual é imperceptível. */
+export function pruneTinyShadows(root: THREE.Object3D): void {
+  root.updateMatrixWorld(true);
+  root.traverse((node) => {
+    if (!(node instanceof THREE.Mesh) || !node.castShadow) return;
+    tinyBox.setFromObject(node).getSize(tinySize);
+    if (Math.max(tinySize.x, tinySize.y, tinySize.z) < TINY_SHADOW_SIZE) node.castShadow = false;
+  });
+}
+
 /**
  * Adiciona uma cópia do modelo ao grupo e esconde os objetos provisórios que ele substitui.
  * Devolve o nó do modelo, para o chamador ligar animações ou materiais por nome.
@@ -41,6 +55,7 @@ export async function attachModel(group: THREE.Object3D, name: string): Promise<
     node.castShadow = true;
     node.receiveShadow = true;
   });
+  pruneTinyShadows(model);
   const provisional = [...group.children];
   group.add(model);
   for (const child of provisional) child.visible = false;

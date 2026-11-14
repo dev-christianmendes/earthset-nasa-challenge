@@ -270,6 +270,8 @@ window.addEventListener('keydown', (event) => {
 
 let last: number | null = null;
 let radiationBefore = false;
+let shadowTick = 0;
+let lastFrameAt = 0;
 
 function frame(now: number): void {
   perfTick(now);
@@ -309,6 +311,9 @@ function frame(now: number): void {
     setTool(null);
     showScreen('end');
   }
+  // Sombras em quadros alternados; a cada quadro quando o jogo já está lento (abaixo de ~30 fps).
+  renderer.shadowMap.needsUpdate = (shadowTick++ & 1) === 0 || now - lastFrameAt > -1;
+  lastFrameAt = now;
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -356,14 +361,20 @@ if (perfEl) {
 }
 let perfFrames = 0;
 let perfSince = 0;
+let perfMin = Infinity;
+let perfMax = 0;
 function perfTick(now: number): void {
   if (!perfEl) return;
   perfFrames++;
+  perfMin = Math.min(perfMin, renderer.info.render.calls);
+  perfMax = Math.max(perfMax, renderer.info.render.calls);
   if (perfSince === 0) perfSince = now;
   if (now - perfSince >= 1000) {
     const mem = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
-    perfEl.textContent = `${Math.round((perfFrames * 1000) / (now - perfSince))} fps · ${renderer.info.render.calls} draws · ${renderer.info.render.triangles} tris${mem ? ` · ${Math.round(mem.usedJSHeapSize / 1048576)} MB` : ''}`;
+    perfEl.textContent = `${Math.round((perfFrames * 1000) / (now - perfSince))} fps · ${perfMin}-${perfMax} draws · ${renderer.info.render.triangles} tris${mem ? ` · ${Math.round(mem.usedJSHeapSize / 1048576)} MB` : ''}`;
     perfFrames = 0;
+    perfMin = Infinity;
+    perfMax = 0;
     perfSince = now;
   }
 }
