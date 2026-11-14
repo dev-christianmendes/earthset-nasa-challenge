@@ -100,3 +100,15 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Motivo:** o envio foi autorizado pelo autor e feito em 14/11/2026; o histórico foi revisado e reescrito para retirar menções ao protótipo.
 - **Comandos:** commit `docs(backlog): marca B0.6 como feito` e `git push origin main` (sem erros).
 - **Pendências:** nenhuma em B0.6.
+
+## 2026-11-14 · B3.2 enquadramento no celular
+
+- **Arquivos alterados:** `src/main.ts` (função `frameForViewport`: em tela até 700 px, `setViewOffset` sobe a cena 22% da altura; chamada no início e no redimensionamento), `index.html` (HUD no celular com `max-height: 46vh`, antes 58vh), `docs/backlog.md` (B3.2 marcado).
+- **Problema:** no celular de 390×844, o HUD cobria a base, que ficava no centro da tela.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npm run test`: 6 arquivos, 49 testes, todos passaram.
+  - `npm run build`: passou.
+  - Chrome headless em `http://localhost:5180/` (servidor Vite iniciado nesta etapa): celular antes e depois; depois, a base aparece acima do HUD.
+  - Desktop: o código não aplica deslocamento acima de 700 px (`clearViewOffset`). A captura de desktop não ficou idêntica byte a byte à anterior, mas a cena tem animação de Sol e hora, então a diferença de pixel não prova mudança. Não verifiquei por pixel.
+- **Pendências:** B3.3 (visual), B3.4 (modo escola).

@@ -138,6 +138,17 @@ camera.position.set(2, 17, 30);
 // Olha um pouco à esquerda: a base aparece à direita do painel de HUD.
 camera.lookAt(-8, 1, 0);
 
+// Em tela estreita o HUD ocupa a parte de baixo: a cena sobe para a base ficar visível acima dele.
+function frameForViewport(): void {
+  if (window.innerWidth <= 700) {
+    const shift = window.innerHeight * 0.22;
+    camera.setViewOffset(window.innerWidth, window.innerHeight, 0, shift, window.innerWidth, window.innerHeight);
+  } else {
+    camera.clearViewOffset();
+  }
+}
+frameForViewport();
+
 // Relevo ilustrativo: chão com ondulação suave e crateras escuras.
 const groundGeo = new THREE.PlaneGeometry(120, 120, 120, 120);
 const pos = groundGeo.attributes.position as THREE.BufferAttribute;
@@ -368,6 +379,7 @@ function frame(now: number): void {
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  frameForViewport();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
