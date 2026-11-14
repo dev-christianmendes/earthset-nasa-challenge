@@ -8,6 +8,7 @@ Projeto: **Earthset · Base no polo sul da Lua**, NASA Space Apps Challenge 2026
 |---|---|---|
 | **Claude Code** (CLI da Anthropic) | Agente de código e documentação neste repositório. Lê `CLAUDE.md`, que importa `AGENTS.md`. | **Pendente** de confirmação pelo autor. Na sessão de 14/11/2026 apareceu `claude-haiku-5-5`. |
 | **GitHub Copilot** (VS Code) | Agente e completação de código. Lê `.github/copilot-instructions.md`. | **Pendente** de confirmação pelo autor. |
+| **opencode** (CLI, opencode.ai) | Agente de código neste repositório, executado por `opencode run` a partir de `docs/PLANO_PARA_AGENTE.md`. Lê `AGENTS.md` e os documentos de `docs/`. | **Pendente** de confirmação pelo autor (provedor e modelo ainda não registrados). Commits com `Co-Authored-By: opencode`. |
 
 Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes.
 

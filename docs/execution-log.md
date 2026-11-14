@@ -363,3 +363,10 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - Blender: `~/tools/blender-5.2.2-linux-x64/blender --background --factory-startup --python assets-src/blender/build_assets.py -- public/models` (6 GLB exportados).
 - **Não verificado:** revisão visual humana do `seq-sheet.png`; caminhada em navegador real com mouse/câmera; captura em celular (mudança só de ativo 3D, sem layout).
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · Verificação da T1 (opencode) e declaração de ferramenta
+
+- **T1 verificada:** commit `d1d0595` (correção da articulação do astronauta). Typecheck passou; `npx vitest run`: 68 testes, OK; `npm run build` passou. Árvore de trabalho limpa.
+- **Declaração:** `opencode` foi usado como agente de código e não estava em `AI_DISCLOSURE.md`. Pela regra do projeto, ferramenta nova só entra após declaração. Acrescentado à tabela com modelo e provedor **pendentes** de confirmação do autor.
+- **Ressalva registrada pelo opencode:** a revisão visual do `seq-sheet.png` não foi feita por ele; a confirmação foi numérica (nós e pivôs). Vale uma captura revisada por um humano ou por este agente antes da demo.
+- **Commit:** feito localmente, sem push.
