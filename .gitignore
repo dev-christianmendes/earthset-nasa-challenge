@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+# Rasters e dados brutos grandes: nunca no git (ver data-pipeline/raw/README.md quando existir)
+*.tif
+*.TIF
+*.img
+*.IMG
+.pytest_cache/
+__pycache__/
+*.pyc
