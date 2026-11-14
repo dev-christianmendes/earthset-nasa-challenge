@@ -395,3 +395,15 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** a animação de correr para a escotilha em movimento (só o código); o equilíbrio da partida com a penalidade ativa (o teste de partida passa, mas a exposição real no cenário não foi medida).
 - **Commit:** feito localmente, sem push.
 
+## 2026-11-14 · T3: marcador do gelo visível fora do rover
+
+- **Problema:** o poliedro azul do gelo não aparecia claramente; ficava sobreposto ao rover no local.
+- **Causa:** `iceMarker.position` recebia apenas `y`; `x` e `z` continuavam em zero, então o marcador ficava na origem do mundo, dentro do habitat. Além disso, o deslocamento inicial em relação ao rover era pequeno e caía quase no mesmo ponto da tela na câmera padrão.
+- **Correção em `src/render/scene.ts`:** `ICE_MARKER_OFFSET = { x: 3.0, z: -3.0 }` (marcador ao lado do rover, a 4,2 m do centro do local) e altura base de 2,5 m acima do terreno; material com `emissiveIntensity: 1.0` e `opacity: 0.9`. O marcador continua aparecendo só enquanto há tarefa de gelo na fila.
+- **Verificação por projeção (câmera padrão `(2, 17, 30)` → `(-8, 1, 0)`):** rover em NDC `(-0,114, 0,315)` e marcador em `(-0,016, 0,425)`; separação de ~94 px em 1280×800. Os dois ficam dentro do frustum e fora do painel lateral do HUD.
+- **Captura local:** `final-default-8000.png` (1280×800), com tarefa de gelo na fila (`hoursLeft = 3`, rover no local), câmera padrão e tela inicial escondida. Análise de pixels: aglomerado ciano do marcador na caixa `(609..641, 219..249)`, centróide ~`(625, 234)`; aglomerado âmbar do rover na caixa `(556..581, 229..273)`, centróide ~`(575, 261)`; as caixas não se sobrepõem. O agente desta sessão não tem entrada de imagem; a confirmação foi numérica/pixel, não visual.
+- **Limitação:** a captura usou ajustes temporários em `src/main.ts` (tarefa de gelo, `started/paused`, título escondido), restaurados em seguida. A sessão concorrente já corrigiu o incidente de ajustes temporários no commit `73e72fd` e incluiu a mudança de cena da T3 no commit `76a8a34`; esta entrada registra a verificação e a atualização dos documentos. A captura em celular do estado final não foi refeita porque o `main.ts` foi restaurado pela sessão concorrente antes da segunda captura; a mudança é só de cena 3D, sem alteração de layout.
+- **Comandos e resultados:** `npm run typecheck` passou; `npx vitest run`: 11 arquivos, 76 testes, todos passando; `npm run build` passou (aviso já conhecido de chunk acima de 500 kB).
+- **Arquivos de documento alterados:** `docs/INTERACTION_MAP.md` (marcador do gelo e lista de lacunas), `docs/PLANO_PARA_AGENTE.md` (T3 marcada como feita) e este `docs/execution-log.md`.
+- **Commit:** feito localmente, sem push.
+

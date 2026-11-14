@@ -39,7 +39,7 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 
 | Componente | O jogador faz | Motor muda | Cena mostra | Lacunas |
 |---|---|---|---|---|
-| Gelo (local do gelo) | pede Gelo | tarefa de gelo; +12 de água | marcador azul no local, enquanto houver tarefa de gelo na fila | **não verificado visualmente** nesta etapa (não apareceu na captura); local ilustrativo: o gelo não é medido no recorte |
+| Gelo (local do gelo) | pede Gelo | tarefa de gelo; +12 de água | marcador azul ao lado do rover (deslocado 3 m em x e −3 m em z), visível enquanto houver tarefa de gelo na fila | local ilustrativo: o gelo não é medido no recorte; conferido por projeção e captura local (fora do commit) |
 | Painel (local dos painéis) | pede Painel | +1 painel | o rover vai ao local perto dos painéis | sem marcador próprio |
 | Antena (local da antena) | pede Antena | antena instalada | o rover vai ao local perto da base | sem marcador próprio |
 
@@ -65,7 +65,6 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 ## Bugs e lacunas que a fidelidade exige (prioridade)
 
 1. Antena instalada não tem efeito no jogo.
-2. Marcador do gelo não verificado na tela (fica sobreposto ao rover no local).
-3. Sem itens coletáveis de verdade; o gelo é só uma tarefa.
-4. Astronautas sem tarefas próprias (coleta, reparo) e sem nome.
-5. Sem animação de implantação do painel e da antena.
+2. Sem itens coletáveis de verdade; o gelo é só uma tarefa.
+3. Astronautas sem tarefas próprias (coleta, reparo) e sem nome.
+4. Sem animação de implantação do painel e da antena.

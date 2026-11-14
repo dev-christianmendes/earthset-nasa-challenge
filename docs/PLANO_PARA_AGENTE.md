@@ -104,7 +104,7 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 ### T2. Tarefas próprias dos astronautas: **revogada (D-02)**
 - O autor pediu todas as tarefas. Ver D-05 a D-08 em `docs/DECISOES.md` e as tarefas T11 a T14 abaixo.
 
-### T3. Marcador do gelo visível
+### T3. Marcador do gelo visível — **feita**
 - **Problema:** o poliedro azul no local do gelo não aparece claramente (fica sobreposto ao rover).
 - **Arquivos:** `src/render/scene.ts` (`iceMarker`, `SITE.ice`).
 - **Aceite:** captura com tarefa de gelo na fila, em que o marcador esteja visível fora do rover (ajustar posição do marcador ou tamanho).
@@ -162,7 +162,6 @@ Regra antiga, mantida:
 ## 8. Problemas conhecidos (para não confundir com trabalho novo)
 
 - Animação dos braços em um quadro parece solta (T1).
-- Marcador do gelo pouco visível (T3).
 - Cancelar tarefa reinicia o trajeto do rover a partir de onde ele está (andando de volta); não é teletransporte, mas não foi medido em tela.
 - Sem pausa com teclado verificada em navegador real.
 - O rover aparece rodando as rodas ao voltar; verificar se o movimento fica natural.
