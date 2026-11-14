@@ -526,5 +526,5 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Sol:** disco e halo na direção calculada pela tabela JPL, visíveis só quando a luz chega à base (regra `lit`). Posição conferida contra a tabela JPL no código; conferência visual com o Sol aceso ainda pendente no computador do autor.
 - **Terra:** textura Blue Marble (NASA, domínio público; `public/textures/earth/`, com LICENSE.txt). Verificado com a câmera apontada para ela. Fora do enquadramento padrão (39° do centro), como na posição real.
 - **Verificação:** typecheck, 93 testes e build passam. Os ajustes temporários de tela foram feitos com backup e restaurados, conferidos com cmp.
-- **Commit:** não feito, por falta de pedido explícito.
+- **Commit:** feito em `fb471e4` (tela) e `3ddc8fb` (assets). Enviado ao GitHub (`main`) em 14/11/2026, com CI verde em `3ddc8fb`.
 
