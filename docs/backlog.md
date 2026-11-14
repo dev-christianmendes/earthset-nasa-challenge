@@ -30,7 +30,7 @@ Plano do projeto novo, do zero. Prazo de envio: **15/11/2026, 23h59**, horário 
 
 - [~] **B3.1** HUD com recursos, hora, fila do robô, estufa, painéis e fim de partida, ligado ao motor (`src/main.ts`, `index.html`). **Falta:** alertas (ar, água e bateria baixos), textos em inglês e revisão de copy.
 - [x] **B3.2** Print em desktop e celular revisado; nenhum texto cortado. Feito: em tela até 700 px, a câmera sobe 22% da altura e o HUD ocupa até 46% da altura, então a base aparece acima do painel (`src/main.ts`, `index.html`). Print de celular conferido; print de desktop comparado com o anterior (ver registro).
-- [ ] **B3.3** Visual "lindo" para a banca: céu, relevo com textura, base com modelos próprios, animação do robô e do Sol, e paleta consistente. **Hoje a cena é básica**: chão cinza com ondulação, crateras e volumes simples. Não declarar pronto antes de revisão visual com screenshots.
+- [ ] **B3.3** Visual "lindo" para a banca: céu, relevo com textura, base com modelos próprios, animação do robô e do Sol, e paleta consistente. **Parcial:** chão com textura de regolito ilustrativa (canvas) e robô com modelo próprio (corpo, esteiras, antena com luz que pisca enquanto trabalha). **Falta:** céu, modelos da base, paleta. **Não declarar pronto:** a revisão visual das capturas não foi feita, porque a leitura de imagem estava bloqueada nesta sessão.
 - [ ] **B3.4** Modo leve para escola (texto curto, sem termos técnicos) e explicações educativas ao lado de cada recurso (o que é, por que cai, de onde vem o dado).
 
 ## Bloco 4 · Envio (15/11, até 12h)

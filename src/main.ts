@@ -159,9 +159,31 @@ for (let i = 0; i < pos.count; i++) {
   pos.setZ(i, bump);
 }
 groundGeo.computeVertexNormals();
+// Textura de regolito ilustrativa: grão aleatório gerado em canvas, repetido sobre o chão.
+function regolithTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#a3a6b0';
+    ctx.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 2600; i++) {
+      const shade = Math.random() < 0.5 ? 0 : 255;
+      ctx.fillStyle = `rgba(${shade},${shade},${shade},${(Math.random() * 0.18).toFixed(3)})`;
+      ctx.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(14, 14);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
 const ground = new THREE.Mesh(
   groundGeo,
-  new THREE.MeshStandardMaterial({ color: 0xa3a6b0, roughness: 1, metalness: 0 }),
+  new THREE.MeshStandardMaterial({ color: 0xffffff, map: regolithTexture(), roughness: 1, metalness: 0 }),
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -253,11 +275,32 @@ for (let i = 0; i < MAX_PANELS; i++) {
   panelMeshes.push(panel);
 }
 
-const robot = new THREE.Mesh(
-  new THREE.BoxGeometry(0.9, 0.6, 0.9),
-  new THREE.MeshStandardMaterial({ color: 0xffc857, emissive: 0x402800, roughness: 0.4 }),
+// Robô de coleta: corpo, duas esteiras, antena com luz de status. Modelo ilustrativo.
+const robot = new THREE.Group();
+const robotBodyMat = new THREE.MeshStandardMaterial({ color: 0xffc857, emissive: 0x402800, roughness: 0.4 });
+const robotBody = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.4, 0.8), robotBodyMat);
+robotBody.position.y = 0.35;
+robotBody.castShadow = true;
+robot.add(robotBody);
+const trackMat = new THREE.MeshStandardMaterial({ color: 0x2a2c33, roughness: 0.9 });
+for (const z of [-0.5, 0.5]) {
+  const track = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.22, 0.18), trackMat);
+  track.position.set(0, 0.11, z);
+  track.castShadow = true;
+  robot.add(track);
+}
+const mast = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8),
+  new THREE.MeshStandardMaterial({ color: 0xdfe4ec, metalness: 0.4, roughness: 0.4 }),
 );
-robot.castShadow = true;
+mast.position.set(0.3, 0.8, 0);
+robot.add(mast);
+const beacon = new THREE.Mesh(
+  new THREE.SphereGeometry(0.08, 12, 8),
+  new THREE.MeshStandardMaterial({ color: 0x7fd7ff, emissive: 0x7fd7ff, emissiveIntensity: 1.5 }),
+);
+beacon.position.set(0.3, 1.1, 0);
+robot.add(beacon);
 scene.add(robot);
 
 // ---------- Atualização por quadro ----------
@@ -291,12 +334,14 @@ function updateScene(hour: number, now: number): void {
   const t = now / 1000;
   if (working) {
     const a = t * 0.8;
-    robot.position.set(Math.cos(a) * 9, 0.3, Math.sin(a) * 6 + 2);
+    // Leve balanço ao andar; a luz do corpo acende e a antena pisca.
+    robot.position.set(Math.cos(a) * 9, 0.3 + Math.abs(Math.sin(t * 6)) * 0.04, Math.sin(a) * 6 + 2);
     robot.rotation.y = -a;
   } else {
     robot.position.set(9, 0.3, 4);
   }
-  (robot.material as THREE.MeshStandardMaterial).emissiveIntensity = working ? 1 : 0.2;
+  robotBodyMat.emissiveIntensity = working ? 1 : 0.2;
+  beacon.visible = !working || Math.sin(t * 4) > -0.2;
 }
 
 // ---------- HUD ----------
