@@ -145,56 +145,90 @@ def export(objects, filename: str) -> None:
     print("EXPORTED", path, os.path.getsize(path))
 
 
-# ---------- Habitat: casco arredondado com faixa de cor, tampas, escotilha e janelas ----------
+# ---------- Habitat: casco modular com cúpulas, anéis, faixa, escotilha, janelas e radiadores ----------
 def build_habitat() -> None:
     clear_scene()
     white = material("habitat_white", HABITAT_WHITE, metallic=0.2, rough=0.45)
     teal = material("habitat_teal", LIFE_TEAL, rough=0.35)
     dark = material("hatch_dark", HATCH_DARK, rough=0.6)
+    seam = material("seam_metal", LUNAR_GRAY, metallic=0.6, rough=0.4)
     glass = material("window_glow", WATER_BLUE, rough=0.2, emission=WATER_BLUE, emission_strength=2.0)
+    cell = material("radiator_cell", PANEL_BLUE, metallic=0.5, rough=0.25)
+    parts = []
 
+    # Casco principal: eixo X, centro na origem, raio 2,2 m, comprimento 6 m.
     hull = add("cylinder", "habitat_hull", rotation=(0, math.radians(90), 0), scale=(2.2, 2.2, 6.0))
     bpy.ops.object.transform_apply(scale=True)
     bevel(hull, 0.15, 3)
     paint(hull, white)
-    parts = [hull]
+    parts.append(hull)
 
-    for x, label in ((-3.02, "cap_neg"), (3.02, "cap_pos")):
-        cap = add("cylinder", label, location=(x, 0, 0), rotation=(0, math.radians(90), 0), scale=(2.25, 2.25, 0.06))
+    # Cúpulas nas extremidades (não tampas chatas): meias-esferas apontando para fora.
+    import mathutils
+
+    for x, rot in ((3.0, math.radians(90)), (-3.0, math.radians(-90))):
+        dome = half_dome(2.2, f"dome_{x:+.0f}", location=(0, 0, 0), upper=True)
+        # Gira só a malha (a cúpula aponta para o eixo X) e só depois coloca o objeto na extremidade.
+        dome.data.transform(mathutils.Matrix.Rotation(rot, 4, "Y"))
+        dome.location = (x, 0, 0)
+        paint(dome, white)
+        parts.append(dome)
+
+    # Anéis de costura (ribs) a cada 2 m: leitura de módulo pressurizado.
+    for x in (-2.0, 0.0, 2.0):
+        ring = add("cylinder", f"seam_{x:+.0f}", location=(x, 0, 0), rotation=(0, math.radians(90), 0),
+                   scale=(2.27, 2.27, 0.12))
         bpy.ops.object.transform_apply(scale=True)
-        bevel(cap, 0.02, 2)
-        paint(cap, teal)
-        parts.append(cap)
+        paint(ring, seam)
+        parts.append(ring)
 
-    band = add("cylinder", "habitat_band", rotation=(0, math.radians(90), 0), scale=(2.23, 2.23, 0.3))
+    # Faixa de cor central (teal) e tampas de costura.
+    band = add("cylinder", "habitat_band", rotation=(0, math.radians(90), 0), scale=(2.24, 2.24, 0.5))
     bpy.ops.object.transform_apply(scale=True)
     paint(band, teal)
     parts.append(band)
 
-    # Escotilha: na frente (eixo -Y do Blender = +Z do three.js), na altura do centro.
-    hatch = add("cube", "hatch", location=(0, -2.25, -0.6), scale=(1.2, 0.3, 1.6))
+    # Escotilha na frente (-Y do Blender = +Z do three.js) com moldura metálica.
+    frame = add("cube", "hatch_frame", location=(0, -2.24, -0.6), scale=(1.5, 0.22, 1.9))
+    bpy.ops.object.transform_apply(scale=True)
+    bevel(frame, 0.06, 2)
+    paint(frame, seam)
+    parts.append(frame)
+    hatch = add("cube", "hatch", location=(0, -2.27, -0.6), scale=(1.2, 0.3, 1.6))
     bpy.ops.object.transform_apply(scale=True)
     bevel(hatch, 0.05, 2)
     paint(hatch, dark)
     parts.append(hatch)
 
+    # Janelas emissivas: três na frente, três na traseira.
     for i, x in enumerate((-1.6, 0.0, 1.6)):
-        win = add("cube", f"window_{i}", location=(x, -2.22, 0.9), scale=(0.9, 0.04, 0.56))
+        for side, y in (("f", -2.22), ("b", 2.22)):
+            win = add("cube", f"window_{side}{i}", location=(x, y, 0.9), scale=(0.9, 0.04, 0.56))
+            bpy.ops.object.transform_apply(scale=True)
+            paint(win, glass)
+            parts.append(win)
+
+    # Radiadores no teto: placas com células azuis.
+    for x in (-2.0, 0.0, 2.0):
+        plate = add("cube", f"radiator_{x:+.0f}", location=(x, 0, 2.36), scale=(1.5, 1.2, 0.06))
         bpy.ops.object.transform_apply(scale=True)
-        paint(win, glass)
-        parts.append(win)
+        bevel(plate, 0.02, 1)
+        paint(plate, cell)
+        parts.append(plate)
 
     export(parts, "habitat.glb")
 
 
-# ---------- Rover: chassi arredondado, rodas que giram, mastro com câmera e farol ----------
+# ---------- Rover: chassi, sensores, painel no topo, rodas com cubo; rodas giram ----------
 def build_rover() -> None:
     clear_scene()
     body_mat = material("rover_amber", SOLAR_AMBER, metallic=0.1, rough=0.4)
     dark = material("rover_track", HATCH_DARK, rough=0.85)
+    hub_mat = material("rover_hub", LUNAR_GRAY, metallic=0.6, rough=0.3)
     mast_mat = material("rover_mast", HABITAT_WHITE, metallic=0.4, rough=0.4)
     beacon = material("rover_beacon", WATER_BLUE, rough=0.2, emission=WATER_BLUE, emission_strength=3.0)
     lens = material("rover_lens", LUNAR_GRAY, metallic=0.6, rough=0.2)
+    cell = material("rover_cell", PANEL_BLUE, metallic=0.5, rough=0.25)
     parts = []
 
     chassis = add("cube", "chassis", location=(0, 0, 0.35), scale=(0.9, 0.8, 0.4))
@@ -203,7 +237,13 @@ def build_rover() -> None:
     paint(chassis, body_mat)
     parts.append(chassis)
 
-    # Rodas: três por lado, eixo ao longo de Y do Blender (Z do three.js). Nome começa com "wheel" para animar.
+    # Painel solar pequeno no topo do chassi.
+    pad = add("cube", "rover_pad", location=(-0.15, 0, 0.6), scale=(0.5, 0.5, 0.03))
+    bpy.ops.object.transform_apply(scale=True)
+    paint(pad, cell)
+    parts.append(pad)
+
+    # Rodas: três por lado, eixo ao longo de Y do Blender (Z do three.js), com cubo metálico.
     for side, by in (("L", 0.5), ("R", -0.5)):
         for i, bx in enumerate((-0.35, 0.0, 0.35)):
             wheel = add("cylinder", f"wheel_{side}{i}", location=(bx, by, 0.11),
@@ -212,7 +252,13 @@ def build_rover() -> None:
             bevel(wheel, 0.02, 2)
             paint(wheel, dark)
             parts.append(wheel)
+            hub = add("cylinder", f"hub_{side}{i}", location=(bx, by + (0.1 if by > 0 else -0.1), 0.11),
+                      rotation=(math.radians(90), 0, 0), scale=(0.05, 0.05, 0.02))
+            bpy.ops.object.transform_apply(scale=True)
+            paint(hub, hub_mat)
+            parts.append(hub)
 
+    # Mastro com câmera (lente) e sensor LIDAR no topo.
     mast = add("cylinder", "mast", location=(0.3, 0, 1.05), scale=(0.03, 0.03, 0.5))
     bpy.ops.object.transform_apply(scale=True)
     paint(mast, mast_mat)
@@ -230,6 +276,11 @@ def build_rover() -> None:
     paint(eye, lens)
     parts.append(eye)
 
+    lidar = add("cylinder", "lidar", location=(-0.2, 0, 0.8), scale=(0.09, 0.09, 0.06))
+    bpy.ops.object.transform_apply(scale=True)
+    paint(lidar, lens)
+    parts.append(lidar)
+
     light = add("sphere", "beacon", location=(0.3, 0, 1.6), scale=(0.08, 0.08, 0.08))
     bpy.ops.object.transform_apply(scale=True)
     paint(light, beacon)
@@ -238,10 +289,11 @@ def build_rover() -> None:
     export(parts, "rover.glb")
 
 
-# ---------- Painel solar: suporte e painel inclinado ----------
+# ---------- Painel solar: suporte, moldura e grade de células; a grade inclina junto ----------
 def build_solar_panel() -> None:
     clear_scene()
     post_mat = material("panel_post", HABITAT_WHITE, metallic=0.4, rough=0.4)
+    frame_mat = material("panel_frame", LUNAR_GRAY, metallic=0.6, rough=0.35)
     cell = material("panel_cell", PANEL_BLUE, metallic=0.5, rough=0.2)
     parts = []
 
@@ -250,30 +302,56 @@ def build_solar_panel() -> None:
     paint(post, post_mat)
     parts.append(post)
 
-    panel = add("cube", "panel", location=(0, 0, 1.2), rotation=(math.radians(-26), 0, 0),
-                scale=(1.6, 1.1, 0.08))
+    # Painel inteiro montado em torno do pivô (0, 0, 1,2); depois a união gira como um bloco.
+    group = []
+    frame = add("cube", "panel_frame", location=(0, 0, 1.2), scale=(1.66, 1.16, 0.06))
     bpy.ops.object.transform_apply(scale=True)
-    bevel(panel, 0.015, 1)
-    paint(panel, cell)
+    paint(frame, frame_mat)
+    group.append(frame)
+    for ix in range(4):
+        for iy in range(3):
+            x = -0.6 + ix * 0.4
+            y = -0.36 + iy * 0.36
+            c = add("cube", f"cell_{ix}_{iy}", location=(x, y, 1.245), scale=(0.34, 0.3, 0.02))
+            bpy.ops.object.transform_apply(scale=True)
+            paint(c, cell)
+            group.append(c)
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in group:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = group[0]
+    bpy.ops.object.join()
+    panel = bpy.context.active_object
+    panel.name = "panel"
+    bpy.context.scene.cursor.location = (0, 0, 1.2)
+    bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
+    panel.rotation_euler = (math.radians(-26), 0, 0)
     parts.append(panel)
 
     export(parts, "solar_panel.glb")
 
 
-# ---------- Estufa: cúpula translúcida com nervuras ----------
+# ---------- Estufa: cúpula translúcida, nervuras e plantas visíveis dentro ----------
 def build_greenhouse() -> None:
     clear_scene()
     glass = material("greenhouse_glass", GROWTH_GREEN, rough=0.1, alpha=0.35)
     rib_mat = material("greenhouse_rib", HABITAT_WHITE, metallic=0.4, rough=0.4)
+    leaf = material("plant_leaf", GROWTH_GREEN, rough=0.6)
+    soil = material("soil", "#4A3B2C", rough=0.9)
     parts = []
 
     dome = half_dome(2.4, "dome", upper=True)
     paint(dome, glass)
     parts.append(dome)
 
+    base = add("cylinder", "greenhouse_base", location=(0, 0, 0.04), scale=(2.4, 2.4, 0.08))
+    bpy.ops.object.transform_apply(scale=True)
+    paint(base, soil)
+    parts.append(base)
+
     radius = 2.4
-    for i in range(3):
-        phi = math.radians(60 * i)
+    for i in range(4):
+        phi = math.radians(45 * i)
         pts = []
         for k in range(0, 33):
             t = math.pi * k / 32
@@ -283,15 +361,31 @@ def build_greenhouse() -> None:
         paint(rib, rib_mat)
         parts.append(rib)
 
+    # Plantas: folhagem em elipsoides sobre o solo, em duas fileiras.
+    for i in range(10):
+        a = math.radians(36 * i)
+        r = 1.3 if i % 2 == 0 else 1.9
+        plant = add("sphere", f"plant_{i}", location=(r * math.cos(a), r * math.sin(a), 0.35),
+                    scale=(0.28, 0.28, 0.38))
+        bpy.ops.object.transform_apply(scale=True)
+        paint(plant, leaf)
+        parts.append(plant)
+
     export(parts, "greenhouse.glb")
 
 
-# ---------- Antena: mastro e prato parabólico ----------
+# ---------- Antena: base, mastro, prato com aro ----------
 def build_antenna() -> None:
     clear_scene()
     mast_mat = material("antenna_mast", HABITAT_WHITE, metallic=0.4, rough=0.4)
     dish_mat = material("antenna_dish", "#E8ECF2", metallic=0.3, rough=0.35)
+    base_mat = material("antenna_base", LUNAR_GRAY, metallic=0.6, rough=0.35)
     parts = []
+
+    plate = add("cylinder", "antenna_base", location=(0, 0, 0.03), scale=(0.3, 0.3, 0.06))
+    bpy.ops.object.transform_apply(scale=True)
+    paint(plate, base_mat)
+    parts.append(plate)
 
     mast = add("cylinder", "antenna_mast", location=(0, 0, 0.9), scale=(0.06, 0.06, 1.8))
     bpy.ops.object.transform_apply(scale=True)
@@ -305,6 +399,13 @@ def build_antenna() -> None:
     bpy.ops.object.transform_apply(rotation=True)
     paint(dish, dish_mat)
     parts.append(dish)
+
+    rim = add("cylinder", "antenna_rim", location=(0, 0, 1.8), rotation=(math.radians(-35), 0, 0),
+              scale=(0.7, 0.7, 0.03))
+    bpy.ops.object.transform_apply(scale=True)
+    bevel(rim, 0.01, 1)
+    paint(rim, base_mat)
+    parts.append(rim)
 
     export(parts, "antenna.glb")
 
