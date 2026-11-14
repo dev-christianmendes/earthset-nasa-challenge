@@ -1,0 +1,56 @@
+# Regras de recursos (B1)
+
+Origem: especificação de regras do protótipo `~/projects-chris/earthset/docs/domain.md` (seções "Recursos (por hora)" e "Peças e decisões"). **Foram reescritas no código deste projeto**; nenhum código do protótipo foi copiado (ver `AI_DISCLOSURE.md`, seção 2). Todos os números são **ajustáveis** e estão em `src/engine/resources.ts`.
+
+## Recursos por hora
+
+| Recurso | Regra |
+|---|---|
+| Energia | `+ 0,9 × painéis (só com Sol) − (0,8 base + aquecimento + estufa 1,0 + eletrólise 0,6)` |
+| Ar | `−1 × fator da patente`; `+2` com a eletrólise ligada |
+| Água | `−0,2 × fator` − estufa `0,08` − eletrólise `0,4` |
+| Comida | `−0,2 × fator` + `0,38` com a estufa ligada e água acima de zero |
+
+Aquecimento por hora (com Sol / sem Sol): morro 0,5 / 1,3; encosta 0,3 / 0,7; borda 0,2 / 0,5.
+
+Fator da patente: cadete 0,75 · explorador 1 · comandante 1,15.
+
+## Equipamentos automáticos
+
+| Equipamento | Liga quando |
+|---|---|
+| Estufa, modo **sempre** | bateria acima de 10% |
+| Estufa, modo **só com sobra** | bateria acima de 50% |
+| Eletrólise | ar abaixo de 90, com água acima de zero e bateria acima de 5% |
+| Modo economia | bateria abaixo de 40%: estufa desligada; eletrólise só com ar abaixo de 40 |
+
+## Início, limites e corações
+
+- Início: bateria em 80% da capacidade (100), ar 80, água 50, comida 40. Ar, água e comida vão de 0 a 100; bateria de 0 até a capacidade.
+- 3 corações. Perde 1 a cada 6 horas seguidas com energia, ar, água ou comida zerados.
+- Derrota quando os corações chegam a zero. Vitória: chegar a 708 horas com pelo menos 1 coração.
+
+## Robô (B1.4, feito)
+
+Implementado em `src/engine/robot.ts`. Números ajustáveis.
+
+| Item | Regra |
+|---|---|
+| Fila | Até 4 tarefas, executadas na ordem. O tempo que sobra num passo vai para a próxima. |
+| Gelo | 6 h por viagem; `+12` de água ao concluir (teto 100). |
+| Painel | 4 h; `+1` painel ao concluir. Até 12 painéis, contando os da fila. |
+| Antena | 8 h; uma só. Marca `antennaInstalled`. **Ainda sem efeito no jogo** (ligação com a Terra e alertas entram em B2 e B3). |
+| Consumo | `+1,0` de energia por hora **enquanto trabalha**. Não trabalha com bateria zerada. |
+
+**Simplificação:** o consumo e o trabalho são calculados por passo de tempo. Se uma tarefa termina no meio do passo, o efeito vale só no fim do passo. Com passos de 1 h (testes) ou de frações de hora (tela), o erro é pequeno.
+
+**Equilíbrio (simulação em `tests/engine/partida.test.ts`):** a partida da tela começa com 2 painéis e capacidade de armazenamento de **1200**. Com 150 a noite zera a base; com 600 ou 900 e 12 painéis, perde; com 1000, vence com 1 coração; com 1200, vence com 3. Os números são escolhas de jogo, não dados científicos, e devem ser revistos quando o bloco B2 trouxer fluxos reais.
+
+## O que ainda não existe (fica para depois)
+
+- **Frio e aquecimento sem energia como causa de perda de coração** (B1.5).
+- **Efeito da antena** (ligação com a Terra, alertas de DONKI).
+- **Bateria da carga e painéis iniciais da preparação** (escolhidos hoje na tela, não na preparação).
+- **Aquecimento sem energia** e frio como causa de perda de coração.
+- **Tempestades, radiação e abrigo** (dose por hora, cobertura de regolito).
+- **Patentes** (o fator de consumo já existe; textos e números de tela não).
