@@ -471,9 +471,13 @@ function pct(value: number, max: number): number {
   return Math.max(0, Math.min(100, (value / max) * 100));
 }
 
-function setBar(bar: HTMLElement, value: HTMLElement, percent: number, text: string): void {
+/** Abaixo desses valores (em %), o recurso aparece em vermelho no HUD (alerta, B3.1). */
+const LOW_ALERT_PERCENT = { battery: 20, air: 30, water: 20, food: 20 } as const;
+
+function setBar(bar: HTMLElement, value: HTMLElement, percent: number, text: string, low: boolean): void {
   bar.style.width = `${percent.toFixed(1)}%`;
   value.textContent = text;
+  bar.closest('.meter')?.classList.toggle('low', low);
 }
 
 function renderHud(): void {
@@ -482,10 +486,10 @@ function renderHud(): void {
   ui.hearts.textContent = '♥'.repeat(hearts) + '♡'.repeat(Math.max(0, 3 - hearts));
 
   const batteryPct = pct(vitals.battery, installation.batteryCapacity);
-  setBar(ui.batBar, ui.batVal, batteryPct, `${Math.round(batteryPct)}%`);
-  setBar(ui.airBar, ui.airVal, pct(vitals.air, 100), `${Math.round(vitals.air)}`);
-  setBar(ui.waterBar, ui.waterVal, pct(vitals.water, 100), `${Math.round(vitals.water)}`);
-  setBar(ui.foodBar, ui.foodVal, pct(vitals.food, 100), `${Math.round(vitals.food)}`);
+  setBar(ui.batBar, ui.batVal, batteryPct, `${Math.round(batteryPct)}%`, batteryPct < LOW_ALERT_PERCENT.battery);
+  setBar(ui.airBar, ui.airVal, pct(vitals.air, 100), `${Math.round(vitals.air)}`, vitals.air < LOW_ALERT_PERCENT.air);
+  setBar(ui.waterBar, ui.waterVal, pct(vitals.water, 100), `${Math.round(vitals.water)}`, vitals.water < LOW_ALERT_PERCENT.water);
+  setBar(ui.foodBar, ui.foodVal, pct(vitals.food, 100), `${Math.round(vitals.food)}`, vitals.food < LOW_ALERT_PERCENT.food);
 
   ui.panels.textContent = `${installation.panels} de ${MAX_PANELS}`;
   ui.greenhouse.value = installation.greenhouse;

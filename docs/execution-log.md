@@ -160,3 +160,16 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Limite:** com o modo ligado, o HUD fica longo e rola no desktop e no celular. Aceito, porque o modo é opcional. A caixa não lembra a escolha ao recarregar a página.
 - **Commit:** feito localmente, sem push (não foi pedido nesta etapa).
 - **Pendências:** B4 (envio: vídeo ou slides em inglês, referências, declaração de IA em inglês).
+
+## 2026-11-14 · B3.1 alertas de recursos baixos
+
+- **Arquivos alterados:** `src/main.ts` (`LOW_ALERT_PERCENT`, `setBar` marca `.meter.low`), `index.html` (CSS `.meter.low` em vermelho), `docs/backlog.md` (B3.1 com o que falta), esta entrada.
+- **Decisão:** limites de alerta: bateria abaixo de 20%, ar abaixo de 30, água e comida abaixo de 20. São escolhas de tela, não regra do motor.
+- **Textos em inglês:** não entram na interface. A regra 6 de `AGENTS.md` manda a interface em português e o inglês só na página de envio e nos materiais linkados. O item B3.1 ficou com a revisão de copy como falta.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npm run test`: 52 testes, todos passaram.
+  - `npm run build`: passou.
+  - Captura com os limites temporariamente altos (bateria 90, ar 85) para ver o alerta: `desktop-alerta.png`, com bateria e ar em vermelho. Limites originais restaurados e conferidos com grep.
+- **Commit:** feito localmente, sem push.
+- **Pendências:** B3.1 (revisão de copy); B2.3 (LOLA, DONKI, revisão do equilíbrio com o Sol real); B4 só depois de B2.3 e B3.1.
