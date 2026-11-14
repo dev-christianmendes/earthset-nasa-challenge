@@ -101,16 +101,17 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 - **Arquivos:** `assets-src/blender/build_assets.py` (função `limb`, `build_astronaut`), `src/render/scene.ts` (`animateCrew`).
 - **Aceite:** em captura sequencial (câmera perto dos astronautas, `seq-sheet.png` como modelo), braços e pernas balançam presos aos ombros e quadris. Sem braço flutuando.
 
-### T2. Tarefas próprias dos astronautas (opcional; decidir com o autor antes)
-- Hoje só andam. Não implemente sem confirmar o que o astronauta faz no jogo (coleta, reparo) porque isso é regra de jogo (motor).
+### T2. Tarefas próprias dos astronautas: **não fazer** (D-02)
+- Os astronautas continuam só visuais.
 
 ### T3. Marcador do gelo visível
 - **Problema:** o poliedro azul no local do gelo não aparece claramente (fica sobreposto ao rover).
 - **Arquivos:** `src/render/scene.ts` (`iceMarker`, `SITE.ice`).
 - **Aceite:** captura com tarefa de gelo na fila, em que o marcador esteja visível fora do rover (ajustar posição do marcador ou tamanho).
 
-### T4. Antena com efeito no jogo (decisão do autor)
-- O motor não usa `antennaInstalled`. Decisão de jogo: o que a antena faz (ex.: libera mensagens de alerta, ou habilita clima ao vivo). **Não implemente sem o autor decidir.**
+### T4. Antena: aviso antecipado de tempestade (D-01, decidido)
+- **Arquivos:** `src/engine/space-weather.ts` (função pura + teste), `src/ui/hud.ts` (aviso), `src/i18n.ts`, `src/school.ts`.
+- **Aceite:** com antena instalada, o HUD mostra aviso quando há tempestade nas próximas 6 h; sem antena, não mostra. Teste do motor cobre as duas situações. Nenhum recurso muda.
 
 ### T5. Animação de instalação do painel e da antena
 - **Arquivos:** `src/render/scene.ts` (unidades de painel e antena).
@@ -124,7 +125,7 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 - A tela de pausa já foi capturada (`pause-m.png`). Falta confirmar Esc e o botão em execução real (teste com teclado, se possível).
 - **Aceite:** Esc pausa e retoma; "Menu principal" volta à tela inicial com partida nova.
 
-### T8. Câmera seguindo o rover (opcional)
+### T8. Câmera seguindo o rover (D-03, decidido; baixa prioridade)
 - **Arquivos:** `src/render/scene.ts` (`controls.target`).
 - **Aceite:** botão "Seguir robô" que move o alvo da órbita para o rover, com transição suave; "Visão da base" volta.
 
@@ -136,11 +137,12 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 - Vídeo de 30 s ou 7 slides em inglês; referências; declaração de IA em inglês. Ver `docs/event-rules.md`.
 - **Não envie nem publique nada sem pedido explícito.**
 
-## 7. Pontos que só o autor decide (não decida sozinho)
+## 7. Pontos de decisão (decididos em 14/11 com delegação do autor, ver `docs/DECISOES.md`)
 
-- O que a antena faz no jogo (T4).
-- Se astronautas têm tarefas próprias (T2).
-- Se a câmera segue o rover (T8).
+Decididos: antena dá aviso antecipado de tempestade (D-01); astronautas sem tarefas de jogo (D-02); "Seguir robô" como botão opcional (D-03). Continuam **só do autor**: qualquer número de regra de jogo, push e envio.
+
+Regra antiga, mantida:
+
 - Mudança de regra de jogo (capacidade da bateria, limiares, tempos de tarefa). Qualquer número de jogo muda o equilíbrio; reteste com `tests/engine/partida.test.ts`.
 - Qualquer push, publicação, envio de formulário.
 - Trocar o idioma padrão ou a identidade visual.

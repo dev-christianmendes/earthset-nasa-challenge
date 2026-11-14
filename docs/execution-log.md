@@ -337,3 +337,11 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Sequência:** `seq-sheet.png`, 4 quadros (1 a 1,5 s de intervalo), câmera aproximada e ajuste temporário desfeito (confirmado com `diff`). No primeiro quadro, braços e pernas do astronauta estão balançando: a animação funciona. Nos outros três, ele está parado. A articulação dos braços parece solta do corpo nesse quadro: problema visual registrado para correção (T1 no plano).
 - **Plano para outra IA:** `docs/PLANO_PARA_AGENTE.md`, com regras, comandos, mapa do código, o que já está feito, tarefas em ordem com critério de aceite e os pontos que só o autor decide.
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · Decisões de escopo delegadas pelo autor
+
+- Autor: "pode decidir". Registro em `docs/DECISOES.md`: D-01 antena dá aviso antecipado de tempestade (6 h), sem mudar recursos; D-02 astronautas sem tarefas de jogo; D-03 "Seguir robô" como botão opcional; D-04 números de jogo, idioma e push inalterados.
+- `docs/PLANO_PARA_AGENTE.md` atualizado (seção 7 e tarefas T2, T4, T8).
+- Nenhum código de jogo foi alterado nesta etapa: só decisões e documentação.
+- **Commit:** feito localmente, sem push.
+
