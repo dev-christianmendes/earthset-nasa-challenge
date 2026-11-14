@@ -99,6 +99,10 @@ export function lumaEvents(prev: GameState, next: GameState, radiationBefore = f
   for (const kind of KINDS) {
     if (next.missionsDone[kind] > prev.missionsDone[kind]) push(`done-${kind}`, `luma.event.done.${kind}`, 'info', null);
   }
+  for (const kind of ['inspect', 'harvest', 'maintain'] as const) {
+    if (next.agentTasksDone[kind] > prev.agentTasksDone[kind]) push(`agent-${kind}`, `luma.event.agent.${kind}`, 'info', null);
+  }
+  if (prev.crop.growth < 100 && next.crop.growth >= 100) push('crop-ready', 'luma.event.cropReady', 'info', null);
   const a = prev.robot.queue[0];
   const b = next.robot.queue[0];
   if (a && b && a.kind === b.kind && missionPhase(a) !== 'return' && missionPhase(b) === 'return') {

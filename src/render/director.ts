@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { camera, controls, crewObject, robot } from './scene';
 import { FOCUS } from './base-layout';
 
-export type Shot = 'overview' | 'crew' | 'rover' | 'ice' | 'energy' | 'antenna' | 'showcase';
+export type Shot = 'overview' | 'crew' | 'crew1' | 'rover' | 'ice' | 'energy' | 'antenna' | 'greenhouse' | 'habitat' | 'logistics' | 'showcase';
 
 interface Tween {
   fromPos: THREE.Vector3;
@@ -45,6 +45,17 @@ function shotFor(name: Shot): { pos: THREE.Vector3; target: THREE.Vector3; follo
       const target = obj ? obj.position.clone().add(new THREE.Vector3(0, 1.1, 0)) : FOCUS.habitat.clone();
       return { pos: target.clone().add(new THREE.Vector3(3.6, 1.6, 4.4)), target, follow: obj };
     }
+    case 'crew1': {
+      const obj = crewObject(1);
+      const target = obj ? obj.position.clone().add(new THREE.Vector3(0, 1.1, 0)) : FOCUS.habitat.clone();
+      return { pos: target.clone().add(new THREE.Vector3(3.6, 1.6, 4.4)), target, follow: obj };
+    }
+    case 'greenhouse':
+      return { pos: FOCUS.greenhouse.clone().add(new THREE.Vector3(9, 6, 10)), target: FOCUS.greenhouse.clone(), follow: null };
+    case 'habitat':
+      return { pos: FOCUS.habitat.clone().add(new THREE.Vector3(13, 7, 15)), target: FOCUS.habitat.clone(), follow: null };
+    case 'logistics':
+      return { pos: FOCUS.logistics.clone().add(new THREE.Vector3(9, 6, 11)), target: FOCUS.logistics.clone(), follow: null };
     case 'rover': {
       const target = robot.position.clone().add(new THREE.Vector3(0, 1, 0));
       return { pos: target.clone().add(new THREE.Vector3(7, 4.5, 8)), target, follow: robot };

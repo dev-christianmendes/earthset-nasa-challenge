@@ -343,3 +343,28 @@ button.ghost { background: transparent; }
   #story-chapters { grid-template-columns: 1fr; }
   #story-chapters li:last-child { grid-column: auto; }
 }
+
+/* Painel contextual (D-18) */
+.ctx { z-index: 6; width: 340px; bottom: auto; max-height: calc(100vh - 200px); }
+.ctx-head-actions { display: flex; gap: 6px; }
+.ctx-bar { height: 6px; border-radius: 4px; background: rgba(190, 215, 255, 0.12); overflow: hidden; margin: 6px 0 10px; }
+.ctx-bar i { display: block; height: 100%; width: 0; background: var(--life-teal); transition: width 0.12s linear; }
+.ctx-bar.green i { background: var(--growth-green); }
+.ctx-bar.amber i { background: var(--solar-amber); }
+.ctx-bar.coral i { background: var(--alert-coral); }
+.ctx-cares { display: grid; gap: 10px; }
+.ctx-care-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.ctx-hint { display: block; color: var(--dim); font-size: 11px; margin-top: 4px; }
+.ctx-tasks { display: grid; gap: 6px; }
+.ctx-task { display: grid; gap: 2px; text-align: left; padding: 9px 12px; }
+.ctx-task small { color: inherit; opacity: 0.75; font-size: 11px; }
+.ctx-task em { font-style: normal; font-size: 11px; color: var(--solar-amber); }
+.ctx-task:disabled { opacity: 0.7; }
+.ctx-progress { margin-top: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.ctx-progress[hidden] { display: none; }
+.ctx-progress-line { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; }
+.ctx-progress-line button { font-size: 11px; padding: 4px 8px; }
+.ctx-link { margin-top: 10px; width: 100%; font-size: 12px; }
+@media (max-width: 760px) {
+  .ctx { left: 8px; right: 8px; width: auto; top: auto; bottom: 84px; max-height: 52vh; }
+}

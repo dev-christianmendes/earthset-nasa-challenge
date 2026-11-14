@@ -45,6 +45,18 @@ function planHour(g: GameState): GameState {
   return s;
 }
 
+/** O plano de referência mais o cuidado da estufa: colhe quando pronta e faz manutenção com desgaste alto. */
+function planWithCrew(g: GameState): GameState {
+  let s = planHour(g);
+  const order = (kind: 'harvest' | 'maintain'): void => {
+    const r = dispatch(s, { type: 'ASSIGN_AGENT_TASK', kind });
+    if (r.ok) s = r.state;
+  };
+  if (s.crop.growth >= 100) order('harvest');
+  if (s.crop.wear > 50) order('maintain');
+  return s;
+}
+
 function play(plan: ((g: GameState) => GameState) | null): GameState {
   let g = createGame({ installation: INSTALLATION });
   while (outcomeOf(g) === 'playing') {
@@ -75,6 +87,16 @@ describe('partida completa', () => {
     // Capacidade 1000: com 950 o plano perde na noite; com 1050 ou mais, sobra folga (ver docs/regras-recursos.md).
     const g = play(planHour);
     expect(g.hearts).toBe(2);
+  });
+
+  it('com astronautas colhendo e fazendo manutenção, o plano mantém o resultado e rende muitas colheitas (D-18)', () => {
+    const g = play(planWithCrew);
+    expect(outcomeOf(g)).toBe('won');
+    // A manutenção custa 15 de energia; com capacidade 1000 (equilíbrio apertado) isso pode custar 1 coração.
+    // Só colher (sem manutenção) mantém os 2 corações: a decisão de gastar energia é real.
+    expect(g.hearts).toBeGreaterThanOrEqual(1);
+    expect(g.crop.harvests).toBeGreaterThan(15);
+    expect(g.agentTasksDone.harvest).toBe(g.crop.harvests);
   });
 
   it('depois do fim, nenhuma ação é aceita', () => {

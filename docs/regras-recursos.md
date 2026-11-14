@@ -61,3 +61,22 @@ A base passiva perde por volta da hora 117 com qualquer capacidade. O ponto de v
 - **Bateria da carga e painéis iniciais da preparação** (escolhidos hoje na tela, não na preparação).
 - **Tempestades, radiação e abrigo** (dose por hora, cobertura de regolito).
 - **Patentes** (o fator de consumo já existe; textos e números de tela não).
+
+
+## Estufa e astronautas (D-18, 14/11/2026)
+
+| Item | Regra |
+|---|---|
+| Crescimento | `100 / 12 h × irrigação × iluminação × eficiência`, só com a estufa ligada; para em 100 |
+| Estágios | muda (abaixo de 34), planta desenvolvida, pronta (100) |
+| Irrigação (baixa, normal, alta) | crescimento ×0,8, ×1, ×1,25; água da estufa ×0,5, ×1, ×2 (base 0,08 por hora) |
+| Iluminação (baixa, normal, alta) | crescimento ×0,8, ×1, ×1,25; energia da estufa ×0,6, ×1, ×1,5 (base 1,0 por hora) |
+| Desgaste | +0,25 por hora ligada; eficiência = 1 − 0,4 × desgaste/100 |
+| Colheita | exige 100 de crescimento; +10 de comida ao fim do trabalho; o cultivo recomeça |
+| Manutenção | exige desgaste de 10 ou mais; custa 15 de energia na hora da ordem; zera o desgaste |
+| Inspeção | sem custo; alivia 20 de desgaste |
+| Tarefa | preparo 0,25 h, ida 5 h, trabalho (2, 3 ou 5 h), volta 5 h, descanso 1 h |
+| Limites | uma tarefa de cada tipo por vez; um astronauta livre (sem tarefa e descansado) |
+| Radiação ou abrigo | a tarefa fica suspensa; quem está fora conta como exposto (`crew.ts`) |
+
+A comida passiva da estufa (0,38 por hora, acima) continua. A colheita é um ganho adicional que depende do jogador.

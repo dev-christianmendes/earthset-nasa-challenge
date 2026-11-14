@@ -8,7 +8,7 @@ import { MATCH_HOURS } from '../engine/clock';
 import { deriveFlow, isGreenhouseOn, type GreenhouseMode } from '../engine/resources';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 import { crewOutside } from '../engine/crew';
-import { HARVEST_EVERY_HOURS } from '../engine/harvest';
+import { hoursToReady } from '../engine/greenhouse';
 import { chaptersOf, currentChapter } from '../engine/chapters';
 import { missionPhase, phaseProgress, PHASES, type MissionPhase } from '../engine/mission';
 import type { ModeConfig } from '../engine/modes';
@@ -398,7 +398,7 @@ function renderGreenhouse(state: GameState): void {
   const on = state.crewOrder === 'auto' && isGreenhouseOn(state.vitals, state.installation);
   el('greenhouse-status').replaceChildren(
     li(t('gh.state'), mode === 'off' ? t('val.off') : on ? t('val.growing') : t('val.idle'), on ? 'ok' : 'warn'),
-    li(t('gh.harvest'), on ? t('gh.harvest.v', { h: Math.ceil(HARVEST_EVERY_HOURS - state.greenhouseHours) }) : '—'),
+    li(t('gh.harvest'), state.crop.growth >= 100 ? t('gh.ready') : on ? t('gh.harvest.v', { h: Math.ceil(hoursToReady(state.crop)) }) : '—'),
     li(t('hud.food'), `${Math.round(state.vitals.food)}`),
   );
 }

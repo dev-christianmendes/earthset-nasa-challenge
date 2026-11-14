@@ -1349,15 +1349,7 @@ def build_greenhouse() -> None:
                 continue
             box(f"tray{row}{tier}", (0.55, L, 0.1), (x, 0.15, z), m="hull_panel", bev=0.015)
             box(f"soil{row}{tier}", (0.48, L - 0.08, 0.02), (x, 0.15, z + 0.055), m="soil", bev=0.0)
-            for k in range(int(L / 0.32)):
-                y = 0.15 - L / 2 + 0.2 + k * 0.32
-                for j, dx in enumerate((-0.12, 0.12)):
-                    bm = bmesh.new()
-                    bmesh.ops.create_icosphere(bm, subdivisions=1, radius=0.13)
-                    sc = 0.8 + 0.25 * ((k * 7 + j * 3 + row) % 3) / 2
-                    bmesh.ops.transform(bm, matrix=mtx((x + dx, y + 0.05 * j, z + 0.12 * sc), (k, j, row),
-                                                       (sc, sc, sc * 0.9)), verts=bm.verts)
-                    finish(f"plant{row}{tier}{k}{j}", bm, "plants", angle=25, wn=False)
+            # As plantas não entram no modelo: o jogo as desenha por estágio de crescimento (src/render/crop.ts).
             box(f"grow_bar{row}{tier}", (0.08, L - 0.2, 0.04), (x, 0.15, z + 0.5), m="grow_light", bev=0.0)
             box(f"grow_hood{row}{tier}", (0.14, L - 0.15, 0.04), (x, 0.15, z + 0.53), m="dark_metal", bev=0.01)
             tube(f"irrig{row}{tier}", [(x + 0.3, 0.15 - L / 2, z + 0.02), (x + 0.3, 0.15 + L / 2, z + 0.02)], 0.018,

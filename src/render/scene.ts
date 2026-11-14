@@ -6,6 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { GameState } from '../engine/game';
 import { isGreenhouseOn } from '../engine/resources';
+import { phaseFraction } from '../engine/astronaut';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 import { isWorking, type TaskKind } from '../engine/robot';
 import { missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
@@ -16,6 +17,7 @@ import { attachModel, loadGltf, loadModel } from './assets';
 import { VERTICAL_EXAGGERATION, surfaceHeight } from './terrain-height';
 import { ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, ICE_PROCESSOR, ICE_ROUTE, PANEL_SLOTS, type Spot } from './layout';
 import { base, loadBaseLayoutModels, updateBase } from './base-layout';
+import { updateCrop } from './crop';
 
 /** Paleta da cena (tokens de docs/VISUAL_DIRECTION.md). */
 export const PALETTE = {
@@ -451,31 +453,44 @@ interface Crew {
   home: { x: number; z: number };
   moving: boolean;
   working: boolean;
+  /** Segundos restantes em que ainda conta como andando (evita piscar entre quadros). */
+  moveTimer: number;
+  /** Velocidade atual em m/s (cadência da caminhada). */
+  speed: number;
   legs: THREE.Object3D[];
   arms: THREE.Object3D[];
 }
 
 const crew: Crew[] = [
-  { mixer: null, actions: {}, current: '', node: null, x: 5.6, z: 1.4, home: { x: 5.6, z: 1.4 }, moving: false, working: false, legs: [], arms: [] },
-  { mixer: null, actions: {}, current: '', node: null, x: 6.2, z: -1.2, home: { x: 6.2, z: -1.2 }, moving: false, working: false, legs: [], arms: [] },
+  { mixer: null, actions: {}, current: '', node: null, x: 5.6, z: 1.4, home: { x: 5.6, z: 1.4 }, moving: false, working: false, moveTimer: 0, speed: 0, legs: [], arms: [] },
+  { mixer: null, actions: {}, current: '', node: null, x: 6.2, z: -1.2, home: { x: 6.2, z: -1.2 }, moving: false, working: false, moveTimer: 0, speed: 0, legs: [], arms: [] },
 ];
 const CREW_WALK_SPEED = 1.4;
 /** Abrigo: dentro do habitat, pela câmara de descompressão. */
 const SHELTER = { x: AIRLOCK.x - 1.2, z: AIRLOCK.z };
 
-function walkCrew(member: Crew, tx: number, tz: number, dt: number): void {
+/**
+ * Leva o astronauta até o destino sem teletransporte: o destino deriva do estado do motor (acompanha pausa
+ * e velocidade do jogo) e a velocidade máxima só evita saltos (abrigo, retomada de tarefa).
+ */
+function followCrew(member: Crew, tx: number, tz: number, dt: number, maxSpeed: number): void {
   const dx = tx - member.x;
   const dz = tz - member.z;
   const dist = Math.hypot(dx, dz);
-  member.moving = dist > 0.08;
-  if (member.moving) {
-    const step = Math.min(dist, CREW_WALK_SPEED * dt);
+  const step = Math.min(dist, maxSpeed * dt);
+  if (step > 1e-4) {
     member.x += (dx / dist) * step;
     member.z += (dz / dist) * step;
+    member.moveTimer = 0.18;
+    member.speed = dt > 0 ? step / dt : 0;
+    if (member.node) member.node.rotation.y = Math.atan2(dx, dz);
+  } else {
+    member.moveTimer = Math.max(0, member.moveTimer - dt);
+    member.speed = 0;
   }
+  member.moving = member.moveTimer > 0;
   if (member.node) {
     member.node.position.set(member.x, surfaceHeight(member.x, member.z), member.z);
-    if (member.moving) member.node.rotation.y = Math.atan2(dx, dz);
     // Dentro do habitat (abrigo) o astronauta não aparece.
     member.node.visible = Math.hypot(member.x - SHELTER.x, member.z - SHELTER.z) > 0.6;
   }
@@ -497,8 +512,9 @@ function playCrewClip(member: Crew, name: Clip): void {
 function animateCrew(member: Crew, t: number, dt: number): void {
   if (member.mixer) {
     playCrewClip(member, member.moving ? (member.actions.walk ? 'walk' : 'run') : member.working ? 'work' : 'idle');
-    const run = member.actions.run;
-    if (run) run.timeScale = member.moving && !member.actions.walk ? 0.45 : 1;
+    const cadence = member.moving ? Math.min(3, Math.max(0.6, member.speed / CREW_WALK_SPEED)) : 1;
+    const gait = member.actions.walk ?? member.actions.run;
+    if (gait) gait.timeScale = member.actions.walk ? cadence : 0.45 * cadence;
     member.mixer.update(dt);
     return;
   }
@@ -507,38 +523,60 @@ function animateCrew(member: Crew, t: number, dt: number): void {
   member.arms.forEach((arm, i) => (arm.rotation.x = i === 0 ? -swing : swing));
 }
 
-/** O da estufa cuida dela quando está ligada; o outro ajuda no processador de gelo durante a missão de gelo. */
+/** Pontos de trabalho na estufa, um por astronauta (lados diferentes da porta). */
+const GH_WORK_SPOTS: readonly Spot[] = [
+  { x: GREENHOUSE.x + 3.1, z: GREENHOUSE.z - 1.9 },
+  { x: GREENHOUSE.x + 2.4, z: GREENHOUSE.z + 1.7 },
+];
+/** Rota de casa até a estufa: contorna o habitat pelo lado leste. */
+function crewPath(i: number): Path {
+  return [crew[i].home, { x: 4.4, z: 5.4 }, GH_WORK_SPOTS[i] ?? GH_WORK_SPOTS[0]];
+}
+const CREW_FOLLOW_SPEED = 9;
+const CREW_SHELTER_SPEED = 6;
+
+/**
+ * Tripulação (D-18): quem tem tarefa anda, trabalha e volta pela fase do motor (src/engine/astronaut.ts);
+ * os outros ficam em casa (o ajudante vai ao processador durante a missão de gelo). Radiação ou abrigo: todos vão ao abrigo.
+ */
 function updateCrew(state: GameState, t: number, dt: number, view: RoverView, radiation: boolean): void {
-  const [keeper, helper] = crew;
   const shelter = radiation || state.crewOrder === 'shelter';
-  if (shelter) {
-    walkCrew(keeper, SHELTER.x, SHELTER.z, dt);
-    walkCrew(helper, SHELTER.x, SHELTER.z, dt);
-    keeper.working = helper.working = false;
-  } else {
-    const greenhouseRunning = isGreenhouseOn(state.vitals, state.installation);
-    if (greenhouseRunning) {
-      const phase = Math.floor(t / 6) % 2 === 0;
-      const gx = GREENHOUSE.x + (phase ? 3.4 : 2.6);
-      const gz = GREENHOUSE.z + (phase ? -1.5 : 1.8);
-      walkCrew(keeper, gx, gz, dt);
-      keeper.working = !keeper.moving;
-      faceTowards(keeper, GREENHOUSE.x, GREENHOUSE.z);
-    } else {
-      walkCrew(keeper, keeper.home.x, keeper.home.z, dt);
-      keeper.working = false;
+  crew.forEach((member, i) => {
+    if (shelter) {
+      followCrew(member, SHELTER.x, SHELTER.z, dt, CREW_SHELTER_SPEED);
+      member.working = false;
+      return;
     }
-    const iceWork = view.kind === 'ice' && view.working && (view.phase === 'return' || view.phase === 'deliver' || view.phase === 'operate');
+    const task = state.agents[i]?.task ?? null;
+    if (task) {
+      const out = crewPath(i);
+      const spot = out[out.length - 1];
+      if (task.phase === 'prep') {
+        followCrew(member, member.home.x, member.home.z, dt, CREW_FOLLOW_SPEED);
+        member.working = false;
+        faceTowards(member, spot.x, spot.z);
+      } else if (task.phase === 'work') {
+        followCrew(member, spot.x, spot.z, dt, CREW_FOLLOW_SPEED);
+        member.working = !member.moving;
+        faceTowards(member, GREENHOUSE.x, GREENHOUSE.z);
+      } else {
+        const p = along(task.phase === 'out' ? out : [...out].reverse(), phaseFraction(task));
+        followCrew(member, p.x, p.z, dt, CREW_FOLLOW_SPEED);
+        member.working = false;
+      }
+      return;
+    }
+    const iceWork = i === 1 && view.kind === 'ice' && view.working && (view.phase === 'return' || view.phase === 'deliver' || view.phase === 'operate');
     if (iceWork) {
-      walkCrew(helper, ICE_PROCESSOR.x - 2.2, ICE_PROCESSOR.z - 1, dt);
-      helper.working = !helper.moving;
-      faceTowards(helper, ICE_PROCESSOR.x, ICE_PROCESSOR.z);
+      followCrew(member, ICE_PROCESSOR.x - 2.2, ICE_PROCESSOR.z - 1, dt, CREW_WALK_SPEED);
+      member.working = !member.moving;
+      faceTowards(member, ICE_PROCESSOR.x, ICE_PROCESSOR.z);
     } else {
-      walkCrew(helper, helper.home.x, helper.home.z, dt);
-      helper.working = false;
-      faceTowards(helper, robot.position.x, robot.position.z);
+      followCrew(member, member.home.x, member.home.z, dt, CREW_WALK_SPEED);
+      member.working = false;
+      faceTowards(member, robot.position.x, robot.position.z);
     }
-  }
+  });
   for (const member of crew) animateCrew(member, t, dt);
 }
 
@@ -663,6 +701,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   rover.beaconMat.emissiveIntensity = !view.working || Math.sin(t * 6) > -0.2 ? 2.2 : 0.2;
   for (const m of rover.headlights) m.emissiveIntensity = view.working ? 3 : 0.4;
 
+  updateCrop(state.crop.growth);
   const level = stormLevel(weather.kp);
   const batteryPct = (state.vitals.battery / state.installation.batteryCapacity) * 100;
   updateBase({

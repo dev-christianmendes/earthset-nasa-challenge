@@ -124,3 +124,11 @@ Pedido do autor: tela inicial própria, modos de experiência, história "Opera�
 
 Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'` (× 1,0), Comandante → `rank: 'comandante'` (× 1,15). Nenhum dado científico muda; a diferença é o fator de consumo (já existente) e a apresentação (quantidade de dicas da LUMA, explicações, HUD técnico). Testes de partida completa cobrem os três modos.
 
+
+## D-18. Astronautas com tarefas reais e estufa jogável (14/11/2026, noite)
+
+- **Decisão:** a colheita deixa de ser automática (D-07). Cada astronauta é uma máquina de estados no motor (`src/engine/astronaut.ts`): `idle → assigned → walking → working → returning → resting → idle`, com `sheltering` na radiação ou na ordem de abrigo (a tarefa fica suspensa e retoma depois). A estufa tem cultivo próprio (`src/engine/greenhouse.ts`): crescimento 0 a 100, desgaste, irrigação e iluminação em três níveis.
+- **Tempo:** as durações são horas de **jogo** (preparo 0,25, cada trecho 5, descanso 1; trabalho: inspeção 2, colheita 3, manutenção 5). A cena deriva posição e animação do progresso, então a tripulação acompanha pausa e velocidade (antes andava em tempo real, a 1,4 m/s).
+- **Regras (ilustrativas, equilíbrio, não dado científico):** a cultura amadurece em 12 h com cuidado normal; irrigação e iluminação altas crescem ×1,25 e gastam ×2 de água e ×1,5 de energia (baixa: ×0,8, ×0,5 e ×0,6); desgaste sobe 0,25 por hora de estufa ligada e tira até 40% da eficiência; colher dá +10 de comida; manutenção custa 15 de energia e zera o desgaste; inspeção alivia 20 de desgaste.
+- **Motivo da mudança de equilíbrio:** a colheita automática (+10 a cada 12 h) tornava a comida irrelevante e tirava a decisão do jogador. A comida passiva (0,38 por hora) continua, então ninguém passa fome por esquecer. O teste de partida de referência continua com 2 corações; com manutenção por bot a partida ainda vence (1 coração), porque os 15 de energia pesam no equilíbrio apertado: a decisão de gastar energia é real.
+- **Interação:** tocar num objeto da cena abre o painel contextual (`src/ui/context-panel.ts`, seleção em `src/render/picking.ts`). A disponibilidade de cada ação vem de uma simulação em seco no motor (`dispatch`), então o motivo mostrado é sempre o do motor.

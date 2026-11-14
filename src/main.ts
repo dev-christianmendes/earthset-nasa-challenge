@@ -15,7 +15,10 @@ import { lumaAdvice, lumaEvents, type LumaAction } from './engine/guide';
 import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
-import { camera, loadBaseModels, loadCrewModels, renderer, resetScenePresentation, resizeRenderer, scene, setQuality, updateScene } from './render/scene';
+import { camera, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, updateScene } from './render/scene';
+import { greenhouse } from './render/base-layout';
+import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
+import { mountContext, renderContext, selectedObject, showContext } from './ui/context-panel';
 import { goTo, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
 import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updateCinematic } from './render/cinematic';
 import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
@@ -51,17 +54,78 @@ const warningNow = (): number | null => antennaWarning(WEATHER, game.clock.hour,
 
 // ---------- Ações ----------
 
-function act(action: GameAction): void {
+function act(action: GameAction): string | null {
   const result = dispatch(game, action);
+  let failure: string | null = null;
   if (result.ok) {
     game = result.state;
     ui.message.textContent = '';
   } else {
     const vars: Record<string, number> = result.reason === 'queue-full' ? { max: MAX_QUEUE } : result.reason === 'panel-limit' ? { max: MAX_PANELS } : {};
-    ui.message.textContent = t(`reason.${result.reason}`, vars);
+    failure = t(`reason.${result.reason}`, vars);
+    ui.message.textContent = failure;
   }
   renderNow(performance.now());
+  return failure;
 }
+
+// ---------- Seleção na cena e painel contextual (D-18) ----------
+
+const FOCUS_SHOT: Record<SelectableId, Shot> = {
+  habitat: 'habitat',
+  greenhouse: 'greenhouse',
+  rover: 'rover',
+  crew0: 'crew',
+  crew1: 'crew1',
+  panels: 'energy',
+  antenna: 'antenna',
+  processor: 'logistics',
+  storage: 'logistics',
+};
+
+function selectObject(id: SelectableId | null): void {
+  if (id) setTool(null);
+  showContext(id);
+  setHighlight(id);
+  if (id) renderContext(game, weatherNow().radiation);
+}
+
+mountContext(document.getElementById('ctx') as HTMLElement, {
+  act(action) {
+    const failure = act(action);
+    if (failure) {
+      showToast(t('ctx.status'), failure);
+      return;
+    }
+    // Ordem recebida: confirmação imediata e um enquadramento curto (o jogador mantém o controle da câmera).
+    if (action.type === 'ASSIGN_AGENT_TASK') {
+      showToast(t('toast.order'), t(`task.${action.kind}`));
+      goTo('greenhouse', performance.now(), 0.9);
+    }
+  },
+  openTool(tool) {
+    selectObject(null);
+    setTool(tool);
+  },
+  overview: () => goTo('overview', performance.now()),
+  focus: (id) => goTo(FOCUS_SHOT[id], performance.now(), 0.9),
+  close: () => selectObject(null),
+});
+
+// Toque curto na cena (sem arrastar) seleciona; arrastar continua girando a câmera.
+let pressAt: { x: number; y: number; time: number } | null = null;
+renderer.domElement.addEventListener('pointerdown', (event) => {
+  pressAt = { x: event.clientX, y: event.clientY, time: performance.now() };
+});
+// Usa `click` (e não `pointerup`): em telas de toque o clique sintético cairia no painel recém-aberto.
+renderer.domElement.addEventListener('click', (event) => {
+  const press = pressAt;
+  pressAt = null;
+  if (!press) return;
+  if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6 || performance.now() - press.time > 450) return;
+  if (!started || ended || paused || currentScreen() !== null || cinematicRunning()) return;
+  selectObject(pickAt(event.clientX, event.clientY));
+});
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-task]')) {
   button.addEventListener('click', () => {
@@ -113,11 +177,13 @@ function renderNow(now: number): void {
   const weather = weatherNow();
   const warning = warningNow();
   renderHud(game, { weather, warningHours: warning, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
+  if (started && selectedObject()) renderContext(game, weather.radiation);
   if (started) updateLuma(lumaAdvice(game, warning, MODES[mode].luma), game.clock.hour, now);
 }
 
 onLanguage(() => {
   relabelLuma();
+  showContext(selectedObject());
   renderChapters(document.getElementById('story-chapters') as HTMLElement, null);
   speedBtn.title = t('hud.speed');
 });
@@ -188,6 +254,7 @@ function resetGame(): void {
   resetLuma();
   setTool(null);
   if (currentTool()) setTool(null);
+  selectObject(null);
   ui.message.textContent = '';
 }
 
@@ -261,6 +328,10 @@ window.addEventListener('keydown', (event) => {
     return;
   }
   const screen = currentScreen();
+  if (started && !ended && screen === null && selectedObject()) {
+    selectObject(null);
+    return;
+  }
   if (started && !ended && screen === null) setPaused(true);
   else if (started && !ended && screen === 'pause') setPaused(false);
   else if (screen && screen !== 'menu' && screen !== 'loading' && screen !== 'end') popScreen();
@@ -297,9 +368,11 @@ function frame(now: number): void {
   // A cena anda no relógio visual (parado na pausa); no menu e na introdução, no relógio real.
   const sceneTime = started ? visualTime : now;
   updateScene(game, sceneTime, sunlit(game.clock.hour), weatherNow(), started ? active : true);
+  updateHighlight(now / 1000);
   if (cinematicRunning()) updateCinematic(now);
   else updateDirector(now);
   if (now >= hudDueAt) {
+    if (currentTool() !== null && selectedObject()) selectObject(null);
     if (started) renderNow(now);
     updateHorizon(game.clock.hour);
     if (screen === 'science') updateScienceHorizon(game.clock.hour);
@@ -371,7 +444,7 @@ function perfTick(now: number): void {
   if (perfSince === 0) perfSince = now;
   if (now - perfSince >= 1000) {
     const mem = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
-    perfEl.textContent = `${Math.round((perfFrames * 1000) / (now - perfSince))} fps · ${perfMin}-${perfMax} draws · ${renderer.info.render.triangles} tris${mem ? ` · ${Math.round(mem.usedJSHeapSize / 1048576)} MB` : ''}`;
+    perfEl.textContent = `${Math.round((perfFrames * 1000) / (now - perfSince))} fps · ${perfMin}-${perfMax} draws · ${renderer.info.render.triangles} tris · geo ${renderer.info.memory.geometries} tex ${renderer.info.memory.textures} prog ${renderer.info.programs?.length ?? 0}${mem ? ` · ${Math.round(mem.usedJSHeapSize / 1048576)} MB` : ''}`;
     perfFrames = 0;
     perfMin = Infinity;
     perfMax = 0;
@@ -385,6 +458,17 @@ function perfTick(now: number): void {
  */
 function maybeAutostart(): void {
   if (!import.meta.env.DEV) return;
+  // Gancho só de desenvolvimento para os testes de interface: posição de um objeto na tela (px).
+  (window as unknown as { __earthset: unknown }).__earthset = {
+    screenOf(id: 'rover' | 'crew0' | 'crew1' | 'greenhouse'): [number, number] | null {
+      const object = id === 'rover' ? robot : id === 'greenhouse' ? greenhouse : crewObject(id === 'crew0' ? 0 : 1);
+      if (!object) return null;
+      const v = object.getWorldPosition(new THREE.Vector3());
+      v.y += 0.8;
+      v.project(camera);
+      return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+    },
+  };
   const q = new URLSearchParams(window.location.search);
   if (q.get('lang') === 'pt' || q.get('lang') === 'en') applyLanguage(q.get('lang') as 'pt' | 'en');
   const screen = q.get('screen');

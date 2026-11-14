@@ -530,6 +530,7 @@ export function setLanderAltitude(h: number): void {
 
 /** Ponto central de cada área, para a câmera. */
 export const FOCUS = {
+  greenhouse: new THREE.Vector3(GREENHOUSE.x, surfaceHeight(GREENHOUSE.x, GREENHOUSE.z) + 1.2, GREENHOUSE.z),
   habitat: new THREE.Vector3(HABITAT.x, surfaceHeight(HABITAT.x, HABITAT.z) + 2, HABITAT.z),
   energy: new THREE.Vector3(-12.5, surfaceHeight(-12.5, 0) + 1, 0),
   logistics: new THREE.Vector3(11, surfaceHeight(11, 0) + 1, 0),

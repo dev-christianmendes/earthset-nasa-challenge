@@ -1,13 +1,12 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 import { describe, expect, it } from 'vitest';
-import { advance, createGame, dispatch } from '../../src/engine/game';
+import { createGame, dispatch } from '../../src/engine/game';
 import { objectivesOf, nextObjective, OBJECTIVE_PANELS } from '../../src/engine/objectives';
 import { lumaAdvice } from '../../src/engine/guide';
 import { crewOutside } from '../../src/engine/crew';
 import type { Installation } from '../../src/engine/resources';
 
 const INST: Installation = { rank: 'explorador', site: 'peak', panels: 2, batteryCapacity: 1000, greenhouse: 'always' };
-const CALM = { kp: 0, radiation: false };
 
 describe('objetivos da missão', () => {
   it('começa com 4 objetivos, nenhum cumprido, e o primeiro é o de painéis', () => {
@@ -42,12 +41,11 @@ describe('ordem de abrigo da tripulação', () => {
     expect(dispatch(g, { type: 'SET_CREW_ORDER', order: 'pular' as never }).ok).toBe(false);
   });
 
-  it('abrigada, a tripulação não colhe na estufa', () => {
-    let g = dispatch(createGame({ installation: INST }), { type: 'SET_CREW_ORDER', order: 'shelter' });
+  it('abrigada, a tripulação não aceita tarefas na estufa', () => {
+    const g = dispatch(createGame({ installation: INST }), { type: 'SET_CREW_ORDER', order: 'shelter' });
     if (!g.ok) throw new Error('ordem recusada');
-    let s = g.state;
-    for (let h = 0; h < 13; h++) s = advance(s, 1, true, CALM);
-    expect(s.greenhouseHours).toBe(0);
+    const r = dispatch(g.state, { type: 'ASSIGN_AGENT_TASK', kind: 'inspect' });
+    expect(r).toEqual({ ok: false, reason: 'crew-sheltering' });
   });
 });
 

@@ -4,11 +4,32 @@
 import { MATCH_HOURS, advanceClock, createClock, type Clock } from './clock';
 import { CALM, solarFactor, stormLevel, type SpaceWeatherSample } from './space-weather';
 import { advanceCrew, createCrew, crewAvailableForHelp, crewOutside, type CrewState } from './crew';
-import { harvestStep } from './harvest';
+import {
+  AGENT_TASK_KINDS,
+  INSPECT_WEAR_RELIEF,
+  MAINTAIN_MIN_WEAR,
+  TASK_ENERGY_COST,
+  cancelAgentTask,
+  createAgents,
+  isAvailable,
+  isOutside,
+  newTask,
+  stepAgent,
+  type AgentState,
+  type AgentTaskKind,
+} from './astronaut';
+import {
+  CARE_LEVELS,
+  HARVEST_FOOD,
+  createCrop,
+  harvestCrop,
+  stepCrop,
+  type Care,
+  type CropState,
+} from './greenhouse';
 import {
   applyFlow,
   deriveFlow,
-  isGreenhouseOn,
   startingVitals,
   type GreenhouseMode,
   type Installation,
@@ -41,8 +62,12 @@ export interface GameState {
   readonly vitalZeroHours: number;
   /** Tripulação: exposição à radiação (D-05). */
   readonly crew: CrewState;
-  /** Horas desde a última colheita da estufa (D-07). */
-  readonly greenhouseHours: number;
+  /** Cultivo da estufa: crescimento, desgaste e cuidados (D-18). */
+  readonly crop: CropState;
+  /** Astronautas com tarefas reais (D-18). Índice 0 e 1. */
+  readonly agents: readonly AgentState[];
+  /** Tarefas de astronauta concluídas, por tipo. */
+  readonly agentTasksDone: Readonly<Record<AgentTaskKind, number>>;
   /** Ordem do jogador para a tripulação: automática (trabalha) ou abrigar (fica dentro). */
   readonly crewOrder: CrewOrder;
   /** Missões do robô concluídas, por tipo (capítulos e eventos da LUMA leem daqui). */
@@ -55,7 +80,10 @@ export type GameAction =
   | { readonly type: 'SET_CREW_ORDER'; readonly order: CrewOrder }
   | { readonly type: 'SET_GREENHOUSE'; readonly mode: GreenhouseMode }
   | { readonly type: 'ENQUEUE_TASK'; readonly kind: TaskKind }
-  | { readonly type: 'CANCEL_TASK'; readonly index: number };
+  | { readonly type: 'CANCEL_TASK'; readonly index: number }
+  | { readonly type: 'ASSIGN_AGENT_TASK'; readonly kind: AgentTaskKind; readonly agent?: number }
+  | { readonly type: 'CANCEL_AGENT_TASK'; readonly agent: number }
+  | { readonly type: 'SET_GREENHOUSE_CARE'; readonly irrigation?: Care; readonly lighting?: Care };
 
 export type DispatchResult =
   | { readonly ok: true; readonly state: GameState }
@@ -76,7 +104,9 @@ export function createGame(options: NewGameOptions): GameState {
     hearts: MAX_HEARTS,
     vitalZeroHours: 0,
     crew: createCrew(),
-    greenhouseHours: 0,
+    crop: createCrop(),
+    agents: createAgents(),
+    agentTasksDone: { inspect: 0, harvest: 0, maintain: 0 },
     crewOrder: 'auto',
     missionsDone: { ice: 0, panel: 0, antenna: 0 },
   };
@@ -126,6 +156,35 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
       }
       return { ok: true, state: { ...state, robot: cancelTask(state.robot, action.index) } };
     }
+    case 'ASSIGN_AGENT_TASK': {
+      if (!AGENT_TASK_KINDS.includes(action.kind)) return { ok: false, reason: 'unknown-task' };
+      if (action.agent !== undefined && (!Number.isInteger(action.agent) || action.agent < 0 || action.agent >= state.agents.length)) {
+        return { ok: false, reason: 'no-such-agent' };
+      }
+      if (state.crewOrder === 'shelter') return { ok: false, reason: 'crew-sheltering' };
+      if (action.kind === 'harvest' && state.crop.growth < 100) return { ok: false, reason: 'crop-not-ready' };
+      if (action.kind === 'maintain' && state.crop.wear < MAINTAIN_MIN_WEAR) return { ok: false, reason: 'no-wear' };
+      if (state.agents.some((a) => a.task?.kind === action.kind)) return { ok: false, reason: 'task-in-progress' };
+      if (state.vitals.battery < TASK_ENERGY_COST[action.kind]) return { ok: false, reason: 'low-battery' };
+      const index = action.agent ?? state.agents.findIndex(isAvailable);
+      if (index < 0 || !isAvailable(state.agents[index])) return { ok: false, reason: 'agent-busy' };
+      const agents = state.agents.map((a, i) => (i === index ? { ...a, task: newTask(action.kind) } : a));
+      const vitals = { ...state.vitals, battery: state.vitals.battery - TASK_ENERGY_COST[action.kind] };
+      return { ok: true, state: { ...state, agents, vitals } };
+    }
+    case 'CANCEL_AGENT_TASK': {
+      const agent = state.agents[action.agent];
+      if (!Number.isInteger(action.agent) || !agent || !agent.task) return { ok: false, reason: 'no-agent-task' };
+      if (agent.task.phase === 'back') return { ok: false, reason: 'already-returning' };
+      return { ok: true, state: { ...state, agents: state.agents.map((a, i) => (i === action.agent ? cancelAgentTask(a) : a)) } };
+    }
+    case 'SET_GREENHOUSE_CARE': {
+      const { irrigation, lighting } = action;
+      if ((irrigation !== undefined && !CARE_LEVELS.includes(irrigation)) || (lighting !== undefined && !CARE_LEVELS.includes(lighting))) {
+        return { ok: false, reason: 'invalid-mode' };
+      }
+      return { ok: true, state: { ...state, crop: { ...state.crop, irrigation: irrigation ?? state.crop.irrigation, lighting: lighting ?? state.crop.lighting } } };
+    }
     default:
       return { ok: false, reason: 'unknown-action' };
   }
@@ -146,7 +205,7 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
 
   // Radiação de partículas solares para o robô: ele não trabalha enquanto ela durar.
   const working = isWorking(state.robot, state.vitals.battery) && !weather.radiation;
-  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, solarFactor(stormLevel(weather.kp)));
+  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, solarFactor(stormLevel(weather.kp)), state.crop);
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
   // Com a tripulação livre, o astronauta ajuda na viagem de gelo (D-06).
@@ -163,10 +222,25 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     if (kind === 'ice') water = Math.min(100, water + ICE_WATER_PER_TRIP);
     if (kind === 'panel') installation = { ...installation, panels: installation.panels + 1 };
   }
-  // Colheita (D-07): só com a estufa ligada, a cada 12 h; o ciclo recomeça se ela desligar.
-  const greenhouseRunning = state.crewOrder === 'auto' && isGreenhouseOn(state.vitals, state.installation);
-  const harvest = harvestStep(state.greenhouseHours, step, greenhouseRunning);
-  const vitals: Vitals = { ...drained, water, food: Math.min(100, drained.food + harvest.food) };
+  // Astronautas: a tarefa anda no tempo de jogo; radiação ou ordem de abrigo a suspende (eles ficam no abrigo).
+  const sheltered = weather.radiation || state.crewOrder === 'shelter';
+  let crop = stepCrop(state.crop, step, flow.greenhouseOn);
+  let agentTasksDone = state.agentTasksDone;
+  let foodGain = 0;
+  const agents = state.agents.map((agent) => {
+    const r = stepAgent(agent, step, sheltered);
+    if (r.completed) {
+      agentTasksDone = { ...agentTasksDone, [r.completed]: agentTasksDone[r.completed] + 1 };
+      if (r.completed === 'harvest' && crop.growth >= 100) {
+        crop = harvestCrop(crop);
+        foodGain += HARVEST_FOOD;
+      }
+      if (r.completed === 'maintain') crop = { ...crop, wear: 0 };
+      if (r.completed === 'inspect') crop = { ...crop, wear: Math.max(0, crop.wear - INSPECT_WEAR_RELIEF) };
+    }
+    return r.agent;
+  });
+  const vitals: Vitals = { ...drained, water, food: Math.min(100, drained.food + foodGain) };
 
   const anyVitalZero = vitals.battery <= 0 || vitals.air <= 0 || vitals.water <= 0 || vitals.food <= 0;
   let vitalZeroHours = anyVitalZero ? state.vitalZeroHours + step : 0;
@@ -177,7 +251,7 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   }
 
   // Tripulação: quem está fora quando a radiação começa leva 1 hora para entrar; cada 12 h de exposição tira 1 coração.
-  const crewStep = advanceCrew(state.crew, crewOutside(state.installation, state.vitals, state.robot, state.crewOrder), weather.radiation, step);
+  const crewStep = advanceCrew(state.crew, crewOutside(state.installation, state.vitals, state.robot, state.crewOrder).map((out, i) => out || (state.agents[i] ? isOutside(state.agents[i]) : false)), weather.radiation, step);
   hearts = Math.max(0, hearts - crewStep.heartsLost);
 
   return {
@@ -188,7 +262,9 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     hearts,
     vitalZeroHours,
     crew: crewStep.crew,
-    greenhouseHours: harvest.accumulated,
+    crop,
+    agents,
+    agentTasksDone,
     crewOrder: state.crewOrder,
     missionsDone,
   };

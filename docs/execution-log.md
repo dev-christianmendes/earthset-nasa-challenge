@@ -542,3 +542,25 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Capturas** (Chrome headless, SwiftShader): menu, modos, história (PT), introdução aos 2, 7 e 12,5 s, partida (visão geral), rover em missão, astronauta de perto, Comandante em 1920×1080, celular 390×844, derrota. Antes: tela de título com HUD em coluna. Não capturado: vitória e FPS real (medir com `?perf=1` na máquina do autor).
 - **Commit:** não feito (sem pedido explícito).
 
+
+## 14/11/2026 · P0 do plano de jogabilidade: auditoria de desempenho e responsividade
+
+- **Medição:** Chromium com GPU real (`--use-angle=vulkan`, Intel Xe). As medições de SwiftShader (1 a 5 fps) da etapa anterior **não representam o jogo**; a linha de base abaixo as substitui.
+- **Build de produção, normal:** menu visível em 0,67 s; 60 fps no menu e em missão de gelo (p95 16,8 ms, 0 quadros acima de 50 ms); 4 long tasks de 81 a 153 ms só no carregamento; 0 erros de console; 225 a 231 draws, 229 mil triângulos, 202 geometrias, 10 texturas, 15 programas.
+- **CPU 4× mais lenta:** menu em 2,06 s; missão a 47,8 fps (p95 33,4 ms, 1 quadro de 66,6 ms); long tasks de carregamento de até 515 ms.
+- **Comando → feedback:** clique em "Launch" até a fila aparecer no DOM em 6 ms (dev).
+- **Repetição:** 8 missões de gelo seguidas a 4×: heap estável (54 a 58 MB), 60 fps em todas.
+- **Carregamento duplicado:** nenhum. `loadBaseModels` e `loadCrewModels` são chamados uma vez (`main.ts`), e `assets.ts` guarda cada GLB em cache por nome (19 requisições de GLB e textura, sem repetição).
+- **Descoberto na leitura:** a tripulação anda em tempo real (1,4 m/s) e não acompanha a velocidade da simulação; ver relatório da etapa. Sem alteração de regra.
+- **Alteração de código:** `?perf=1` passou a mostrar geometrias, texturas e programas (`src/main.ts`).
+
+## 14/11/2026 · P1 do plano de jogabilidade: astronautas com tarefas e estufa jogável (D-18)
+
+- **Motor:** `src/engine/astronaut.ts` (máquina de estados, durações em horas de jogo), `src/engine/greenhouse.ts` (cultivo), `game.ts` (estado `crop`, `agents`, `agentTasksDone`; ações `ASSIGN_AGENT_TASK`, `CANCEL_AGENT_TASK`, `SET_GREENHOUSE_CARE`), `resources.ts` (consumo da estufa pelos cuidados), `guide.ts` (eventos da LUMA). `harvest.ts` removido (colheita automática da D-07 substituída).
+- **Cena e interface:** `render/picking.ts` (raycasting e anel de destaque), `render/crop.ts` (plantas por estágio), `render/scene.ts` (tripulação deriva posição da fase do motor e acompanha pausa e velocidade), `ui/context-panel.ts` (painel), `director.ts` (planos da estufa, habitat, logística e astronauta 2), `main.ts` (seleção, ordens, Esc). Modelo `greenhouse_v4.glb` regenerado sem as plantas embutidas (`build_v4.py`, `blender -b --python ... -- public/models/v4 greenhouse`).
+- **Testes:** `npm run typecheck` ok; `npm run test` 133 testes ok (eram 103): 29 novos para astronautas e estufa (ordens válidas e inválidas, recurso insuficiente, ocupado, cancelamento, conclusão e recompensa, abrigo e radiação, pausa com tempo zero, passo grande igual a passos pequenos, partida de 708 h com bot que colhe e faz manutenção). Equilíbrio de referência (2 corações) mantido. `npm run build` ok.
+- **Interface (Playwright, GPU real):** `scripts/e2e-contexto.py` passa 15 verificações: tocar na estufa abre o painel; ordem mostra estado em 4 a 22 ms (meta: 150 ms); progresso durante a tarefa; colheita conclui em 4×; cancelamento manda voltar; Esc fecha o painel sem pausar; tocar no rover e no astronauta seleciona; abrir uma ferramenta fecha o painel; em pausa a seleção não age; 3 ordens seguidas a 4× com heap estável (54 MB) e FPS 43 a 50 em dev; 0 erros de console.
+- **Desempenho antes e depois (visão geral, dev, mesma máquina):** 54 a 56 fps e 285 draws antes; 57 a 59 fps e 286 draws depois (empate dentro do ruído).
+- **Falhas encontradas e corrigidas:** (1) as plantas novas ficavam invisíveis porque `attachModel` escondia todo filho já existente no grupo (agora respeita `userData.persistent`); (2) em celular, o clique sintético do toque caía no painel recém-aberto e disparava a primeira ação (a seleção passou de `pointerup` para `click`); (3) a base passiva perde perto da hora 117, então o teste de repetição usa poucas ordens.
+- **Limitações conhecidas:** o painel do rover mostra estado e cancelamento, as missões continuam no painel Rover (P2); habitat, painéis, antena, processador e armazenamento só informam (P3); sem seleção por teclado (P4); a tripulação só tem tarefas na estufa; o ajudante do rover continua decorativo.
+- **Commit:** não feito (sem pedido explícito).

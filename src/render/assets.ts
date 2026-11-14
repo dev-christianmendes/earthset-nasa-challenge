@@ -46,6 +46,7 @@ export function pruneTinyShadows(root: THREE.Object3D): void {
 
 /**
  * Adiciona uma cópia do modelo ao grupo e esconde os objetos provisórios que ele substitui.
+ * Filhos com `userData.persistent` (peças desenhadas por código, como as plantas) não são escondidos.
  * Devolve o nó do modelo, para o chamador ligar animações ou materiais por nome.
  */
 export async function attachModel(group: THREE.Object3D, name: string): Promise<THREE.Object3D> {
@@ -58,6 +59,6 @@ export async function attachModel(group: THREE.Object3D, name: string): Promise<
   pruneTinyShadows(model);
   const provisional = [...group.children];
   group.add(model);
-  for (const child of provisional) child.visible = false;
+  for (const child of provisional) if (!child.userData.persistent) child.visible = false;
   return model;
 }

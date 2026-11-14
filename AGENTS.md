@@ -83,14 +83,20 @@ src/engine/mission.ts       Fases da missão do robô (derivadas do progresso)
 src/render/layout.ts        Planta da base por áreas; base-layout.ts: peças e estados visuais
 src/render/director.ts      Planos de câmera; cinematic.ts: introdução
 src/ui/screens.ts           Telas e configurações; hud.ts, luma.ts, icons.ts, styles.css
+src/engine/astronaut.ts     Astronautas: máquina de estados, tarefas (inspecionar, colher, manutenção), abrigo (D-18)
+src/engine/greenhouse.ts    Cultivo da estufa: crescimento, desgaste, irrigação e iluminação (D-18)
+src/render/picking.ts       Seleção na cena (raycasting) e anel de destaque
+src/render/crop.ts          Plantas da estufa por estágio de crescimento (malhas instanciadas)
+src/ui/context-panel.ts     Painel contextual do objeto selecionado (ações vêm do motor, via dispatch em seco)
+scripts/e2e-contexto.py     Fluxo real de interface (Playwright, Python) contra `npm run dev`
 ```
 
 Atalhos de captura (só `npm run dev`): `?autostart=cadet&hour=24&task=ice&after=2&tool=rover&shot=rover`, `?autostart=cadet&cineAt=7`, `?screen=modes&lang=pt`. O título da página começa com "Earthset ·".
 
 ### 4.1 Modelo do motor (estado e fluxo)
 
-- **`GameState`** (`game.ts`): `clock`, `installation` (rank, site, panels, batteryCapacity, greenhouse), `vitals` (battery em unidades de 0 a capacidade; air, water, food de 0 a 100), `robot` (fila e `antennaInstalled`), `hearts` (0 a 3) e `vitalZeroHours`.
-- **Ações** (`dispatch`): objetos com `type`. Hoje: `SET_GREENHOUSE`, `ENQUEUE_TASK` (kind: `ice` | `panel` | `antenna`), `CANCEL_TASK` (index). Toda ação é validada e devolve `{ ok, state }` ou `{ ok: false, reason }`. **Nunca altera o estado de entrada.** A `reason` é texto em português, mostrado ao jogador.
+- **`GameState`** (`game.ts`): `clock`, `installation` (rank, site, panels, batteryCapacity, greenhouse), `vitals` (battery em unidades de 0 a capacidade; air, water, food de 0 a 100), `robot` (fila e `antennaInstalled`), `hearts` (0 a 3), `vitalZeroHours`, `crop` (cultivo da estufa) e `agents` (dois astronautas com tarefa e descanso).
+- **Ações** (`dispatch`): objetos com `type`. Hoje: `SET_GREENHOUSE`, `SET_CREW_ORDER`, `ENQUEUE_TASK` (kind: `ice` | `panel` | `antenna`), `CANCEL_TASK` (index), `ASSIGN_AGENT_TASK` (kind: `inspect` | `harvest` | `maintain`, agent opcional), `CANCEL_AGENT_TASK`, `SET_GREENHOUSE_CARE` (irrigation, lighting). Toda ação é validada e devolve `{ ok, state }` ou `{ ok: false, reason }`. **Nunca altera o estado de entrada.** A `reason` é texto em português, mostrado ao jogador.
 - **Tempo** (`advance(state, dtHours, sunlit)`): aplica o fluxo por hora em um passo, avança o robô, aplica o efeito das tarefas concluídas (gelo +12 de água, painel +1 em `installation.panels`) e atualiza corações. Para em 708 h. Lança `RangeError` com hora negativa ou não finita.
 - **Sol:** entra de fora, pelo parâmetro `sunlit`. Hoje é ilustrativo (dia de 354 h, noite de 354 h). A fonte real é o bloco B2.
 - **Robô:** só trabalha com tarefa na fila **e** bateria acima de zero. Consome `ROBOT_LOAD_PER_HOUR` (1.0) enquanto trabalha.

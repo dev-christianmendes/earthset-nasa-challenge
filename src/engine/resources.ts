@@ -1,6 +1,7 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Recursos por hora: energia, ar, água e comida. Motor puro.
 // Valores e regras: docs/regras-recursos.md. Todos ajustáveis.
+import { IRRIGATION, LIGHTING, type Care } from './greenhouse';
 import { ROBOT_LOAD_PER_HOUR } from './robot';
 
 export type Rank = 'cadete' | 'explorador' | 'comandante';
@@ -75,6 +76,7 @@ export function deriveFlow(
   sunlit: boolean,
   robotWorking = false,
   solar = 1,
+  care: { readonly irrigation: Care; readonly lighting: Care } = { irrigation: 'normal', lighting: 'normal' },
 ): HourlyFlow {
   const batteryFraction = vitals.battery / inst.batteryCapacity;
   const economy = batteryFraction < RULES.economyBelowBattery;
@@ -93,12 +95,12 @@ export function deriveFlow(
   const load =
     BASE_LOAD_PER_HOUR +
     heating +
-    (greenhouseOn ? GREENHOUSE.energy : 0) +
+    (greenhouseOn ? GREENHOUSE.energy * LIGHTING[care.lighting].use : 0) +
     (electrolysisOn ? ELECTROLYSIS.energy : 0) +
     (robotWorking ? ROBOT_LOAD_PER_HOUR : 0);
 
   const factor = RANK_FACTOR[inst.rank];
-  const waterUse = 0.2 * factor + (greenhouseOn ? GREENHOUSE.water : 0) + (electrolysisOn ? ELECTROLYSIS.water : 0);
+  const waterUse = 0.2 * factor + (greenhouseOn ? GREENHOUSE.water * IRRIGATION[care.irrigation].use : 0) + (electrolysisOn ? ELECTROLYSIS.water : 0);
   const foodGain = greenhouseOn && vitals.water > 0 ? GREENHOUSE.food : 0;
 
   return {
