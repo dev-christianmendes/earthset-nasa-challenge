@@ -28,7 +28,13 @@ export function createCrew(): CrewState {
 }
 
 /** Quem está fora do habitat agora, por atividade (antes da radiação). */
-export function crewOutside(inst: Installation, vitals: Vitals, robot: RobotState): readonly boolean[] {
+export function crewOutside(
+  inst: Installation,
+  vitals: Vitals,
+  robot: RobotState,
+  order: 'auto' | 'shelter' = 'auto',
+): readonly boolean[] {
+  if (order === 'shelter') return [false, false];
   const keeperOutside = isGreenhouseOn(vitals, inst);
   const helperOutside = isWorking(robot, vitals.battery);
   return [keeperOutside, helperOutside];
