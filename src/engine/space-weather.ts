@@ -56,3 +56,16 @@ export function hoursUntilStorm(table: SpaceWeatherTable, hour: number, ahead = 
   }
   return null;
 }
+
+/**
+ * Aviso da antena (D-01, docs/DECISOES.md): horas até a próxima tempestade, se a antena
+ * estiver instalada. Sem antena, não há aviso antecipado. Null quando não há tempestade na janela.
+ */
+export function antennaWarning(
+  table: SpaceWeatherTable,
+  hour: number,
+  antennaInstalled: boolean,
+  ahead = 6,
+): number | null {
+  return antennaInstalled ? hoursUntilStorm(table, hour, ahead) : null;
+}

@@ -7,7 +7,7 @@ import { isSunlit } from './engine/sun';
 import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
-import { hoursUntilStorm, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
+import { antennaWarning, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
 import { camera, controls, frameForViewport, loadBaseModels, loadCrewModels, renderer, resetView, scene, updateScene } from './render/scene';
 import { applyLanguage, renderHud, ui } from './ui/hud';
 import { getLang } from './i18n';
@@ -90,7 +90,7 @@ function currentWeather(): SpaceWeatherSample {
 
 /** Aviso antecipado de tempestade: só com a antena instalada (D-01). */
 function warningNow(): number | null {
-  return game.robot.antennaInstalled ? hoursUntilStorm(WEATHER, game.clock.hour) : null;
+  return antennaWarning(WEATHER, game.clock.hour, game.robot.antennaInstalled);
 }
 
 /** Atualiza o HUD com o estado atual, o clima e o aviso da antena. */

@@ -18,7 +18,7 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 | Componente | O jogador faz | Motor muda | Cena mostra | Lacunas |
 |---|---|---|---|---|
 | Painéis solares | pede **Painel** ao robô | `installation.panels +1` após 4 h de tarefa; máximo 12 | unidade em suporte aparece na cena; geração depende do Sol real | sem animação de instalação; painel não gira para o Sol |
-| Antena | pede **Antena** ao robô | `robot.antennaInstalled` após 8 h | antena aparece no teto do habitat | **sem efeito no jogo** (o motor ainda não usa a antena); sem animação de ativação |
+| Antena | pede **Antena** ao robô | `robot.antennaInstalled` após 8 h; com a antena, o HUD avisa tempestade nas próximas 6 h (D-01) | antena aparece no teto do habitat; aviso de tempestade no HUD | sem animação de ativação |
 | Estufa | escolhe modo: desligada, sempre ligada, só com sobra | liga conforme a bateria | cúpula translúcida aparece quando ligada no modo ≠ desligada | o modo não muda a aparência |
 | Habitat | nada (é a base) | nenhum direto; é o ponto de referência | modelo GLB; escotilha e janelas | janelas não acendem; sem tripulação |
 | Sol | nada (escolhe o local, fixo: morro) | sol da tabela JPL, horizonte LOLA | luz direcional, sombras, painel polar | — |
@@ -64,7 +64,6 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 
 ## Bugs e lacunas que a fidelidade exige (prioridade)
 
-1. Antena instalada não tem efeito no jogo.
-2. Sem itens coletáveis de verdade; o gelo é só uma tarefa.
-3. Astronautas sem tarefas próprias (coleta, reparo) e sem nome.
-4. Sem animação de implantação do painel e da antena.
+1. Sem itens coletáveis de verdade; o gelo é só uma tarefa.
+2. Astronautas sem tarefas próprias (coleta, reparo) e sem nome.
+3. Sem animação de implantação do painel e da antena.

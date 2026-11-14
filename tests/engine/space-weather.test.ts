@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createGame, advance } from '../../src/engine/game';
 import { deriveFlow, PANEL_OUTPUT_PER_HOUR, type Installation } from '../../src/engine/resources';
 import { dispatch } from '../../src/engine/game';
-import { CALM, hoursUntilStorm, solarFactor, stormLevel, weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
+import { antennaWarning, CALM, hoursUntilStorm, solarFactor, stormLevel, weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
 
 const INSTALLATION: Installation = {
   rank: 'explorador',
@@ -76,5 +76,9 @@ describe('aviso antecipado da antena (D-01)', () => {
   it('não avisa quando a tempestade começa depois da janela de 6 horas', () => {
     expect(hoursUntilStorm(table, 0, 2)).toBeNull();
     expect(hoursUntilStorm(table, 4)).toBeNull();
+  });
+  it('só avisa com a antena instalada', () => {
+    expect(antennaWarning(table, 0, true)).toBe(3);
+    expect(antennaWarning(table, 0, false)).toBeNull();
   });
 });

@@ -40,7 +40,7 @@ Implementado em `src/engine/robot.ts`. Números ajustáveis.
 | Fila | Até 4 tarefas, executadas na ordem. O tempo que sobra num passo vai para a próxima. |
 | Gelo | 6 h por viagem; `+12` de água ao concluir (teto 100). |
 | Painel | 4 h; `+1` painel ao concluir. Até 12 painéis, contando os da fila. |
-| Antena | 8 h; uma só. Marca `antennaInstalled`. **Ainda sem efeito no jogo** (ligação com a Terra e alertas entram em B2 e B3). |
+| Antena | 8 h; uma só. Marca `antennaInstalled`. Com a antena, o HUD avisa quando há tempestade nas próximas 6 h (D-01); sem antena, só mostra o clima atual. Não muda recursos. |
 | Consumo | `+1,0` de energia por hora **enquanto trabalha**. Não trabalha com bateria zerada. |
 
 **Simplificação:** o consumo e o trabalho são calculados por passo de tempo. Se uma tarefa termina no meio do passo, o efeito vale só no fim do passo. Com passos de 1 h (testes) ou de frações de hora (tela), o erro é pequeno.
@@ -58,7 +58,6 @@ A base passiva perde por volta da hora 117 com qualquer capacidade. O ponto de v
 
 ## O que ainda não existe (fica para depois)
 
-- **Efeito da antena** (ligação com a Terra, alertas de DONKI).
 - **Bateria da carga e painéis iniciais da preparação** (escolhidos hoje na tela, não na preparação).
 - **Tempestades, radiação e abrigo** (dose por hora, cobertura de regolito).
 - **Patentes** (o fator de consumo já existe; textos e números de tela não).
