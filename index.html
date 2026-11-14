@@ -3,308 +3,363 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Earthset: administre uma base no polo sul da Lua por um dia lunar. Jogo educativo para o NASA Space Apps Challenge 2026." />
+    <meta name="description" content="Earthset: one mission, one base, 708 hours to survive at the Moon's south pole. Educational game for the NASA Space Apps Challenge 2026, built on real NASA data." />
     <title>Earthset · South-pole Moon base</title>
-    <style>
-      :root {
-        --bg: #03050a;
-        --panel: rgba(10, 14, 24, 0.82);
-        --line: rgba(255, 255, 255, 0.12);
-        --text: #e8edf5;
-        --muted: #9aa6b8;
-        --accent: #7fd1ff;
-        --ok: #6fe39a;
-        --warn: #ffcf6b;
-        --bad: #ff7a7a;
-        /* Tokens de docs/VISUAL_DIRECTION.md */
-        --space-navy: #172536;
-        --lunar-gray: #78818b;
-        --habitat-white: #e8e5da;
-        --solar-amber: #f3a847;
-        --life-teal: #56b9a4;
-        --water-blue: #6d9fe8;
-        --growth-green: #83b96c;
-        --alert-coral: #e47767;
-        --science-violet: #b5a0e8;
-      }
-      html, body {
-        margin: 0;
-        height: 100%;
-        background: var(--bg);
-        color: var(--text);
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        overflow: hidden;
-      }
-      canvas { display: block; }
-      .panel {
-        position: fixed;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        box-sizing: border-box;
-      }
-      #hud {
-        top: 16px;
-        left: 16px;
-        width: 300px;
-        max-height: calc(100vh - 32px);
-        overflow-y: auto;
-        padding: 10px 14px;
-      }
-      h1 { font-size: 14px; margin: 0 0 2px; letter-spacing: 0.02em; padding-right: 92px; }
-      .sub { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
-      .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; margin-top: 4px; }
-      .label { color: var(--muted); }
-      .hearts { color: var(--bad); font-size: 18px; letter-spacing: 2px; }
-      .bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; margin-top: 4px; }
-      .bar > i { display: block; height: 100%; width: 0; border-radius: 6px; transition: width 0.25s ease; }
-      .bar.battery > i { background: linear-gradient(90deg, var(--solar-amber), var(--growth-green)); }
-      .bar.air > i { background: var(--life-teal); }
-      .bar.water > i { background: var(--water-blue); }
-      .bar.food > i { background: var(--growth-green); }
-      /* Botão flutuante no topo central: não empurra o painel do HUD, funciona em qualquer largura. */
-      #top-actions { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 8px; }
-      #top-actions button { font-size: 12px; min-height: 36px; padding: 6px 14px; background: var(--panel); }
-      #pause-menu { display: flex; flex-direction: column; gap: 10px; }
-      #pause-menu button, #pause-controls button { width: 100%; }
-      #pause-controls { margin-top: 16px; }
-      .meters .meter:first-child .row { margin-top: 0; }
-      /* Desktop: recursos em duas colunas, para caber em 800 px de altura. */
-      .meters { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
-      /* Modo escola (B3.4): explicações ao lado de cada recurso. */
-      .school-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 8px 0 8px; cursor: pointer; user-select: none; }
-      .school-toggle input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
-      .hint { display: none; margin: 6px 0 0; font-size: 11px; line-height: 1.4; color: var(--muted); }
-      .hint span { display: block; margin-top: 2px; }
-      .hint b { color: var(--text); font-weight: 600; }
-      body.school .hint { display: block; }
-      /* Objetivos, controle da tripulação e LUMA (guia). */
-      #goals h2, #crew h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
-      #goal-list { list-style: none; margin: 0; padding: 0; font-size: 13px; }
-      #goal-list li { display: grid; grid-template-columns: 16px 1fr; gap: 0 6px; align-items: center; padding: 2px 0; }
-      #goal-list .mark { color: var(--muted); }
-      #goal-list li.done .mark { color: var(--growth-green); }
-      #goal-list li.done .label { color: var(--muted); text-decoration: line-through; }
-      #goal-list .goal-bar { grid-column: 2; height: 3px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
-      #goal-list .goal-bar i { display: block; height: 100%; background: var(--solar-amber); border-radius: 4px; transition: width 0.3s ease; }
-      #crew .crew-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-      #crew button.active { background: rgba(243, 168, 71, 0.22); border-color: var(--solar-amber); }
-      #luma { right: 16px; bottom: 44px; width: 300px; padding: 12px 14px; }
-      #luma .luma-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-      #luma .luma-head b { color: var(--life-teal); letter-spacing: 0.08em; }
-      #luma .luma-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--life-teal); box-shadow: 0 0 8px var(--life-teal); }
-      #luma p { margin: 0; font-size: 13px; line-height: 1.45; }
-      #brief .title-card { text-align: left; }
-      #brief p { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 12px; }
-      #brief .brief-start { width: 100%; background: var(--solar-amber); color: var(--space-navy); border-color: var(--solar-amber); font-weight: 600; min-height: 48px; }
-      /* Painel polar do horizonte (B-dados): canto superior direito, só em tela larga. */
-      #horizon { top: 16px; right: 16px; width: 240px; padding: 12px; text-align: center; }
-      #horizon h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
-      #horizon svg { display: block; margin: 0 auto; }
-      #horizon .cap { font-size: 11px; line-height: 1.4; color: var(--muted); margin: 6px 0 0; text-align: left; }
-      .space { font-size: 12px; color: var(--warn); margin: 8px 0 0; }
-      .space.storm { color: var(--bad); font-weight: 600; }
-      .title-screen { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(3,5,10,0.55); z-index: 10; padding: 16px; }
-      .title-screen[hidden] { display: none; }
-      .title-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px 26px; max-width: 460px; width: 100%; text-align: center; }
-      .title-card h1 { font-size: 40px; letter-spacing: 0.04em; margin: 0 0 6px; }
-      .title-card .tagline { color: var(--muted); margin: 0 0 22px; }
-      #title-menu { display: flex; flex-direction: column; gap: 10px; }
-      #title-menu button { width: 100%; }
-      #title-menu button.primary { background: var(--solar-amber); color: var(--space-navy); border-color: var(--solar-amber); font-weight: 600; min-height: 48px; }
-      #title-credits { margin-top: 18px; text-align: left; }
-      #title-credits .credits { font-size: 13px; line-height: 1.5; color: var(--muted); margin: 0 0 12px; }
-      #title-credits button { width: 100%; }
-      .lang-btn { position: absolute; top: 14px; right: 14px; min-height: 28px; padding: 4px 10px; font-size: 11px; border-radius: 8px; }
-      /* Alerta (B3.1): recurso baixo fica vermelho. */
-      .meter.low .bar > i { background: var(--bad) !important; }
-      .meter.low .row span:last-child { color: var(--bad); font-weight: 600; }
-      .section { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; }
-      .section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
-      .buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-      button {
-        font: inherit;
-        color: var(--text);
-        background: rgba(127, 209, 255, 0.12);
-        border: 1px solid rgba(127, 209, 255, 0.35);
-        border-radius: 10px;
-        padding: 10px 6px;
-        font-size: 13px;
-        cursor: pointer;
-        min-height: 36px;
-      }
-      button:hover:not(:disabled) { background: rgba(127, 209, 255, 0.22); }
-      button:disabled { opacity: 0.4; cursor: not-allowed; }
-      select {
-        width: 100%;
-        font: inherit;
-        color: var(--text);
-        background: #0d1420;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 10px;
-        min-height: 44px;
-      }
-      #queue { list-style: none; padding: 0; margin: 0; font-size: 13px; }
-      #queue li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--line); }
-      #queue li.empty { color: var(--muted); border-bottom: 0; }
-      #queue button { min-height: 32px; min-width: 32px; padding: 2px 8px; font-size: 16px; line-height: 1; }
-      #message { min-height: 18px; color: var(--warn); font-size: 12px; margin-top: 8px; }
-      #note { position: fixed; right: 16px; bottom: 12px; color: var(--muted); font-size: 11px; background: rgba(0,0,0,0.35); padding: 4px 8px; border-radius: 8px; }
-      #overlay {
-        position: fixed; inset: 0; display: grid; place-items: center;
-        background: rgba(3, 5, 10, 0.72);
-      }
-      #overlay[hidden] { display: none; }
-      #overlay .panel { position: static; width: min(440px, calc(100vw - 32px)); padding: 24px; text-align: center; }
-      #overlay h2 { margin: 0 0 10px; font-size: 22px; }
-      #overlay p { color: var(--muted); line-height: 1.5; margin: 0 0 18px; }
-      #overlay button { padding: 12px 22px; }
-      @media (max-width: 700px) {
-        #hud { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 46vh; padding: 12px 14px; }
-        .meters { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
-        .meter .row { margin-top: 6px; }
-        .section { margin-top: 10px; padding-top: 10px; }
-        #note { display: none; }
-        #horizon { display: none; }
-        #luma { top: 56px; bottom: auto; left: 12px; right: 12px; width: auto; }
-      }
-    </style>
   </head>
-  <body>
-    <aside id="hud" class="panel" aria-label="Painel da base">
-      <h1 data-i18n="hud.title">South-pole Moon base</h1>
-      <button type="button" id="lang" class="lang-btn">Português</button>
-      <div class="sub"><span data-i18n="hud.hour">Game hour</span> <strong id="hour">0</strong> <span data-i18n="hud.of">of 708</span> · <span id="hearts" class="hearts" data-i18n-aria="hud.hearts" aria-label="hearts">♥♥♥</span></div>
-      <div id="goals" class="section">
-        <h2 data-i18n="objective.title">Mission goals</h2>
-        <ul id="goal-list"></ul>
+  <body class="state-loading">
+    <!-- ============ Carregamento ============ -->
+    <section id="loading" class="screen screen-loading" aria-live="polite">
+      <div class="loading-box">
+        <div class="wordmark small" aria-hidden="true"><span>EARTH</span><b>SET</b></div>
+        <div class="load-bar"><i id="load-fill"></i></div>
+        <p id="load-text" data-i18n="load.text">Preparing the lunar surface…</p>
       </div>
-      <p class="hint" data-hint="hearts"></p>
-      <label class="school-toggle"><input type="checkbox" id="school-mode" /> <span data-i18n="hud.school">School mode</span></label>
+    </section>
 
-      <div class="meters">
-        <div class="meter">
-          <div class="row"><span class="label" data-label="battery" data-i18n="hud.battery">Battery</span><span id="val-battery">0%</span></div>
-          <div class="bar battery"><i id="bar-battery"></i></div>
-          <p class="hint" data-hint="battery"></p>
+    <!-- ============ Tela inicial ============ -->
+    <section id="menu" class="screen screen-menu" hidden aria-labelledby="logo-title">
+      <div class="menu-shade" aria-hidden="true"></div>
+      <div class="menu-col">
+        <div class="logo-block">
+          <svg class="logo-mark" viewBox="0 0 120 60" aria-hidden="true">
+            <defs>
+              <linearGradient id="earth-g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#8fd0ff" />
+                <stop offset="1" stop-color="#2f6fb0" />
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="44" r="22" fill="url(#earth-g)" />
+            <path d="M44 38 q6 -6 12 -2 t10 4 q5 2 8 -2" stroke="#83b96c" stroke-width="3" fill="none" stroke-linecap="round" />
+            <path d="M0 46 Q30 40 60 46 T120 44 V60 H0 Z" fill="#0b1118" />
+            <path d="M0 46 Q30 40 60 46 T120 44" stroke="#f3a847" stroke-width="1.6" fill="none" />
+          </svg>
+          <h1 id="logo-title" class="wordmark"><span>EARTH</span><b>SET</b></h1>
+          <p class="tagline" data-i18n="menu.tagline">One mission. One base. 708 hours to survive.</p>
         </div>
-        <div class="meter">
-          <div class="row"><span class="label" data-label="air" data-i18n="hud.air">Air</span><span id="val-air">0</span></div>
-          <div class="bar air"><i id="bar-air"></i></div>
-          <p class="hint" data-hint="air"></p>
-        </div>
-        <div class="meter">
-          <div class="row"><span class="label" data-label="water" data-i18n="hud.water">Water</span><span id="val-water">0</span></div>
-          <div class="bar water"><i id="bar-water"></i></div>
-          <p class="hint" data-hint="water"></p>
-        </div>
-        <div class="meter">
-          <div class="row"><span class="label" data-label="food" data-i18n="hud.food">Food</span><span id="val-food">0</span></div>
-          <div class="bar food"><i id="bar-food"></i></div>
-          <p class="hint" data-hint="food"></p>
-        </div>
+        <nav class="menu-list" aria-label="Main menu">
+          <button type="button" class="menu-btn primary" data-go="modes"><span data-i18n="menu.new">New mission</span><small data-i18n="menu.new.sub">Operation Last Horizon</small></button>
+          <button type="button" class="menu-btn" data-open="howto" data-i18n="menu.howto">How to play</button>
+          <button type="button" class="menu-btn" data-go="modes" data-i18n="menu.modes">Game modes</button>
+          <button type="button" class="menu-btn" data-open="science" data-i18n="menu.science">Explore the science</button>
+          <button type="button" class="menu-btn" data-open="settings" data-i18n="menu.settings">Settings</button>
+          <button type="button" class="menu-btn" data-open="credits" data-i18n="menu.credits">Credits &amp; sources</button>
+          <button type="button" class="menu-btn lang-toggle" data-lang-toggle data-i18n="hud.lang">Português</button>
+        </nav>
       </div>
-      <div class="row"><span class="label" data-label="panels" data-i18n="hud.panels">Solar panels</span><span id="panels">0</span></div>
-      <p class="hint" data-hint="panels"></p>
-      <p id="space" class="space" aria-live="polite">calm space weather</p>
-      <p class="hint" data-hint="space"></p>
+      <ul class="menu-facts">
+        <li><b data-i18n="menu.fact.where.k">Setting</b><span data-i18n="menu.fact.where">Lunar south pole</span></li>
+        <li><b data-i18n="menu.fact.time.k">Duration</b><span data-i18n="menu.fact.time">708 simulated hours</span></li>
+        <li><b data-i18n="menu.fact.goal.k">Goal</b><span data-i18n="menu.fact.goal">Keep the crew alive</span></li>
+        <li><b data-i18n="menu.fact.data.k">Real data</b><span data-i18n="menu.fact.data">JPL Horizons · LRO LOLA · NASA DONKI</span></li>
+        <li><b data-i18n="menu.fact.story.k">Story</b><span data-i18n="menu.fact.story">Fictional, built on real measurements</span></li>
+      </ul>
+    </section>
 
-      <div class="section">
-        <h2 data-label="robot" data-i18n="hud.queue">Robot · queue</h2>
-        <p class="hint" data-hint="robot"></p>
-        <ul id="queue"></ul>
-        <div id="message" role="status" aria-live="polite"></div>
-      </div>
-
-      <div class="section">
-        <h2 data-i18n="hud.ask">Ask the robot</h2>
-        <div class="buttons">
-          <button type="button" data-task="ice" data-label="ice" data-i18n="task.ice" data-i18n-title="task.ice.title">Ice</button>
-          <button type="button" data-task="panel" data-label="panel" data-i18n="task.panel" data-i18n-title="task.panel.title">Panel</button>
-          <button type="button" data-task="antenna" data-label="antenna" data-i18n="task.antenna" data-i18n-title="task.antenna.title">Antenna</button>
+    <!-- ============ Escolha de experiência ============ -->
+    <section id="modes" class="screen screen-panel" hidden aria-labelledby="modes-title">
+      <div class="sheet wide">
+        <header class="sheet-head">
+          <p class="eyebrow" data-i18n="modes.eyebrow">Choose your experience</p>
+          <h2 id="modes-title" data-i18n="modes.title">How do you want to command the base?</h2>
+          <p class="sheet-sub" data-i18n="modes.sub">Same science in every mode. The mode changes how much help you get and how much the crew consumes.</p>
+        </header>
+        <div class="mode-grid">
+          <button type="button" class="mode-card" data-mode="explorer">
+            <span class="mode-icon" data-icon="compass"></span>
+            <b data-i18n="mode.explorer">Explorer</b>
+            <small data-i18n="mode.explorer.who">New to space · about 8–12</small>
+            <ul>
+              <li data-i18n="mode.explorer.f1">LUMA guides every step</li>
+              <li data-i18n="mode.explorer.f2">Simple words and visual explanations</li>
+              <li data-i18n="mode.explorer.f3">Crew uses 25% less (game setting)</li>
+            </ul>
+          </button>
+          <button type="button" class="mode-card" data-mode="cadet">
+            <span class="mode-icon" data-icon="rocket"></span>
+            <b data-i18n="mode.cadet">Lunar Cadet</b>
+            <small data-i18n="mode.cadet.who">Teens and casual players</small>
+            <ul>
+              <li data-i18n="mode.cadet.f1">Full resource management</li>
+              <li data-i18n="mode.cadet.f2">Story goals and contextual alerts</li>
+              <li data-i18n="mode.cadet.f3">Reference balance</li>
+            </ul>
+          </button>
+          <button type="button" class="mode-card" data-mode="commander">
+            <span class="mode-icon" data-icon="chart"></span>
+            <b data-i18n="mode.commander">Commander</b>
+            <small data-i18n="mode.commander.who">Experienced, science-minded</small>
+            <ul>
+              <li data-i18n="mode.commander.f1">Technical HUD with hourly flows</li>
+              <li data-i18n="mode.commander.f2">LUMA only reports critical alerts</li>
+              <li data-i18n="mode.commander.f3">Crew uses 15% more (game setting)</li>
+            </ul>
+          </button>
         </div>
+        <p class="fine" data-i18n="modes.note">Suggested profiles are only a guide to complexity, not an age rating. No personal data is asked or stored.</p>
+        <div class="sheet-actions"><button type="button" class="ghost" data-back data-i18n="title.back">Back</button></div>
       </div>
+    </section>
 
-      <div id="crew" class="section">
-        <h2 data-i18n="hud.crew">Crew</h2>
-        <div class="crew-buttons">
-          <button type="button" data-crew="auto" data-i18n="hud.crew.auto">Auto</button>
-          <button type="button" data-crew="shelter" data-i18n="hud.crew.shelter">Shelter</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2 data-label="greenhouse" data-i18n="hud.greenhouse">Greenhouse</h2>
-        <p class="hint" data-hint="greenhouse"></p>
-        <select id="greenhouse" data-i18n-aria="hud.greenhouse.aria" aria-label="Greenhouse mode"></select>
-      </div>
-    </aside>
-
-    <section id="title" class="title-screen" aria-labelledby="title-name">
-      <div class="title-card">
-        <h1 id="title-name">Earthset</h1>
-        <p class="tagline" data-i18n="title.tagline">A small base. A hostile world. One lunar day.</p>
-        <div id="title-menu">
-          <button type="button" id="start" class="primary" data-i18n="title.start">New mission</button>
-          <button type="button" id="title-lang" data-i18n="hud.lang">Português</button>
-          <button type="button" id="show-credits" data-i18n="title.credits">Credits</button>
-        </div>
-        <div id="title-credits" hidden>
-          <p class="credits" data-i18n="title.credits.text"></p>
-          <button type="button" id="hide-credits" data-i18n="title.back">Back</button>
+    <!-- ============ História / briefing ============ -->
+    <section id="story" class="screen screen-panel" hidden aria-labelledby="story-title">
+      <div class="sheet">
+        <header class="sheet-head">
+          <p class="eyebrow" data-i18n="story.eyebrow">Mission briefing</p>
+          <h2 id="story-title" data-i18n="story.title">Operation Last Horizon</h2>
+        </header>
+        <p class="lead" data-i18n="story.p1">A small experimental station sits near the Moon's south pole. It studies sunlight at the pole, tests the use of lunar ice and asks one question: can people live here?</p>
+        <p data-i18n="story.p2">Your crew has just landed. The base is only partly working: not enough power for the whole lunar day, the antenna needs repair and reserves are limited. You command the operations. LUMA, the station's support system, reads the data with you.</p>
+        <ol class="chapter-list" id="story-chapters"></ol>
+        <p class="fine" data-i18n="story.fiction">The story is fiction. Sunlight, terrain and space weather are real NASA measurements (9 Oct 2024 scenario).</p>
+        <div class="sheet-actions">
+          <button type="button" class="ghost" data-back data-i18n="title.back">Back</button>
+          <button type="button" class="primary" id="story-go" data-i18n="story.go">Begin mission</button>
         </div>
       </div>
     </section>
 
-    <div id="top-actions">
-      <section id="brief" class="title-screen" hidden aria-labelledby="brief-title">
-      <div class="title-card">
-        <h2 id="brief-title" data-i18n="brief.title">Your mission</h2>
-        <p data-i18n="brief.body">You run a small base at the Moon's south pole for one lunar day (708 hours).</p>
-        <p data-i18n="brief.controls">Ask the robot for ice, panels and the antenna.</p>
-        <button type="button" id="brief-start" class="brief-start" data-i18n="brief.start">Start mission</button>
+    <!-- ============ Painéis do menu: como jogar, ciência, configurações, créditos ============ -->
+    <section id="howto" class="screen screen-panel" hidden aria-labelledby="howto-title">
+      <div class="sheet">
+        <header class="sheet-head"><h2 id="howto-title" data-i18n="howto.title">How to play</h2></header>
+        <ul class="howto">
+          <li><span data-icon="clock"></span><p data-i18n="howto.1">Time runs on its own: 2 game hours per second. Survive 708 hours with at least one of your 3 lives.</p></li>
+          <li><span data-icon="rover"></span><p data-i18n="howto.2">Send the rover on missions: lunar ice becomes water, new solar arrays bring power, the antenna warns you about storms.</p></li>
+          <li><span data-icon="bolt"></span><p data-i18n="howto.3">Sunlight at the pole is real (JPL Horizons). When the Sun drops behind the measured horizon, the battery must last the night.</p></li>
+          <li><span data-icon="crew"></span><p data-i18n="howto.4">Space weather is real (NASA DONKI). During radiation, keep the crew inside.</p></li>
+          <li><span data-icon="heart"></span><p data-i18n="howto.5">If power, air, water or food stays at zero for 6 hours, you lose a life.</p></li>
+          <li><span data-icon="mouse"></span><p data-i18n="howto.6">Drag to orbit the camera, scroll to zoom. Esc pauses. The toolbar at the bottom opens each system.</p></li>
+        </ul>
+        <div class="sheet-actions"><button type="button" class="primary" data-back data-i18n="title.back">Back</button></div>
       </div>
     </section>
 
-    <button type="button" id="reset-view" data-i18n="hud.reset">Base view</button>
-      <button type="button" id="pause-btn" data-i18n="pause.button">Pause</button>
+    <section id="science" class="screen screen-panel" hidden aria-labelledby="science-title">
+      <div class="sheet wide">
+        <header class="sheet-head">
+          <p class="eyebrow" data-i18n="science.eyebrow">Real data inside the game</p>
+          <h2 id="science-title" data-i18n="science.title">Explore the science</h2>
+        </header>
+        <div class="science-grid">
+          <div class="science-plot"><div id="science-horizon"></div></div>
+          <div class="science-text">
+            <h3 data-i18n="science.sun.h">Sunlight at the pole</h3>
+            <p data-i18n="science.sun.p">At the south pole the Sun circles the horizon, very low. The yellow path is its real position for 709 hours (NASA/JPL Horizons). The blue line is the horizon measured by the Lunar Reconnaissance Orbiter laser altimeter (LRO LOLA). Where the path is above the line, your panels get light.</p>
+            <h3 data-i18n="science.why.h">Why it matters to you</h3>
+            <p data-i18n="science.why.p">The base is lit for the first 370 hours, then the Sun hides behind the terrain for almost 280 hours. Install panels early and store energy for that long night.</p>
+            <h3 data-i18n="science.ice.h">Water from lunar ice</h3>
+            <p data-i18n="science.ice.p">Ice in permanently shadowed craters is mixed with regolith. To get water you dig the icy soil, heat it so the ice turns to vapour, capture and condense the vapour, then purify it. The game shows this as the rover's ice mission.</p>
+            <h3 data-i18n="science.space.h">Space weather</h3>
+            <p data-i18n="science.space.p">Solar storms and particle events come from NASA DONKI records of 9 Oct 2024. Storms cut panel output; radiation stops outdoor work.</p>
+            <p class="fine" data-i18n="science.fine">Illustrative: rover, greenhouse, consumption rates, ice site position and terrain height exaggeration (2×).</p>
+          </div>
+        </div>
+        <div class="sheet-actions"><button type="button" class="primary" data-back data-i18n="title.back">Back</button></div>
+      </div>
+    </section>
+
+    <section id="settings" class="screen screen-panel" hidden aria-labelledby="settings-title">
+      <div class="sheet">
+        <header class="sheet-head"><h2 id="settings-title" data-i18n="settings.title">Settings</h2></header>
+        <div class="settings">
+          <label class="switch"><input type="checkbox" id="set-intro" checked /><span data-i18n="settings.intro">Play the intro before each new mission</span></label>
+          <label class="switch"><input type="checkbox" id="set-motion" /><span data-i18n="settings.motion">Reduce motion (no camera flights)</span></label>
+          <label class="switch"><input type="checkbox" id="set-explain" /><span data-i18n="settings.explain">Show explanations next to resources</span></label>
+          <label class="switch"><input type="checkbox" id="set-quality" checked /><span data-i18n="settings.quality">High quality shadows</span></label>
+          <div class="setting-row"><span data-i18n="settings.lang">Language</span><button type="button" data-lang-toggle data-i18n="hud.lang">Português</button></div>
+        </div>
+        <div class="sheet-actions"><button type="button" class="primary" data-back data-i18n="title.back">Back</button></div>
+      </div>
+    </section>
+
+    <section id="credits" class="screen screen-panel" hidden aria-labelledby="credits-title">
+      <div class="sheet">
+        <header class="sheet-head"><h2 id="credits-title" data-i18n="credits.title">Credits &amp; sources</h2></header>
+        <dl class="credits">
+          <dt data-i18n="credits.data">Scientific data</dt>
+          <dd data-i18n="credits.data.v">Sun ephemeris: NASA/JPL Horizons. Terrain: LRO LOLA LDEM 80S 20 m (NASA). Space weather: NASA DONKI, historical scenario of 9 Oct 2024 (not a forecast). Earth image: NASA Blue Marble (public domain).</dd>
+          <dt data-i18n="credits.art">Art</dt>
+          <dd data-i18n="credits.art.v">Lunar surface texture: Poly Haven "Moon Dusted 01" (CC0). Models: Earthset Blender scripts, plus CC0 packs listed in the project's asset register.</dd>
+          <dt data-i18n="credits.code">Software</dt>
+          <dd data-i18n="credits.code.v">three.js (MIT), Vite, Vitest, Blender (GPL). Built with AI coding assistants, declared in AI_DISCLOSURE.md.</dd>
+          <dt data-i18n="credits.note">Note</dt>
+          <dd data-i18n="credits.note.v">Earthset is not affiliated with or endorsed by NASA. The story and characters are fiction.</dd>
+        </dl>
+        <div class="sheet-actions"><button type="button" class="primary" data-back data-i18n="title.back">Back</button></div>
+      </div>
+    </section>
+
+    <!-- ============ Introdução animada ============ -->
+    <section id="cine" class="cine" hidden aria-live="polite">
+      <div class="bar top"></div>
+      <div class="bar bottom"></div>
+      <p id="cine-caption" class="cine-caption"></p>
+      <div id="cine-luma" class="cine-luma" hidden><span class="luma-avatar" aria-hidden="true"><i></i></span><p id="cine-luma-text"></p></div>
+      <button type="button" id="cine-skip" class="cine-skip" data-i18n="cine.skip">Skip intro</button>
+    </section>
+
+    <!-- ============ HUD de jogo ============ -->
+    <div id="hud" hidden>
+      <header id="topbar" class="topbar">
+        <div class="tb-left">
+          <div class="wordmark tiny" aria-hidden="true"><span>EARTH</span><b>SET</b></div>
+          <div class="chapter-chip" id="chapter-chip" title=""><b id="chapter-num">1</b><span id="chapter-name"></span></div>
+        </div>
+        <div class="tb-center">
+          <div class="clock">
+            <div class="clock-row"><span class="clock-label" data-i18n="hud.hour">Mission hour</span><b id="hour">0</b><span class="clock-of">/ 708</span><span id="sun-state" class="sun-state"></span></div>
+            <div class="clock-bar"><i id="clock-fill"></i><span id="night-mark" class="night-mark"></span></div>
+          </div>
+          <div class="res" id="res">
+            <div class="chip" data-res="battery"><span data-icon="bolt"></span><div><small data-i18n="hud.battery">Power</small><b id="val-battery">0%</b><i class="mini"><i id="bar-battery"></i></i></div></div>
+            <div class="chip" data-res="air"><span data-icon="air"></span><div><small data-i18n="hud.air">Air</small><b id="val-air">0</b><i class="mini"><i id="bar-air"></i></i></div></div>
+            <div class="chip" data-res="water"><span data-icon="drop"></span><div><small data-i18n="hud.water">Water</small><b id="val-water">0</b><i class="mini"><i id="bar-water"></i></i></div></div>
+            <div class="chip" data-res="food"><span data-icon="leaf"></span><div><small data-i18n="hud.food">Food</small><b id="val-food">0</b><i class="mini"><i id="bar-food"></i></i></div></div>
+          </div>
+        </div>
+        <div class="tb-right">
+          <div id="hearts" class="hearts" data-i18n-aria="hud.hearts" aria-label="lives"></div>
+          <div id="space" class="alert-chip" aria-live="polite"></div>
+          <button type="button" class="speed-btn" id="speed-btn" data-i18n-title="hud.speed" title="Simulation speed">1×</button>
+          <button type="button" class="icon-btn" id="pause-btn" data-i18n-aria="pause.button" aria-label="Pause"><span data-icon="pause"></span></button>
+        </div>
+      </header>
+      <p id="flows" class="flows" hidden></p>
+
+      <nav id="toolbar" class="toolbar" aria-label="Systems">
+        <button type="button" data-tool="base"><span data-icon="home"></span><small data-i18n="tool.base">Base</small></button>
+        <button type="button" data-tool="rover"><span data-icon="rover"></span><small data-i18n="tool.rover">Rover</small><i class="badge" id="rover-badge" hidden></i></button>
+        <button type="button" data-tool="crew"><span data-icon="crew"></span><small data-i18n="tool.crew">Crew</small></button>
+        <button type="button" data-tool="energy"><span data-icon="bolt"></span><small data-i18n="tool.energy">Energy</small></button>
+        <button type="button" data-tool="greenhouse"><span data-icon="leaf"></span><small data-i18n="tool.greenhouse">Greenhouse</small></button>
+        <button type="button" data-tool="missions"><span data-icon="flag"></span><small data-i18n="tool.missions">Missions</small></button>
+        <button type="button" data-tool="science"><span data-icon="orbit"></span><small data-i18n="tool.science">Science</small></button>
+      </nav>
+
+      <aside id="side" class="side" hidden aria-labelledby="side-title">
+        <header class="side-head"><h2 id="side-title"></h2><button type="button" class="icon-btn" id="side-close" data-i18n-aria="side.close" aria-label="Close"><span data-icon="close"></span></button></header>
+
+        <div class="side-body" data-panel="base">
+          <ul class="status-list" id="base-status"></ul>
+          <h3 data-i18n="side.camera">Camera</h3>
+          <div class="cam-grid">
+            <button type="button" data-cam="overview" data-i18n="cam.overview">Base overview</button>
+            <button type="button" data-cam="crew" data-i18n="cam.crew">Astronaut</button>
+            <button type="button" data-cam="rover" data-i18n="cam.rover">Rover</button>
+            <button type="button" data-cam="ice" data-i18n="cam.ice">Ice site</button>
+          </div>
+          <div class="explain" id="base-explain"></div>
+        </div>
+
+        <div class="side-body" data-panel="rover">
+          <p class="side-sub" data-i18n="rover.sub">Choose a mission. The rover leaves the garage, drives to the site, works, returns and delivers.</p>
+          <div class="mission-cards">
+            <article class="mission-card" data-mission="ice">
+              <header><span data-icon="drop"></span><b data-i18n="mission.ice">Lunar ice extraction</b></header>
+              <p data-i18n="mission.ice.p">Dig icy regolith and bring it to the processor. +12 water.</p>
+              <footer><small data-i18n="mission.ice.time">6 h · 4 h with an astronaut helping</small><button type="button" class="primary" data-task="ice" data-i18n="mission.launch">Launch</button></footer>
+            </article>
+            <article class="mission-card" data-mission="panel">
+              <header><span data-icon="panel"></span><b data-i18n="mission.panel">Solar array installation</b></header>
+              <p data-i18n="mission.panel.p">Carry a stored array to the energy field and connect it. +1 panel.</p>
+              <footer><small id="panel-count-note"></small><button type="button" class="primary" data-task="panel" data-i18n="mission.launch">Launch</button></footer>
+            </article>
+            <article class="mission-card" data-mission="antenna">
+              <header><span data-icon="antenna"></span><b data-i18n="mission.antenna">Antenna repair</b></header>
+              <p data-i18n="mission.antenna.p">Repair the dish. It warns you about solar storms 6 h ahead.</p>
+              <footer><small data-i18n="mission.antenna.time">8 h</small><button type="button" class="primary" data-task="antenna" data-i18n="mission.launch">Launch</button></footer>
+            </article>
+          </div>
+          <h3 data-i18n="rover.queue">Operations queue</h3>
+          <ol id="queue" class="queue"></ol>
+          <div id="process" class="process" hidden>
+            <h3 data-i18n="process.title">Ice to water</h3>
+            <ol class="process-steps" id="process-steps"></ol>
+          </div>
+          <div id="message" class="message" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="side-body" data-panel="crew">
+          <p class="side-sub" data-i18n="crew.sub">Two astronauts. On Auto they tend the greenhouse and help the rover dig ice. In Shelter they stay inside the habitat.</p>
+          <div class="seg" role="group">
+            <button type="button" data-crew="auto"><span data-icon="crew"></span><span data-i18n="hud.crew.auto">Auto</span></button>
+            <button type="button" data-crew="shelter"><span data-icon="shield"></span><span data-i18n="hud.crew.shelter">Shelter</span></button>
+          </div>
+          <ul class="status-list" id="crew-status"></ul>
+          <button type="button" class="wide-btn" data-cam="crew" data-i18n="cam.crew.focus">Focus camera on the astronaut</button>
+        </div>
+
+        <div class="side-body" data-panel="energy">
+          <div class="big-readout"><span data-icon="bolt"></span><b id="energy-pct">0%</b><small id="energy-cap"></small></div>
+          <ul class="status-list" id="energy-status"></ul>
+          <div class="explain" id="energy-explain"></div>
+        </div>
+
+        <div class="side-body" data-panel="greenhouse">
+          <p class="side-sub" data-i18n="greenhouse.sub">The greenhouse turns power and water into food. The crew harvests every 12 hours while it runs.</p>
+          <div class="seg three" role="group" id="greenhouse-seg">
+            <button type="button" data-gh="off" data-i18n="greenhouse.off">Off</button>
+            <button type="button" data-gh="surplus" data-i18n="greenhouse.surplus">Only with surplus</button>
+            <button type="button" data-gh="always" data-i18n="greenhouse.always">Always on</button>
+          </div>
+          <ul class="status-list" id="greenhouse-status"></ul>
+        </div>
+
+        <div class="side-body" data-panel="missions">
+          <ol class="chapter-list live" id="chapters"></ol>
+        </div>
+
+        <div class="side-body" data-panel="science">
+          <div id="horizon-panel" class="horizon-wrap"></div>
+          <p class="side-sub" data-i18n="science.why.p">The base is lit for the first 370 hours, then the Sun hides behind the terrain for almost 280 hours. Install panels early and store energy for that long night.</p>
+          <p class="fine" data-i18n="note">Sun and terrain: real data (NASA/JPL Horizons, LRO LOLA). Space weather: 9 Oct 2024 scenario (NASA DONKI). Terrain vertical exaggeration 2×. Rover and greenhouse are illustrative.</p>
+        </div>
+      </aside>
+
+      <aside id="luma" class="luma" aria-live="polite">
+        <div class="luma-head">
+          <span class="luma-avatar" aria-hidden="true"><i></i></span>
+          <div class="luma-id"><b data-i18n="luma.name">LUMA</b><small data-i18n="luma.role">Station support system</small></div>
+          <button type="button" class="icon-btn small" id="luma-history-btn" data-i18n-aria="luma.history" aria-label="History"><span data-icon="list"></span></button>
+          <button type="button" class="icon-btn small" id="luma-min" data-i18n-aria="luma.minimize" aria-label="Minimize"><span data-icon="min"></span></button>
+        </div>
+        <p id="luma-text" class="luma-text"></p>
+        <button type="button" id="luma-action" class="luma-action" hidden></button>
+        <ol id="luma-history" class="luma-history" hidden></ol>
+      </aside>
+
+      <div id="toast" class="toast" hidden></div>
+      <p id="footnote" class="footnote" data-i18n="footnote">Real NASA data: Sun, terrain, space weather. Story, rover and consumption: game.</p>
     </div>
 
-    <section id="pause" class="title-screen" hidden aria-labelledby="pause-title">
-      <div class="title-card">
-        <h2 id="pause-title" data-i18n="pause.title">Paused</h2>
-        <div id="pause-menu">
-          <button type="button" id="resume" class="primary" data-i18n="pause.resume">Resume</button>
-          <button type="button" id="show-controls" data-i18n="pause.controls">Controls</button>
+    <!-- ============ Pausa ============ -->
+    <section id="pause" class="screen screen-panel" hidden aria-labelledby="pause-title">
+      <div class="sheet narrow">
+        <header class="sheet-head"><h2 id="pause-title" data-i18n="pause.title">Paused</h2></header>
+        <div class="stack">
+          <button type="button" class="primary" id="resume" data-i18n="pause.resume">Resume</button>
+          <button type="button" data-open="howto" data-i18n="menu.howto">How to play</button>
+          <button type="button" data-open="settings" data-i18n="menu.settings">Settings</button>
           <button type="button" id="to-menu" data-i18n="pause.menu">Main menu</button>
         </div>
-        <div id="pause-controls" hidden>
-          <p class="credits" data-i18n="pause.controls.text"></p>
-          <button type="button" id="hide-controls" data-i18n="title.back">Back</button>
-        </div>
       </div>
     </section>
 
-    <aside id="luma" class="panel" aria-live="polite">
-      <div class="luma-head"><span class="luma-dot"></span><b data-i18n="luma.name">LUMA</b><span data-i18n="luma.title">LUMA · your base guide</span></div>
-      <p id="luma-text"></p>
-    </aside>
-
-    <aside id="horizon" class="panel" data-i18n-aria="horizon.aria" aria-label="Measured horizon at the peak">
-      <h2 data-i18n="horizon.title">Real horizon</h2>
-      <div id="horizon-panel"></div>
-    </aside>
-
-    <div id="note" data-i18n="note">Sun and terrain: real data (NASA/JPL Horizons, LRO LOLA). Space weather: 9 Oct 2024 scenario (NASA DONKI). Terrain vertical exaggeration 2×. Robot and greenhouse are illustrative.</div>
-
-    <div id="overlay" hidden>
-      <div class="panel" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
-        <h2 id="overlay-title" data-i18n="overlay.title">Game over</h2>
-        <p id="overlay-text"></p>
-        <button type="button" id="restart" data-i18n="overlay.restart">Play again</button>
+    <!-- ============ Fim de partida ============ -->
+    <section id="end" class="screen screen-panel" hidden aria-labelledby="end-title">
+      <div class="sheet">
+        <header class="sheet-head">
+          <p class="eyebrow" id="end-eyebrow"></p>
+          <h2 id="end-title"></h2>
+          <p class="sheet-sub" id="end-text"></p>
+        </header>
+        <ul class="end-stats" id="end-stats"></ul>
+        <div class="sheet-actions">
+          <button type="button" class="ghost" id="end-menu" data-i18n="pause.menu">Main menu</button>
+          <button type="button" class="primary" id="restart" data-i18n="overlay.restart">Play again</button>
+        </div>
       </div>
-    </div>
+    </section>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
