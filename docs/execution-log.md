@@ -93,3 +93,10 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Tela:** nenhuma mudança visual; screenshot não refeito.
 - **Ferramentas:** `ctx_doctor` 11 de 11 PASS. `ctx_stats`: 14,3% da sessão e 15,2% do projeto mantidos fora do chat. `rtk gain`: 987 tokens economizados em 55 comandos (9,0%). Serena respondeu ao `initial_instructions`; a chamada de símbolos foi testada antes.
 - **Pendências:** B0.6 (`[?]`, autor), B1.2 parcial, B3.2 a B3.4, B2.x, B4.x. Commit e push não feitos nesta etapa, porque não foram pedidos.
+
+## 2026-11-14 · B0.6 marcado como feito
+
+- **Arquivos alterados:** `docs/backlog.md` (B0.6 de `[?]` para `[x]`, com a razão no item).
+- **Motivo:** o envio foi autorizado pelo autor e feito em 14/11/2026; o histórico foi revisado e reescrito para retirar menções ao protótipo.
+- **Comandos:** commit `docs(backlog): marca B0.6 como feito` e `git push origin main` (sem erros).
+- **Pendências:** nenhuma em B0.6.
