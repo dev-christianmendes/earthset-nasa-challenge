@@ -22,7 +22,7 @@ Status: descreve o que existe hoje e o que está sendo implementado.
 - Sombras longas são resultado da geometria real do relevo e da elevação do Sol.
 
 ## Animação
-- Animações são consequência do estado do motor: roda do rover gira só quando o robô trabalha; farol pisca ao trabalhar; cor do farol muda na radiação.
+- Animações são consequência do estado do motor: o rover vai ao local da tarefa da frente da fila (0 a 35% do tempo da tarefa), trabalha no local (35 a 65%) e volta (65 a 100%); rodas giram só ao deslocar; farol pisca ao trabalhar e fica vermelho na radiação. O motor não modela viagem; o trajeto é a parte visual do tempo da tarefa (`placeRover` em `src/render/scene.ts`).
 - Nenhuma animação decide resultado de jogo.
 
 ## Desempenho

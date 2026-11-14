@@ -9,7 +9,8 @@ import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
 import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
 import { camera, controls, frameForViewport, loadBaseModels, renderer, resetView, scene, updateScene } from './render/scene';
-import { renderHud, ui } from './ui/hud';
+import { applyLanguage, renderHud, ui } from './ui/hud';
+import { getLang } from './i18n';
 import { t } from './i18n';
 import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
 import { mountHorizonPanel } from './ui/horizon-panel';
@@ -98,13 +99,15 @@ function sunlit(hour: number): boolean {
 
 let last: number | null = null;
 let hudDueAt = 0;
+/** A partida só avança depois de "Nova missão" (tela inicial). */
+let started = false;
 /** Intervalo de atualização do HUD (ms). Ações do jogador atualizam na hora. */
 const HUD_INTERVAL_MS = 100;
 
 const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, INSTALLATION.site);
 
 function frame(now: number): void {
-  if (last !== null && outcomeOf(game) === 'playing') {
+  if (started && last !== null && outcomeOf(game) === 'playing') {
     const seconds = Math.min(Math.max(0, (now - last) / 1000), MAX_FRAME_SECONDS);
     game = advance(game, seconds * HOURS_PER_SECOND, sunlit(game.clock.hour), currentWeather());
   }
@@ -130,6 +133,21 @@ window.addEventListener('resize', () => {
 
 ui.greenhouse.value = INSTALLATION.greenhouse;
 renderHud(game, currentWeather());
+// Tela inicial: começar a missão, idioma e créditos. A cena fica visível de fundo.
+document.getElementById('start')?.addEventListener('click', () => {
+  started = true;
+  document.getElementById('title')?.setAttribute('hidden', '');
+});
+document.getElementById('title-lang')?.addEventListener('click', () => applyLanguage(getLang() === 'en' ? 'pt' : 'en'));
+document.getElementById('show-credits')?.addEventListener('click', () => {
+  document.getElementById('title-menu')?.setAttribute('hidden', '');
+  document.getElementById('title-credits')?.removeAttribute('hidden');
+});
+document.getElementById('hide-credits')?.addEventListener('click', () => {
+  document.getElementById('title-credits')?.setAttribute('hidden', '');
+  document.getElementById('title-menu')?.removeAttribute('hidden');
+});
+
 // Modelos GLB: carregam em segundo plano; até lá, as formas provisórias da cena continuam visíveis.
 loadBaseModels().catch((error: unknown) => console.error('modelos 3D não carregaram:', error));
 requestAnimationFrame(frame);

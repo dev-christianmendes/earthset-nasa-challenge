@@ -9,12 +9,12 @@ Status: parcial. Descreve o que existe e o que está previsto.
 - **Sobreposição de fim de partida.**
 
 ## Previsto
-- Tela inicial (título, nova missão, idioma, modo escola, créditos).
+- Tela inicial: **feita** (título, tagline, "Nova missão", idioma, créditos). A partida só avança depois de "Nova missão".
 - Preparação da missão.
 - Pausa (continuar, controles, voltar ao menu com confirmação).
 - Vitória e derrota com resumo e causas.
 - Ajuda: controles, sistemas, fontes e atribuição.
-- **Ainda não existe nenhuma dessas telas.** Não contar como feito.
+- Pausa, vitória/derrota redesenhadas e ajuda ainda não existem. Não contar como feito.
 
 ## Níveis de informação
 1. **Aventura:** texto curto, ícones, linguagem simples.

@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GameState } from '../engine/game';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
-import { MAX_PANELS, isWorking } from '../engine/robot';
+import { MAX_PANELS, TASK_HOURS, isWorking, type TaskKind } from '../engine/robot';
 import { sampleAt } from '../engine/sun';
 import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
@@ -22,6 +22,7 @@ export const PALETTE = {
   panel: 0x3f7fd0,
   panelGlow: 0x0c2446,
   metal: 0xdfe4ec,
+  iceMarker: 0x9fe7ff,
   beacon: 0x7fd7ff,
   robot: 0xffc857,
   track: 0x2a2c33,
@@ -319,6 +320,87 @@ scene.add(robot);
 
 // ---------- Atualização por quadro ----------
 
+// ---------- Robô: movimento ligado à fila do motor ----------
+
+/** Base: onde o rover fica parado. Lado norte da base (−z), longe dos painéis. */
+const DOCK: { x: number; z: number } = { x: 8, z: -5 };
+/** Local de cada tarefa, dentro do recorte de 400 m do LOLA e perto da base para caber na visão padrão. Ilustrativo: o gelo ainda não está medido no recorte. */
+const SITE: Record<TaskKind, { x: number; z: number }> = {
+  ice: { x: -18, z: -16 },
+  panel: { x: 5, z: 12 },
+  antenna: { x: 1.2, z: -3 },
+};
+
+/** Altura do relevo (metros, já com exagero) no ponto (x, z) da cena, por interpolação na malha do LOLA. */
+function surfaceHeight(x: number, z: number): number {
+  const { n, size_m, heights_m } = TERRAIN_MESH;
+  const step = size_m / (n - 1);
+  const half = size_m / 2;
+  const fi = Math.min(n - 1.001, Math.max(0, (x + half) / step));
+  const fj = Math.min(n - 1.001, Math.max(0, (half - z) / step));
+  const i = Math.floor(fi);
+  const j = Math.floor(fj);
+  const di = fi - i;
+  const dj = fj - j;
+  const h = (a: number, b: number) => heights_m[b * n + a];
+  const top = h(i, j) * (1 - di) + h(i + 1, j) * di;
+  const bottom = h(i, j + 1) * (1 - di) + h(i + 1, j + 1) * di;
+  return (top * (1 - dj) + bottom * dj) * VERTICAL_EXAGGERATION;
+}
+
+/**
+ * Posiciona o rover pela tarefa da frente da fila. Progresso p = 1 − horas restantes / horas da tarefa:
+ * sai da base (0 a 35%), trabalha no local (35 a 65%), volta (65 a 100%). O motor não modela viagem;
+ * o tempo de viagem é a parte visual do tempo de tarefa.
+ */
+function placeRover(state: GameState, t: number): { working: boolean; moving: boolean } {
+  const task = state.robot.queue[0];
+  const working = isWorking(state.robot, state.vitals.battery);
+  if (!task || !working) {
+    robot.position.set(DOCK.x, surfaceHeight(DOCK.x, DOCK.z), DOCK.z);
+    return { working: false, moving: false };
+  }
+  const p = Math.min(1, Math.max(0, 1 - task.hoursLeft / TASK_HOURS[task.kind]));
+  const site = SITE[task.kind];
+  const OUT = 0.35;
+  const BACK = 0.65;
+  // Destino do trecho atual: local da tarefa na ida, base na volta; parado no local durante o trabalho.
+  let from = DOCK;
+  let to = site;
+  let k = 0;
+  let moving = true;
+  if (p < OUT) {
+    k = p / OUT;
+  } else if (p < BACK) {
+    from = site;
+    to = site;
+    k = 0;
+    moving = false;
+  } else {
+    from = site;
+    to = DOCK;
+    k = (p - BACK) / (1 - BACK);
+  }
+  const x = from.x + (to.x - from.x) * k;
+  const z = from.z + (to.z - from.z) * k;
+  robot.position.set(x, surfaceHeight(x, z) + (moving ? 0.02 * Math.sin(t * 8) : 0), z);
+  if (moving) {
+    // Rumo: +x é a frente do modelo. Aponta para o destino do trecho.
+    const dx = to.x - from.x;
+    const dz = to.z - from.z;
+    robot.rotation.y = Math.atan2(-dz, dx);
+  }
+  return { working: true, moving };
+}
+
+/** Marcador do gelo no local da tarefa de gelo (item de missão). Visível enquanto há tarefa de gelo na fila. */
+const iceMarker = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(1.1, 0),
+  new THREE.MeshStandardMaterial({ color: PALETTE.iceMarker, emissive: PALETTE.iceMarker, emissiveIntensity: 0.6, transparent: true, opacity: 0.85, roughness: 0.2 }),
+);
+iceMarker.visible = false;
+scene.add(iceMarker);
+
 export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample): void {
   // Direção do Sol a partir do azimute (norte = -z, leste = +x) e da elevação reais.
   const { az, el } = sampleAt(SUN, state.clock.hour);
@@ -346,16 +428,8 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
 
   baseAntenna.visible = state.robot.antennaInstalled;
 
-  const working = isWorking(state.robot, state.vitals.battery);
   const t = now / 1000;
-  if (working) {
-    const a = t * 0.8;
-    // Leve balanço ao andar; a luz do corpo acende e a antena pisca.
-    robot.position.set(Math.cos(a) * 9, Math.abs(Math.sin(t * 6)) * 0.05, Math.sin(a) * 6 + 2);
-    robot.rotation.y = -a;
-  } else {
-    robot.position.set(9, 0, 4);
-  }
+  const { working, moving } = placeRover(state, t);
   robotBodyMat.emissiveIntensity = working ? 1 : 0.2;
   // Tempestade: os painéis perdem brilho na proporção da geração (ver solarFactor).
   panelMat.emissiveIntensity = 0.6 * solarFactor(stormLevel(weather.kp));
@@ -363,8 +437,12 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   rover.beaconMat.color.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
   rover.beaconMat.emissive.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
   rover.beacon.visible = !working || Math.sin(t * 4) > -0.2;
-  // Rodas giram só quando o robô trabalha (estado vindo do motor).
-  if (working) for (const wheel of rover.wheels) wheel.rotation.z = -t * 6;
+  // Rodas giram só enquanto o robô se desloca (sair, voltar), não quando trabalha no local.
+  if (moving) for (const wheel of rover.wheels) wheel.rotation.z = -t * 6;
+  // Marcador do gelo: aparece enquanto há tarefa de gelo na fila (item de missão).
+  iceMarker.visible = state.robot.queue.some((task) => task.kind === 'ice');
+  iceMarker.position.y = surfaceHeight(SITE.ice.x, SITE.ice.z) + 1.4 + Math.sin(t * 2) * 0.15;
+  iceMarker.rotation.y = t * 0.6;
 }
 
 // ---------- Modelos 3D (assets-src/blender) ----------

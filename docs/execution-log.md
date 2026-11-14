@@ -296,3 +296,16 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** animação das rodas em movimento (captura parada); desempenho dos modelos em máquina real; GLB do rover (219 KB) poderia ser reduzido.
 - **Commit:** feito localmente, sem push.
 
+
+## 2026-11-14 · Tela inicial, movimento do rover ligado à fila, mapa de interações
+
+- **Rover (bug confirmado):** o rover girava em um círculo fixo em torno da base em qualquer tarefa, passando por cima da base. Corrigido: sai da base até o local da tarefa (0 a 35% do tempo da tarefa), trabalha no local (35 a 65%), volta (65 a 100%). Locais: gelo (−18, −16), painel (5, 12), antena (1,2, −3), base (8, −5). Rodas giram só ao deslocar.
+- **Marcador do gelo:** poliedro azul no local do gelo, visível enquanto há tarefa de gelo na fila.
+- **Tela inicial:** título, tagline da identidade, "Nova missão" (inicia a simulação), idioma e créditos com fontes e aviso de não afiliação à NASA. A cena aparece de fundo.
+- **Mapa de interações:** `docs/INTERACTION_MAP.md`, com cada componente, a ação do jogador, a mudança no motor, a reação na cena e as lacunas.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou. `npx vitest run`: 66 testes, OK. `npm run build`: passou.
+  - Capturas: `title-i.png` (tela inicial), `rover-trip3.png` (rover a caminho do gelo, com ajuste temporário de teste revertido em seguida).
+- **Não verificado:** marcador do gelo na tela; câmera com mouse; animação das rodas em movimento.
+- **Bugs conhecidos:** cancelar tarefa em andamento faz o rover voltar de forma instantânea; a antena ainda não tem efeito no jogo.
+- **Commit:** feito localmente, sem push.

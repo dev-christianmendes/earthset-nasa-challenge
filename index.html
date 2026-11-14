@@ -81,6 +81,17 @@
       #horizon .cap { font-size: 11px; line-height: 1.4; color: var(--muted); margin: 6px 0 0; text-align: left; }
       .space { font-size: 12px; color: var(--warn); margin: 8px 0 0; }
       .space.storm { color: var(--bad); font-weight: 600; }
+      .title-screen { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(3,5,10,0.55); z-index: 10; padding: 16px; }
+      .title-screen[hidden] { display: none; }
+      .title-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px 26px; max-width: 460px; width: 100%; text-align: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+      .title-card h1 { font-size: 40px; letter-spacing: 0.04em; margin: 0 0 6px; }
+      .title-card .tagline { color: var(--muted); margin: 0 0 22px; }
+      #title-menu { display: flex; flex-direction: column; gap: 10px; }
+      #title-menu button { width: 100%; }
+      #title-menu button.primary { background: var(--solar-amber); color: var(--space-navy); border-color: var(--solar-amber); font-weight: 600; min-height: 48px; }
+      #title-credits { margin-top: 18px; text-align: left; }
+      #title-credits .credits { font-size: 13px; line-height: 1.5; color: var(--muted); margin: 0 0 12px; }
+      #title-credits button { width: 100%; }
       .lang-btn { position: absolute; top: 14px; right: 14px; min-height: 28px; padding: 4px 10px; font-size: 11px; border-radius: 8px; }
       /* Alerta (B3.1): recurso baixo fica vermelho. */
       .meter.low .bar > i { background: var(--bad) !important; }
@@ -193,6 +204,22 @@
         <select id="greenhouse" data-i18n-aria="hud.greenhouse.aria" aria-label="Greenhouse mode"></select>
       </div>
     </aside>
+
+    <section id="title" class="title-screen" aria-labelledby="title-name">
+      <div class="title-card">
+        <h1 id="title-name">Earthset</h1>
+        <p class="tagline" data-i18n="title.tagline">A small base. A hostile world. One lunar day.</p>
+        <div id="title-menu">
+          <button type="button" id="start" class="primary" data-i18n="title.start">New mission</button>
+          <button type="button" id="title-lang" data-i18n="hud.lang">Português</button>
+          <button type="button" id="show-credits" data-i18n="title.credits">Credits</button>
+        </div>
+        <div id="title-credits" hidden>
+          <p class="credits" data-i18n="title.credits.text"></p>
+          <button type="button" id="hide-credits" data-i18n="title.back">Back</button>
+        </div>
+      </div>
+    </section>
 
     <button type="button" id="reset-view" data-i18n="hud.reset">Base view</button>
 
