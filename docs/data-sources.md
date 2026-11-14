@@ -37,10 +37,10 @@ Cada número científico do jogo tem origem aqui. O que for ilustrativo está ma
 | Site | Horizonte máximo | Horas com Sol |
 |---|---|---|
 | peak (morro) | 4,3° | 448 |
-| slope (encosta, início do jogo) | 25,4° | 182 |
+| slope (encosta) | 25,4° | 182 |
 | rim (borda) | 55,4° | 0 |
 
-Consequência para o jogo: o início na encosta tem 182 h de Sol (antes, a tabela ilustrativa dava quase o dia inteiro). O equilíbrio precisa ser revisto com isso (ver `docs/backlog.md`, C1 e B2.3).
+Decisão (14/11/2026, autor): a base começa no **morro (peak)**, com 448 h de Sol. A encosta (182 h) e a borda (0 h) ficam como locais de comparação. O equilíbrio precisa ser revisto com isso (ver `docs/backlog.md`, C1 e B2.3).
 
 **Suposição a verificar (convenção de azimute):** o azimute do Horizons (0° = norte local, sentido horário) foi ligado à projeção com norte = +y (meridiano 0°, afastando-se do polo) e leste = +x, a convenção padrão da estereográfica polar sul (EPSG:3031). Se o sinal de leste estiver invertido, o Sol nasce do lado errado. Verificação pendente: comparar uma direção conhecida do relevo com o nascer do Sol na tabela.
 

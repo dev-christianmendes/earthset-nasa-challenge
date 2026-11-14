@@ -17,7 +17,7 @@ const TERRAIN = terrainJson as TerrainTable;
 
 const INSTALLATION: Installation = {
   rank: 'explorador',
-  site: 'slope',
+  site: 'peak',
   panels: 2,
   // Capacidade de armazenamento: escolha de equilíbrio, ajustável (ver docs/regras-recursos.md).
   batteryCapacity: 1200,

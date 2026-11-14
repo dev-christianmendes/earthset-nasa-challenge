@@ -192,5 +192,6 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - Primeira versão do teste de faixa usava meio pixel de tolerância; o arredondamento tirou o muro da malha. Trocado por um pixel inteiro, no teste.
   - `rim` tem zero horas de Sol. A asserção antiga (`count('rim') > 0`) era premissa do horizonte ilustrativo; trocada pelas contagens medidas.
   - Convenção de azimute não verificada com dado externo (ver `docs/data-sources.md`).
+- **Decisão posterior (autor, 14/11):** a base começa no morro (`site: 'peak'` em `src/main.ts` e em `tests/engine/partida.test.ts`). Vitest: 57 testes passam com o morro.
 - **Pendências:** equilíbrio com o Sol real (B2.3); verificar azimute; C2 (DONKI, cenário D1); C3; V1–V4; I2–I3; F5; F6 (envio, só com pedido).
 - **Commit:** feito localmente, sem push.

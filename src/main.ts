@@ -12,7 +12,7 @@ import { renderHud, ui } from './ui/hud';
 /** Configuração inicial da base. Valores de equilíbrio do motor (docs/regras-recursos.md). */
 const INSTALLATION: Installation = {
   rank: 'explorador',
-  site: 'slope',
+  site: 'peak',
   panels: 2,
   batteryCapacity: 1200,
   greenhouse: 'surplus',
