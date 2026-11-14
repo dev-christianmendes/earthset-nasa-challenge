@@ -58,14 +58,21 @@ export function mountHorizonPanel(
   svg.append(el('polygon', { points: shape, fill: 'rgba(127,209,255,0.28)', stroke: '#7fd1ff', 'stroke-width': 1 }));
 
   // Trajetória do Sol em 709 horas, na borda: amarelo quando chega ao morro, cinza quando não.
+  // Um elemento por cor (não 709): menos trabalho de repintura a cada mudança de hora.
   let litHours = 0;
+  let litD = '';
+  let unlitD = '';
   for (let h = 0; h < sun.samples.length; h++) {
     const s = sampleAt(sun, h);
     const lit = isSunlit(sun, h, site, terrain);
     if (lit) litHours++;
     const [x, y] = point(s.az, SUN_RING);
-    svg.append(el('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.9, fill: lit ? '#ffcf6b' : '#3a4150' }));
+    const seg = `M${x.toFixed(1)} ${y.toFixed(1)}h0.01`;
+    if (lit) litD += seg;
+    else unlitD += seg;
   }
+  svg.append(el('path', { d: unlitD, stroke: '#3a4150', 'stroke-width': 3.8, 'stroke-linecap': 'round', fill: 'none' }));
+  svg.append(el('path', { d: litD, stroke: '#ffcf6b', 'stroke-width': 3.8, 'stroke-linecap': 'round', fill: 'none' }));
 
   // Marcadores: norte e a posição do Sol na hora atual.
   svg.append(el('text', { x: C, y: 12, 'text-anchor': 'middle', fill: '#9aa6b8', 'font-size': 10 }, 'N'));

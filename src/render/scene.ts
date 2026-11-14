@@ -36,10 +36,12 @@ export const PALETTE = {
 // ---------- Cena ----------
 
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// Limite de densidade de pixels: 2x custa 4x de preenchimento na GPU.
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// Sombras nítidas: PCF simples (o modo "soft" foi removido na versão atual do three.js).
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 document.body.insertBefore(renderer.domElement, document.body.firstChild);
@@ -65,6 +67,36 @@ controls.maxDistance = 70;
 controls.minPolarAngle = THREE.MathUtils.degToRad(20);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(82);
 controls.update();
+
+// Plano de abertura (briefing): travelling lento de uma visão ampla até a base; a órbita fica desligada nesse trecho.
+const INTRO_FROM = new THREE.Vector3(26, 34, 64);
+const INTRO_SECONDS = 7;
+let introPending = false;
+let introStart = -1;
+
+/** Pede o plano de abertura; ele começa no próximo quadro, no relógio visual da cena. */
+export function startIntro(): void {
+  introPending = true;
+  introStart = -1;
+  controls.enabled = false;
+  camera.position.copy(INTRO_FROM);
+  controls.target.copy(DEFAULT_TARGET);
+}
+
+function updateIntro(nowMs: number): void {
+  if (introPending) {
+    introPending = false;
+    introStart = nowMs;
+  }
+  if (introStart < 0) return;
+  const k = Math.min(1, (nowMs - introStart) / 1000 / INTRO_SECONDS);
+  const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; // ease-in-out cúbico
+  camera.position.lerpVectors(INTRO_FROM, DEFAULT_CAMERA_POSITION, e);
+  if (k >= 1) {
+    introStart = -1;
+    controls.enabled = true;
+  }
+}
 
 /** Volta à visão padrão da base (botão "Visão da base"). */
 export function resetView(): void {
@@ -206,6 +238,9 @@ scene.add(ground);
 const sun = new THREE.DirectionalLight(PALETTE.sunlight, 2.6);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
+// Viés calibrado: some com o serrilhado (acne) sem descolar a sombra dos pés dos objetos.
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.03;
 sun.shadow.camera.left = -30;
 sun.shadow.camera.right = 30;
 sun.shadow.camera.top = 30;
@@ -215,6 +250,21 @@ sun.shadow.camera.far = 120;
 scene.add(sun);
 scene.add(sun.target);
 const ambient = new THREE.HemisphereLight(PALETTE.skyFill, PALETTE.groundFill, 0.35);
+
+// Disco do Sol no céu: na direção calculada pela tabela do JPL Horizons, só quando a luz chega à base
+// (mesma regra de `lit`, que já considera o horizonte medido no LOLA). Sem névoa e sem tone mapping.
+const SKY_SUN_DISTANCE = 320;
+const sunDisk = new THREE.Mesh(
+  new THREE.SphereGeometry(4.5, 32, 16),
+  new THREE.MeshBasicMaterial({ color: PALETTE.sunlight, fog: false, toneMapped: false }),
+);
+const sunGlow = new THREE.Mesh(
+  new THREE.SphereGeometry(14, 32, 16),
+  new THREE.MeshBasicMaterial({ color: 0xffd28a, transparent: true, opacity: 0.22, depthWrite: false, fog: false, toneMapped: false }),
+);
+sunDisk.visible = false;
+sunGlow.visible = false;
+scene.add(sunDisk, sunGlow);
 scene.add(ambient);
 
 // Céu: estrelas e a Terra, ao fundo.
@@ -230,9 +280,24 @@ starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions
 // Estrelas e Terra ficam fora da névoa: a névoa escondia tudo além de 220 unidades.
 scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.2, sizeAttenuation: false, fog: false })));
 
+/**
+ * Material da Terra: textura da NASA (Blue Marble, domínio público; ver public/textures/earth/LICENSE.txt).
+ * Começa azul liso e troca pela textura quando carrega. Sem atmosfera: a Lua não tem.
+ */
+function earthMaterial(): THREE.MeshStandardMaterial {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x2f6fb0, roughness: 0.8, fog: false });
+  new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}textures/earth/earth_land_shallow_topo_2048.jpg`, (t) => {
+    t.colorSpace = THREE.SRGBColorSpace;
+    mat.map = t;
+    mat.color.set(0xffffff);
+    mat.needsUpdate = true;
+  });
+  return mat;
+}
+
 const earth = new THREE.Mesh(
   new THREE.SphereGeometry(7, 48, 32),
-  new THREE.MeshStandardMaterial({ color: 0x2f6fb0, roughness: 0.8, emissive: 0x0a1a33, emissiveIntensity: 0.4, fog: false }),
+  earthMaterial(),
 );
 earth.position.set(-70, 60, -150);
 scene.add(earth);
@@ -639,6 +704,7 @@ function setInstalled(obj: THREE.Object3D, installed: boolean, now: number): voi
 }
 
 export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true): void {
+  updateIntro(now);
   // Direção do Sol a partir do azimute (norte = -z, leste = +x) e da elevação reais.
   const { az, el } = sampleAt(SUN, state.clock.hour);
   const azRad = (az * Math.PI) / 180;
@@ -650,13 +716,19 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   );
   if (lit) {
     sun.intensity = 3.2;
-    ambient.intensity = 0.8;
+    ambient.intensity = 0.6; // contraste: sombra dura sobre luz de preenchimento fria
   } else {
     // Sol acima do horizonte plano, mas tapado pelo relevo: só a luz de fundo.
     sun.intensity = 0;
-    ambient.intensity = 0.55;
+    ambient.intensity = 0.4;
   }
   sun.target.position.set(0, 0, 0);
+  // Disco do Sol na mesma direção da luz; visível só quando a luz chega à base.
+  const sunDir = sun.position.clone().normalize().multiplyScalar(SKY_SUN_DISTANCE);
+  sunDisk.position.copy(sunDir);
+  sunGlow.position.copy(sunDir);
+  sunDisk.visible = lit;
+  sunGlow.visible = lit;
 
   for (let i = 0; i < panelMeshes.length; i++) {
     setInstalled(panelMeshes[i], i < state.installation.panels, now);

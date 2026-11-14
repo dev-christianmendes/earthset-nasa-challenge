@@ -8,7 +8,7 @@ import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
 import { antennaWarning, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
-import { camera, controls, frameForViewport, loadBaseModels, loadCrewModels, renderer, resetScenePresentation, resetView, scene, updateScene } from './render/scene';
+import { camera, controls, frameForViewport, loadBaseModels, loadCrewModels, renderer, resetScenePresentation, resetView, scene, startIntro, updateScene } from './render/scene';
 import { applyLanguage, renderHud, ui } from './ui/hud';
 import { getLang } from './i18n';
 import { t } from './i18n';
@@ -123,6 +123,15 @@ const HUD_INTERVAL_MS = 100;
 const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, INSTALLATION.site);
 
 function frame(now: number): void {
+  if (perfEl) {
+    perfFrames++;
+    if (perfSince === 0) perfSince = now;
+    if (now - perfSince >= 1000) {
+      perfEl.textContent = `${Math.round((perfFrames * 1000) / (now - perfSince))} fps · ${renderer.info.render.calls} draws · ${renderer.info.render.triangles} tris`;
+      perfFrames = 0;
+      perfSince = now;
+    }
+  }
   const active = started && !paused && outcomeOf(game) === 'playing';
   if (active && last !== null) {
     const seconds = Math.min(Math.max(0, (now - last) / 1000), MAX_FRAME_SECONDS);
@@ -153,9 +162,18 @@ ui.greenhouse.value = INSTALLATION.greenhouse;
 renderNow();
 // Tela inicial: começar a missão, idioma e créditos. A cena fica visível de fundo.
 document.getElementById('start')?.addEventListener('click', () => {
-  started = true;
+  // "Nova missão" abre o briefing; a partida começa só no botão "Começar missão".
   document.getElementById('title')?.setAttribute('hidden', '');
+  document.getElementById('brief')?.removeAttribute('hidden');
 });
+document.getElementById('brief-start')?.addEventListener('click', () => {
+  started = true;
+  startIntro();
+  document.getElementById('brief')?.setAttribute('hidden', '');
+});
+for (const b of document.querySelectorAll<HTMLButtonElement>('[data-crew]')) {
+  b.addEventListener('click', () => act({ type: 'SET_CREW_ORDER', order: b.dataset.crew as 'auto' | 'shelter' }));
+}
 document.getElementById('title-lang')?.addEventListener('click', () => applyLanguage(getLang() === 'en' ? 'pt' : 'en'));
 document.getElementById('show-credits')?.addEventListener('click', () => {
   document.getElementById('title-menu')?.setAttribute('hidden', '');
@@ -193,6 +211,7 @@ document.getElementById('to-menu')?.addEventListener('click', () => {
   setMessage('');
   renderNow();
   document.getElementById('pause')?.setAttribute('hidden', '');
+  document.getElementById('brief')?.setAttribute('hidden', '');
   document.getElementById('title')?.removeAttribute('hidden');
   document.getElementById('title-menu')?.removeAttribute('hidden');
   document.getElementById('title-credits')?.setAttribute('hidden', '');
@@ -204,4 +223,16 @@ window.addEventListener('keydown', (event) => {
 // Modelos GLB: carregam em segundo plano; até lá, as formas provisórias da cena continuam visíveis.
 loadBaseModels().catch((error: unknown) => console.error('modelos 3D não carregaram:', error));
 loadCrewModels().catch((error: unknown) => console.error('astronautas não carregaram:', error));
+// Pré-compila os shaders com a cena montada: evita o travamento na primeira vez que cada material aparece.
+Promise.allSettled([loadBaseModels(), loadCrewModels()]).then(() => renderer.compile(scene, camera));
+
+// Contador de quadros: ?perf=1 na URL mostra FPS e carga de desenho (para medir em qualquer máquina).
+const perfEl = new URLSearchParams(window.location.search).has('perf') ? document.createElement('div') : null;
+if (perfEl) {
+  perfEl.id = 'perf';
+  perfEl.style.cssText = 'position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,0.6);color:#fff;font:12px monospace;padding:4px 8px;border-radius:6px';
+  document.body.appendChild(perfEl);
+}
+let perfFrames = 0;
+let perfSince = 0;
 requestAnimationFrame(frame);

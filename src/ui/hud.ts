@@ -8,6 +8,8 @@ import type { GreenhouseMode } from '../engine/resources';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 import { EXPLANATIONS, HINT_TITLES, SCHOOL_LABELS } from '../school';
 import { applyStatic, getLang, loadLang, setLang, t, type Lang } from '../i18n';
+import { objectivesOf } from '../engine/objectives';
+import { lumaAdvice } from '../engine/guide';
 
 const GREENHOUSE_KEYS: Record<GreenhouseMode, string> = {
   off: 'greenhouse.off',
@@ -128,6 +130,53 @@ function setBar(bar: HTMLElement, value: HTMLElement, percent: number, text: str
   bar.closest('.meter')?.classList.toggle('low', low);
 }
 
+// ---------- Objetivos, LUMA e tripulação (painéis novos) ----------
+
+const goalList = el('goal-list');
+const lumaText = el('luma-text');
+let lastGoalsKey = '';
+let lastLumaKey = '';
+
+function renderGoals(state: GameState): void {
+  const objs = objectivesOf(state);
+  const key = `${getLang()}|${objs.map((o) => `${o.id}:${o.done}:${Math.round(o.progress * 20)}`).join('|')}`;
+  if (key === lastGoalsKey) return;
+  lastGoalsKey = key;
+  goalList.replaceChildren(
+    ...objs.map((o) => {
+      const li = document.createElement('li');
+      li.className = o.done ? 'done' : '';
+      const mark = document.createElement('span');
+      mark.className = 'mark';
+      mark.textContent = o.done ? '✓' : '○';
+      const label = document.createElement('span');
+      label.className = 'label';
+      label.textContent = t(`objective.${o.id}`);
+      const bar = document.createElement('span');
+      bar.className = 'goal-bar';
+      const fill = document.createElement('i');
+      fill.style.width = `${Math.round(o.progress * 100)}%`;
+      bar.appendChild(fill);
+      li.append(mark, label, bar);
+      return li;
+    }),
+  );
+}
+
+function renderLuma(state: GameState, warningHours: number | null): void {
+  const advice = lumaAdvice(state, warningHours);
+  const text = t(advice.key, advice.vars);
+  if (text === lastLumaKey) return;
+  lastLumaKey = text;
+  lumaText.textContent = text;
+}
+
+function renderCrew(state: GameState): void {
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-crew]')) {
+    b.classList.toggle('active', b.dataset.crew === state.crewOrder);
+  }
+}
+
 export function renderHud(state: GameState, weather: SpaceWeatherSample, warningHours: number | null = null): void {
   const { vitals, installation, hearts, clock, robot: r } = state;
   ui.hour.textContent = String(Math.floor(clock.hour));
@@ -152,6 +201,9 @@ export function renderHud(state: GameState, weather: SpaceWeatherSample, warning
     ? `${base} · ${t('space.warning', { hours: warningHours })}`
     : base;
   ui.space.classList.toggle('storm', level > 0 || weather.radiation);
+  renderGoals(state);
+  renderLuma(state, warningHours);
+  renderCrew(state);
   ui.greenhouse.value = installation.greenhouse;
 
   // A fila só é reconstruída quando muda (ou quando o idioma muda): evita trabalho de DOM a cada atualização.
