@@ -76,7 +76,16 @@ AI_DISCLOSURE.md            Declaração de uso de IA (ferramentas, modelos, tex
 .github/workflows/ci.yml    CI: typecheck, testes, build, auditoria, fronteira do motor
 .github/dependabot.yml      Atualizações semanais (npm e ações)
 CLAUDE.md                   Importa este arquivo para o Claude Code
+docs/PLANO_V4.md            Plano vigente (Earthset 4.0): P0, P1, P2, modos e capítulos
+src/engine/modes.ts         Modos de experiência → patente do motor (D-17)
+src/engine/chapters.ts      5 capítulos derivados do estado
+src/engine/mission.ts       Fases da missão do robô (derivadas do progresso)
+src/render/layout.ts        Planta da base por áreas; base-layout.ts: peças e estados visuais
+src/render/director.ts      Planos de câmera; cinematic.ts: introdução
+src/ui/screens.ts           Telas e configurações; hud.ts, luma.ts, icons.ts, styles.css
 ```
+
+Atalhos de captura (só `npm run dev`): `?autostart=cadet&hour=24&task=ice&after=2&tool=rover&shot=rover`, `?autostart=cadet&cineAt=7`, `?screen=modes&lang=pt`. O título da página começa com "Earthset ·".
 
 ### 4.1 Modelo do motor (estado e fluxo)
 
@@ -162,7 +171,7 @@ CLAUDE.md                   Importa este arquivo para o Claude Code
 
 ## 10. Estado atual (atualizar a cada etapa)
 
-Data: 14/11/2026.
+Data: 14/11/2026 (noite). **Earthset 4.0 em curso: ver `docs/PLANO_V4.md` e o bloco 7 de `docs/backlog.md`.**
 
 - **Bloco 0 (fundação):** feito, exceto B0.6 (envio ao GitHub, autor).
 - **Bloco 1 (regras da base):** B1.1 e B1.3 feitos. B1.2 parcial: estufa feita; tarefas do robô entraram com o robô. **B1.4 (robô e gelo) feito** nesta etapa, com 41 testes passando. **B1.5 (frio e aquecimento sem energia) feito**, pela regra de bateria zerada; temperatura separada fica fora desta versão.

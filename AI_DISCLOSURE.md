@@ -13,8 +13,8 @@ Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes
 
 ## 2. Ativos de terceiros e geração de código de arte
 
-- **Ativos de terceiros** (todos sob CC0 1.0, verificados na fonte, registrados em `docs/ART_ASSET_PIPELINE.md`): textura de superfície lunar (Poly Haven, Moon Dusted 01) e astronauta de baixo polígono com animações (OpenGameArt, nó 44447).
-- **Modelos gerados por script** (Blender 5.2, scripts em `assets-src/blender/`, escritos com auxílio de IA e revisados pelo projeto): habitat, rover, painel solar, estufa, antena e astronauta.
+- **Ativos de terceiros** (todos sob CC0 1.0, verificados na fonte, registrados em `docs/ART_ASSET_PIPELINE.md`): textura de superfície lunar (Poly Haven, Moon Dusted 01); manequim e animações Quaternius (Universal Animation Library) como base do astronauta; modelos alternativos KayKit e Quaternius em `public/models/ext/`; astronauta OpenGameArt (nó 44447, recuo).
+- **Modelos gerados por script** (Blender 5.2, scripts em `assets-src/blender/`, escritos com auxílio de IA e revisados pelo projeto): habitat, rover, painel solar, estufa, antena e astronauta, e a série v4 (`build_v4.py`: 14 modelos) e o traje do astronauta (`build_ext_astronaut.py`).
 - **Nenhuma imagem ou modelo gerado por IA** foi usado como ativo final.
 
 ## 3. Como as ferramentas são usadas aqui

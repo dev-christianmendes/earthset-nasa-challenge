@@ -17,3 +17,17 @@ Plano vigente: `docs/PLANO_CONSOLIDADO.md`. Decisões: D-11 a D-15.
 - [ ] **V3.10** Rover (P1).
 - [ ] **V3.11** Pedras e crateras (P1).
 - [ ] **V3.12** Animações de colheita e aceno (P1).
+
+## Bloco 7 · Earthset 4.0 (D-16, `docs/PLANO_V4.md`)
+
+- [x] **E4.1** Tela inicial própria com menu completo (Nova missão, Como jogar, Modos, Ciência, Configurações, Créditos, Idioma). Capturas 1366×768 e celular.
+- [x] **E4.2** Seleção de modo (Explorador, Cadete Lunar, Comandante), `src/engine/modes.ts`, partidas completas testadas nos três modos.
+- [x] **E4.3** História "Operação Último Horizonte" e 5 capítulos derivados do estado (`src/engine/chapters.ts`, testado).
+- [x] **E4.4** Introdução animada de 16,5 s na cena (pouso do módulo, base, astronauta, LUMA), pulável, com movimento reduzido. Capturas aos 2, 7 e 12,5 s.
+- [x] **E4.5** HUD novo: barra superior, barra de ferramentas, painel lateral recolhível, LUMA no canto, velocidade 1×/2×/4×, HUD técnico no Comandante.
+- [x] **E4.6** Base por áreas (`src/render/layout.ts`, `base-layout.ts`), pousada no relevo medido, com cabos, trilhas, pedras instanciadas e luzes operacionais.
+- [x] **E4.7** Modelos v4 (Blender, 14 GLB, 2,6 MB) e astronauta novo (base CC0 Quaternius). Rover v4 de seis rodas com broca.
+- [x] **E4.8** Missões com fases (`src/engine/mission.ts`): preparação, ida, operação, volta, entrega; gelo com broca, poeira balística, carga e etapas "do gelo à água".
+- [x] **E4.9** LUMA com avatar, gravidade, atalho, histórico, minimizar e eventos testados (`lumaEvents`).
+- [x] **E4.10** Pausa, vitória/derrota com resumo, créditos. Derrota capturada; vitória não capturada (exige partida inteira).
+

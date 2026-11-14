@@ -528,3 +528,17 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Verificação:** typecheck, 93 testes e build passam. Os ajustes temporários de tela foram feitos com backup e restaurados, conferidos com cmp.
 - **Commit:** feito em `fb471e4` (tela) e `3ddc8fb` (assets). Enviado ao GitHub (`main`) em 14/11/2026, com CI verde em `3ddc8fb`.
 
+## 2026-11-14 (noite) · Earthset 4.0 (D-16, `docs/PLANO_V4.md`)
+
+- **Escopo:** pedido do autor "EARTHSET 4.0". Plano em `docs/PLANO_V4.md`; decisões D-16 (reformulação) e D-17 (modos usam as patentes já testadas do motor).
+- **Motor:** `missionsDone` no estado; `modes.ts`, `chapters.ts`, `mission.ts` (fases derivadas do progresso real); `guide.ts` com gravidade, atalho, nível por modo e `lumaEvents` (missão concluída, rover voltando, capítulo, coração, radiação). Testes novos em `tests/engine/modos-capitulos.test.ts`; `objetivos-luma.test.ts` atualizado para o conselho por capítulo.
+- **Equilíbrio:** sem mudança de número. Com o plano de referência, Explorador e Cadete vencem; o Comandante termina com no máximo os corações do Cadete (testado).
+- **Interface:** `index.html` reescrito (telas de carregamento, menu, modos, história, como jogar, ciência, configurações, créditos, introdução, HUD, pausa, fim); `src/ui/styles.css`, `icons.ts` (ícones próprios), `screens.ts`, `luma.ts`, `hud.ts` reescrito. Velocidade 1×/2×/4× (padrão 1 h de jogo por segundo).
+- **Cena:** `scene.ts` reescrito; `layout.ts` (planta por áreas sobre a crista norte–sul do LOLA), `terrain-height.ts`, `base-layout.ts` (estados visuais), `director.ts` (planos de câmera e seguir), `cinematic.ts` (introdução). Terra baixa no céu (posição ilustrativa, 7° de elevação). Neblina trocada por escurecimento preto só na borda do recorte.
+- **Modelos:** dois agentes em paralelo. Blender: 14 GLB em `public/models/v4/` (`assets-src/blender/build_v4.py`, `preview_v4.py`). Pacotes CC0: astronauta `public/models/ext/astronaut.glb` (manequim e animações Quaternius, CC0, com traje, capacete e mochila próprios; `build_ext_astronaut.py`) e outros modelos KayKit/Quaternius em `public/models/ext/` (não usados na cena por enquanto). Licenças e fontes em `assets-src/external/*/SOURCE.md`; downloads brutos fora do git.
+- **Achados:** a base começa dentro de um evento de radiação real (horas 0–22 do cenário DONKI) e há tempestade G4 nas horas 30–53; a longa noite na base vai da hora 370 à 649. Antes, a base ficava em altura fixa e os painéis do lado leste flutuavam; agora cada peça pousa no relevo medido.
+- **Correções durante a verificação:** painéis invisíveis (transição de instalação com relógio da cena reiniciado), rover fora do quadro (local do gelo movido para leste), disco da garagem meio enterrado (removido), broca girando para cima (sinal invertido), legenda da introdução sem contraste.
+- **Verificação:** `npm run typecheck` ok; `npm run test` 103 testes ok; `npm run build` ok (JS 916 kB, 230 kB gzip; `dist` 12 MB com os modelos); `npm audit --omit=dev` 0. Atalhos de captura (`?autostart`, `?cineAt`) só no servidor de desenvolvimento, ausentes do build.
+- **Capturas** (Chrome headless, SwiftShader): menu, modos, história (PT), introdução aos 2, 7 e 12,5 s, partida (visão geral), rover em missão, astronauta de perto, Comandante em 1920×1080, celular 390×844, derrota. Antes: tela de título com HUD em coluna. Não capturado: vitória e FPS real (medir com `?perf=1` na máquina do autor).
+- **Commit:** não feito (sem pedido explícito).
+

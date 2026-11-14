@@ -115,3 +115,12 @@ Implementação: `src/engine/crew.ts`, ligada em `advance` (`src/engine/game.ts`
 - **Permitidas:** NASA 3D Resources (domínio público segundo as diretrizes de mídia da NASA), Kenney (CC0), Quaternius (CC0), Poly Haven (CC0), e Poly Pizza só com licença verificada por modelo (CC0 preferível; CC-BY com atribuição registrada).
 - **Proibido:** qualquer logotipo, emblema ou identificador da NASA; modelo com licença incerta; imagem gerada por IA como ativo.
 - **Atribuição:** cada modelo entra no registro de `docs/ART_ASSET_PIPELINE.md` com origem, autor, licença e data de verificação. Créditos que citem terceiros são conferidos antes do uso.
+
+## D-16. Earthset 4.0: reformulação da experiência (14/11/2026, noite)
+
+Pedido do autor: tela inicial própria, modos de experiência, história "Operação Último Horizonte" em 5 capítulos, introdução animada pulável, HUD de jogo (barra superior, ferramentas embaixo, painel lateral recolhível), base composta por áreas, modelos novos (externos CC0 + Blender), missão de gelo com fases visuais e LUMA contextual. Plano e aceite em `docs/PLANO_V4.md`, que passa a valer no lugar da ordem de `docs/PLANO_CONSOLIDADO.md`. Mantidas as regras de motor puro, dados reais, LUMA por regras e ativos licenciados.
+
+## D-17. Modos de experiência usam as patentes já testadas do motor
+
+Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'` (× 1,0), Comandante → `rank: 'comandante'` (× 1,15). Nenhum dado científico muda; a diferença é o fator de consumo (já existente) e a apresentação (quantidade de dicas da LUMA, explicações, HUD técnico). Testes de partida completa cobrem os três modos.
+

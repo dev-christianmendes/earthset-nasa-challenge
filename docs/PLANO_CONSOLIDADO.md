@@ -1,5 +1,7 @@
 # Plano consolidado (escopo v3, 14/11/2026)
 
+> **Substituído em 14/11/2026 (noite) por `docs/PLANO_V4.md` (Earthset 4.0, D-16).** Este plano fica como histórico.
+
 Este é o plano vigente. Substitui os planos anteriores de execução (`docs/PLANO_PARA_AGENTE.md` é histórico). Decisões de base: D-11 a D-15 em `docs/DECISOES.md`. Estado do código: `docs/CONTEXTO_CODEX.md`.
 
 **Prazo: 15/11/2026, 23h59 (meta interna 12h).** Tudo que está em P0 precisa estar pronto antes disso, incluindo a entrega. P1 entra se P0 estiver fechado. P2 não é prometido para esta entrega.
