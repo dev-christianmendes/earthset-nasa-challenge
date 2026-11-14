@@ -101,8 +101,8 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 - **Arquivos:** `assets-src/blender/build_assets.py` (função `limb`, `build_astronaut`), `src/render/scene.ts` (`animateCrew`).
 - **Aceite:** em captura sequencial (câmera perto dos astronautas, `seq-sheet.png` como modelo), braços e pernas balançam presos aos ombros e quadris. Sem braço flutuando.
 
-### T2. Tarefas próprias dos astronautas: **não fazer** (D-02)
-- Os astronautas continuam só visuais.
+### T2. Tarefas próprias dos astronautas: **revogada (D-02)**
+- O autor pediu todas as tarefas. Ver D-05 a D-08 em `docs/DECISOES.md` e as tarefas T11 a T14 abaixo.
 
 ### T3. Marcador do gelo visível
 - **Problema:** o poliedro azul no local do gelo não aparece claramente (fica sobreposto ao rover).
@@ -132,6 +132,18 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 ### T9. Desempenho medido
 - Medir quadros por segundo e tempo de carregamento dos GLB (`npx vite`, navegador real). Hoje não há medida.
 - **Aceite:** número registrado no diário. Se passar de 30 quadros por segundo em notebook comum, ok; senão, reduzir sombras ou o GLB do rover (219 KB).
+
+### T11. Reações visuais da tripulação (D-08)
+- **Aceite:** ao aviso da antena, acenam; ao início da radiação, andam até a escotilha; sem regra nova. Captura revisada.
+
+### T12. Astronauta ajuda o gelo (D-06)
+- **Aceite:** tarefa de gelo com ajuda termina em 4 h; sem ajuda, 6 h. Testes do motor com e sem ajuda. Captura do rover no local com astronauta ao lado.
+
+### T13. Astronauta colhe na estufa (D-07)
+- **Aceite:** com a estufa ligada, +10 de comida a cada 12 h (até 100). Teste do motor. Animação de colheita na estufa.
+
+### T14. Abrigo e exposição à radiação (D-05, por último)
+- **Aceite:** tripulação fora na radiação acumula exposição; 1 coração a cada 6 h. Testes do motor (com e sem abrigo). Penalidade ajustável só com partida passando.
 
 ### T10. Demo e envio (só com pedido do autor)
 - Vídeo de 30 s ou 7 slides em inglês; referências; declaração de IA em inglês. Ver `docs/event-rules.md`.

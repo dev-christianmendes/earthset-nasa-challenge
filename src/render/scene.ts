@@ -49,8 +49,8 @@ scene.fog = new THREE.Fog(PALETTE.space, 60, 220);
 
 export const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 600);
 // Enquadramento padrão: olha um pouco à esquerda, para a base aparecer à direita do painel de HUD.
-const DEFAULT_CAMERA_POSITION = new THREE.Vector3(2, 17, 30);
-const DEFAULT_TARGET = new THREE.Vector3(-8, 1, 0);
+const DEFAULT_CAMERA_POSITION = new THREE.Vector3(-13, 5, -9);
+const DEFAULT_TARGET = new THREE.Vector3(-17, 1, -15.5);
 camera.position.copy(DEFAULT_CAMERA_POSITION);
 
 // Câmera orbital em torno da base: arrastar gira, roda ou pinça aproxima, limites de distância e inclinação.
@@ -59,7 +59,7 @@ controls.target.copy(DEFAULT_TARGET);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.enablePan = false;
-controls.minDistance = 10;
+controls.minDistance = 5;
 controls.maxDistance = 70;
 controls.minPolarAngle = THREE.MathUtils.degToRad(20);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(82);
@@ -485,10 +485,12 @@ export function loadCrewModels(): Promise<unknown> {
   );
 }
 
+/** Deslocamento em relação ao rover parado no local: o marcador fica ao lado, não sobre o modelo. */
+const ICE_MARKER_OFFSET = { x: 2.6, z: 2.0 };
 /** Marcador do gelo no local da tarefa de gelo (item de missão). Visível enquanto há tarefa de gelo na fila. */
 const iceMarker = new THREE.Mesh(
   new THREE.IcosahedronGeometry(1.1, 0),
-  new THREE.MeshStandardMaterial({ color: PALETTE.iceMarker, emissive: PALETTE.iceMarker, emissiveIntensity: 0.6, transparent: true, opacity: 0.85, roughness: 0.2 }),
+  new THREE.MeshStandardMaterial({ color: PALETTE.iceMarker, emissive: PALETTE.iceMarker, emissiveIntensity: 1.0, transparent: true, opacity: 0.9, roughness: 0.2 }),
 );
 iceMarker.visible = false;
 scene.add(iceMarker);
@@ -536,7 +538,9 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   if (moving) for (const wheel of rover.wheels) wheel.rotation.z = -t * 6;
   // Marcador do gelo: aparece enquanto há tarefa de gelo na fila (item de missão).
   iceMarker.visible = state.robot.queue.some((task) => task.kind === 'ice');
-  iceMarker.position.y = surfaceHeight(SITE.ice.x, SITE.ice.z) + 1.4 + Math.sin(t * 2) * 0.15;
+  const iceMarkerX = SITE.ice.x + ICE_MARKER_OFFSET.x;
+  const iceMarkerZ = SITE.ice.z + ICE_MARKER_OFFSET.z;
+  iceMarker.position.set(iceMarkerX, surfaceHeight(iceMarkerX, iceMarkerZ) + 1.5 + Math.sin(t * 2) * 0.15, iceMarkerZ);
   iceMarker.rotation.y = t * 0.6;
 }
 
