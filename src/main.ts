@@ -33,18 +33,6 @@ const MAX_FRAME_SECONDS = 0.1;
 // ---------- Estado e ações ----------
 
 let game: GameState = createGame({ installation: INSTALLATION });
-{
-  const ice = dispatch(game, { type: 'ENQUEUE_TASK', kind: 'ice' });
-  if (ice.ok) {
-    game = {
-      ...ice.state,
-      robot: {
-        ...ice.state.robot,
-        queue: ice.state.robot.queue.map((task) => ({ ...task, hoursLeft: 3 })),
-      },
-    };
-  }
-}
 
 function act(action: GameAction): void {
   const result = dispatch(game, action);
@@ -122,9 +110,9 @@ function sunlit(hour: number): boolean {
 let last: number | null = null;
 let hudDueAt = 0;
 /** A partida só avança depois de "Nova missão" (tela inicial). */
-let started = true;
+let started = false;
 /** Pausa: a simulação para; a cena continua desenhando. Esc alterna. */
-let paused = true;
+let paused = false;
 /** Intervalo de atualização do HUD (ms). Ações do jogador atualizam na hora. */
 const HUD_INTERVAL_MS = 100;
 
@@ -157,7 +145,6 @@ window.addEventListener('resize', () => {
 
 ui.greenhouse.value = INSTALLATION.greenhouse;
 renderNow();
-document.getElementById('title')?.setAttribute('hidden', '');
 // Tela inicial: começar a missão, idioma e créditos. A cena fica visível de fundo.
 document.getElementById('start')?.addEventListener('click', () => {
   started = true;
