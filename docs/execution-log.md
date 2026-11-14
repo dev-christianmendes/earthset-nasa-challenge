@@ -407,3 +407,14 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Arquivos de documento alterados:** `docs/INTERACTION_MAP.md` (marcador do gelo e lista de lacunas), `docs/PLANO_PARA_AGENTE.md` (T3 marcada como feita) e este `docs/execution-log.md`.
 - **Commit:** feito localmente, sem push.
 
+## 2026-11-14 · T4: aviso da antena no motor e texto do modo escola
+
+- **Contexto:** a D-01 já estava implementada (commit `576ec04`). Esta etapa fecha o aceite "teste do motor cobre as duas situações" e leva o texto da decisão ao modo escola.
+- **Motor:** `antennaWarning(table, hour, antennaInstalled, ahead=6)` em `src/engine/space-weather.ts`; devolve `null` sem antena ou sem tempestade na janela. `src/main.ts` passa a usar a função; a condição da antena saiu do ponto de entrada.
+- **Teste:** `tests/engine/space-weather.test.ts` ganhou "só avisa com a antena instalada" (com antena = 3 h; sem antena = null). Total: 77 testes.
+- **Modo escola:** `src/school.ts`, explicação `space.why` nos dois idiomas, com a frase da D-01. O texto ficou dentro do limite de 130 caracteres do teste.
+- **Docs:** `docs/regras-recursos.md` e `docs/INTERACTION_MAP.md` atualizados (a antena não é mais "sem efeito"); `docs/PLANO_PARA_AGENTE.md` marca a T4 como feita.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run`: 11 arquivos, 77 testes, OK; `npm run build` passou (aviso conhecido de chunk > 500 kB).
+- **Captura:** a captura `antenna-warning.png` do commit `576ec04` continua válida; a mudança desta etapa é de lógica pura e texto, sem alterar o HUD. Não foi refeita por causa da sessão concorrente de arte na mesma árvore.
+- **Commit:** feito localmente, sem push.
+

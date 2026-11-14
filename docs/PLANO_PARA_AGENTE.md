@@ -109,7 +109,7 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 - **Arquivos:** `src/render/scene.ts` (`iceMarker`, `SITE.ice`).
 - **Aceite:** captura com tarefa de gelo na fila, em que o marcador esteja visível fora do rover (ajustar posição do marcador ou tamanho).
 
-### T4. Antena: aviso antecipado de tempestade (D-01, decidido)
+### T4. Antena: aviso antecipado de tempestade (D-01, decidido) — **feita**
 - **Arquivos:** `src/engine/space-weather.ts` (função pura + teste), `src/ui/hud.ts` (aviso), `src/i18n.ts`, `src/school.ts`.
 - **Aceite:** com antena instalada, o HUD mostra aviso quando há tempestade nas próximas 6 h; sem antena, não mostra. Teste do motor cobre as duas situações. Nenhum recurso muda.
 
