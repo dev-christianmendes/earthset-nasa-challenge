@@ -126,7 +126,7 @@ CLAUDE.md                   Importa este arquivo para o Claude Code
   - job `verify`: `npm ci`, typecheck, testes, build, `npm audit --omit=dev --audit-level=high`, e envio do `dist` como artefato (14 dias).
   - job `boundary`: falha se `src/engine` importar three.js, usar `document.`, `window.` ou `HTMLElement`.
 - **Dependabot** abre PRs semanais para npm e ações do GitHub. Revisar antes de aceitar.
-- **Estado atual:** o CI está criado e **ainda não rodou**, porque nada foi enviado ao GitHub (regra 7). Primeiro envio: quando o autor pedir.
+- **Estado atual:** o CI rodou no GitHub a partir do envio de 14/11/2026 (`main`, 4 execuções seguidas com sucesso, até `17abde8`). Mudanças futuras: enviar só quando o autor pedir (regra 7).
 - **Vulnerabilidades conhecidas (aceitas):** `npm audit` aponta 3 problemas em `vitest` 3.2.7 e `tinypool` (dev-only, não entram no build). A correção indicada é trocar para vitest 5, que é uma mudança maior. Não há correção em 3.x até a data desta versão. Revisar depois do evento. A dependência de produção (three.js) tem 0 vulnerabilidades.
 - **Ambiente:** `context-mode` exige Node 24.15 ou mais novo. Resolvido: Node 24.22.3 é o padrão local e `ctx_doctor` passa em todos os checks (ver `docs/execution-log.md`, entrada de 14/11, Node).
 
@@ -165,7 +165,7 @@ CLAUDE.md                   Importa este arquivo para o Claude Code
 Data: 14/11/2026.
 
 - **Bloco 0 (fundação):** feito, exceto B0.6 (envio ao GitHub, autor).
-- **Bloco 1 (regras da base):** B1.1 e B1.3 feitos. B1.2 parcial: estufa feita; tarefas do robô entraram com o robô. **B1.4 (robô e gelo) feito** nesta etapa, com 41 testes passando. **B1.5 (frio e aquecimento sem energia) aberto.**
+- **Bloco 1 (regras da base):** B1.1 e B1.3 feitos. B1.2 parcial: estufa feita; tarefas do robô entraram com o robô. **B1.4 (robô e gelo) feito** nesta etapa, com 41 testes passando. **B1.5 (frio e aquecimento sem energia) feito**, pela regra de bateria zerada; temperatura separada fica fora desta versão.
 - **Bloco 2 (dados):** aberto. Depende de decisão do autor (B2.1).
 - **Bloco 3 (tela):** HUD ligado ao motor; painel de robô, estufa, fim de partida e cena com luz de sol. **Visual ainda básico**: falta arte, céu e textura para o padrão "lindo" pedido. Ver backlog.
 - **Bloco 4 (envio):** aberto. O projeto de envio é novo, iniciado do zero em 14/11/2026. Não há bloqueio de elegibilidade pendente.

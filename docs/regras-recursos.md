@@ -28,6 +28,7 @@ Fator da patente: cadete 0,75 · explorador 1 · comandante 1,15.
 
 - Início: bateria em 80% da capacidade (100), ar 80, água 50, comida 40. Ar, água e comida vão de 0 a 100; bateria de 0 até a capacidade.
 - 3 corações. Perde 1 a cada 6 horas seguidas com energia, ar, água ou comida zerados.
+- **Frio (B1.5):** sem energia, a base esfria. A perda de coração por bateria zerada é o frio: não há temperatura separada nesta versão. Teste em `tests/engine/game.test.ts`.
 - Derrota quando os corações chegam a zero. Vitória: chegar a 708 horas com pelo menos 1 coração.
 
 ## Robô (B1.4, feito)
@@ -48,9 +49,7 @@ Implementado em `src/engine/robot.ts`. Números ajustáveis.
 
 ## O que ainda não existe (fica para depois)
 
-- **Frio e aquecimento sem energia como causa de perda de coração** (B1.5).
 - **Efeito da antena** (ligação com a Terra, alertas de DONKI).
 - **Bateria da carga e painéis iniciais da preparação** (escolhidos hoje na tela, não na preparação).
-- **Aquecimento sem energia** e frio como causa de perda de coração.
 - **Tempestades, radiação e abrigo** (dose por hora, cobertura de regolito).
 - **Patentes** (o fator de consumo já existe; textos e números de tela não).

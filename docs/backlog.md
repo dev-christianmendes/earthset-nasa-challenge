@@ -9,7 +9,7 @@ Plano do projeto novo, do zero. Prazo de envio: **15/11/2026, 23h59**, horário 
 - [x] **B0.3** Cena three.js mínima com relógio no HUD (`src/main.ts`). Luz e relevo **ilustrativos**.
 - [x] **B0.4** `AI_DISCLOSURE.md` com a declaração de uso de IA; `AGENTS.md`, `README.md`, `.gitignore` e `docs/event-rules.md`.
 - [x] **B0.5** Cena verificada em navegador (desktop 1280×800 e celular 390×844). A primeira tentativa saiu preta por um bug real: `dt` negativo no primeiro quadro lançava `RangeError` e parava o laço. Corrigido em `src/main.ts`. A luz inicial escura foi corrigida na etapa B1.4 (sol nascendo baixo com intensidade mínima); ainda é um primeiro ajuste, ver B3.3.
-- [ ] **B0.7** CI/CD: `.github/workflows/ci.yml` (typecheck, testes, build, auditoria, fronteira do motor) e `dependabot.yml` criados. **Ainda não rodou no GitHub**, porque nada foi enviado (regra 7).
+- [x] **B0.7** CI/CD: `.github/workflows/ci.yml` (typecheck, testes, build, auditoria, fronteira do motor) e `dependabot.yml` criados. **Rodou no GitHub** após o envio de 14/11/2026: as 4 últimas execuções em `main` terminaram com sucesso.
 - [ ] **B0.6** `[?]` Autor: enviar ao GitHub depois de revisar o histórico inicial (ver seção "Envio" abaixo).
 
 ## Bloco 1 · Regras da base (14/11, tarde) — feito, com ressalvas
@@ -18,7 +18,7 @@ Plano do projeto novo, do zero. Prazo de envio: **15/11/2026, 23h59**, horário 
 - [x] **B1.2** Ações do jogador validadas pelo motor: `SET_GREENHOUSE`, `ENQUEUE_TASK` e `CANCEL_TASK`, com rejeição de entrada inválida e de ação após o fim.
 - [x] **B1.3** Fim de partida em `src/engine/game.ts`: derrota com corações zerados; vitória com pelo menos 1 coração em 708 h. Verificado com partidas completas em `tests/engine/partida.test.ts`: base passiva perde; plano com robô vence com 3 corações.
 - [x] **B1.4** Robô e gelo em `src/engine/robot.ts`: fila de até 4 tarefas, gelo (+12 de água por viagem), painéis (até 12) e antena. Consumo do robô na energia. 11 testes de unidade e partidas completas. Regras em `docs/regras-recursos.md`.
-- [ ] **B1.5** Frio e aquecimento sem energia como causa de perda de coração. Não iniciado nesta etapa.
+- [x] **B1.5** Frio e aquecimento sem energia como causa de perda de coração. Feito pela regra existente de bateria zerada (teste novo em `tests/engine/game.test.ts`); temperatura separada fica fora desta versão, ver `docs/regras-recursos.md`.
 
 ## Bloco 2 · Dados reais (14/11, noite)
 

@@ -52,6 +52,13 @@ describe('partida', () => {
     expect(outcomeOf(g)).toBe('playing');
   });
 
+  it('sem energia, a base esfria e perde 1 coração a cada 6 horas (B1.5)', () => {
+    const start = withVitals(createGame({ installation: inst }), { battery: 0, air: 100, water: 50, food: 40 });
+    const g = advance(start, HOURS_PER_HEART_LOSS, false);
+    expect(g.hearts).toBe(2);
+    expect(g.vitals.battery).toBe(0);
+  });
+
   it('o contador zera quando o recurso volta a ter valor', () => {
     const start = withVitals(createGame({ installation: inst }), { battery: 50, air: 100, water: 50, food: 0 });
     const a = advance(start, 5, true);

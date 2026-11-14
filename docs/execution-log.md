@@ -79,3 +79,17 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - Leitura de `docs/backlog.md` com `rtk cat`: 45 linhas, igual a `wc -l`. Uma leitura anterior, feita com `cat` direto no Bash, saiu com 2 linhas em vez de 45. Não reproduzido em três tentativas seguintes; causa não identificada.
   - `rtk gain`: 956 tokens economizados em 37 comandos (12,3%).
 - **Pendências:** testar `rtk bulk-read` e `rtk code-write` (`RTK.md`, não testados); rastrear a leitura incompleta da primeira tentativa se voltar.
+
+## 2026-11-14 · B1.5 (frio sem energia) e estado do CI
+
+- **Arquivos alterados:** `tests/engine/game.test.ts` (teste novo, "sem energia, a base esfria e perde 1 coração a cada 6 horas (B1.5)"), `docs/regras-recursos.md` (regra de frio na seção de corações; item removido de "O que ainda não existe"), `docs/backlog.md` (B1.5 e B0.7 marcados), `AGENTS.md` (seção 6 e bloco 1 atualizados).
+- **Decisão:** o frio como causa de perda de coração já é a regra de bateria zerada. Não há temperatura separada, porque não há número aprovado para ela. Se o autor quiser temperatura própria, vira item novo no backlog.
+- **CI:** as execuções em `main` (`43606329560`, `43606673030`, `43606952442`, `43607076254`) terminaram com `success`, sem falha. Esta é a primeira execução real do `ci.yml` (B0.7).
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npm run test`: 6 arquivos, 49 testes, todos passaram (o teste novo incluído).
+  - `npm run build`: passou (`dist/index.html` 5.41 kB).
+  - `python3 -m unittest discover -s tests` em `data-pipeline`: 5 testes, OK.
+- **Tela:** nenhuma mudança visual; screenshot não refeito.
+- **Ferramentas:** `ctx_doctor` 11 de 11 PASS. `ctx_stats`: 14,3% da sessão e 15,2% do projeto mantidos fora do chat. `rtk gain`: 987 tokens economizados em 55 comandos (9,0%). Serena respondeu ao `initial_instructions`; a chamada de símbolos foi testada antes.
+- **Pendências:** B0.6 (`[?]`, autor), B1.2 parcial, B3.2 a B3.4, B2.x, B4.x. Commit e push não feitos nesta etapa, porque não foram pedidos.
