@@ -17,3 +17,10 @@ __pycache__/
 data-pipeline/raw/*.bin
 assets-src/external/modular-scifi-megakit/megakit.zip
 .playwright-mcp/
+
+# Downloads brutos de pacotes CC0 (reproduzíveis pelos links em cada SOURCE.md; licença copiada ao lado)
+assets-src/external/kaykit-space-base-bits/raw/
+assets-src/external/polypizza-quaternius-space/raw/
+assets-src/external/quaternius-universal-animation-library*/x/
+# Prévias de revisão renderizadas no Blender
+assets-src/blender/previews/

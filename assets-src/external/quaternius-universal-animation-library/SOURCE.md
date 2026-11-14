@@ -1,0 +1,9 @@
+# Quaternius · Universal Animation Library [Standard]
+
+- Fonte: https://quaternius.itch.io/universal-animation-library (download gratuito, "name your own price", arquivo "Universal Animation Library[Standard].zip"; em `x/` ficaram só License.txt, README.txt e o GLB usado; o zip e os demais formatos foram apagados para poupar espaço).
+- Autor: Quaternius (https://quaternius.com)
+- Licença (citada de `x/Universal Animation Library[Standard]/License.txt`; a página do itch.io também indica "Creative Commons Zero v1.0 Universal"):
+  > License: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication https://creativecommons.org/publicdomain/zero/1.0/
+- Acesso: 14/11/2026.
+- Arquivos usados: `Unreal-Godot/UAL1_Standard.glb` (manequim, esqueleto e clipes Idle_Loop, Walk_Loop, Jog_Fwd_Loop, Sprint_Loop, Fixing_Kneeling, Interact, PickUp_Table).
+- Uso: `assets-src/blender/build_ext_astronaut.py` → `public/models/ext/astronaut.glb` (traje, capacete, mochila e clipe "wave" acrescentados no script).
