@@ -3,16 +3,19 @@
 // Regra dos corações: docs/regras-recursos.md (ajustável).
 import { MATCH_HOURS, advanceClock, createClock, type Clock } from './clock';
 import { CALM, solarFactor, stormLevel, type SpaceWeatherSample } from './space-weather';
-import { advanceCrew, createCrew, crewOutside, type CrewState } from './crew';
+import { advanceCrew, createCrew, crewAvailableForHelp, crewOutside, type CrewState } from './crew';
+import { harvestStep } from './harvest';
 import {
   applyFlow,
   deriveFlow,
+  isGreenhouseOn,
   startingVitals,
   type GreenhouseMode,
   type Installation,
   type Vitals,
 } from './resources';
 import {
+  ICE_HELP_SPEED,
   ICE_WATER_PER_TRIP,
   cancelTask,
   createRobot,
@@ -38,6 +41,8 @@ export interface GameState {
   readonly vitalZeroHours: number;
   /** Tripulação: exposição à radiação (D-05). */
   readonly crew: CrewState;
+  /** Horas desde a última colheita da estufa (D-07). */
+  readonly greenhouseHours: number;
 }
 
 export type GameAction =
@@ -64,6 +69,7 @@ export function createGame(options: NewGameOptions): GameState {
     hearts: MAX_HEARTS,
     vitalZeroHours: 0,
     crew: createCrew(),
+    greenhouseHours: 0,
   };
 }
 
@@ -128,8 +134,10 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   const flow = deriveFlow(state.vitals, state.installation, sunlit, working, solarFactor(stormLevel(weather.kp)));
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
+  // Com a tripulação livre, o astronauta ajuda na viagem de gelo (D-06).
+  const helpAvailable = crewAvailableForHelp(state.crew, weather.radiation);
   const progress = working
-    ? progressRobot(state.robot, step)
+    ? progressRobot(state.robot, step, helpAvailable ? ICE_HELP_SPEED : 1)
     : { robot: state.robot, completed: [] as readonly TaskKind[] };
 
   let installation = state.installation;
@@ -138,7 +146,10 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     if (kind === 'ice') water = Math.min(100, water + ICE_WATER_PER_TRIP);
     if (kind === 'panel') installation = { ...installation, panels: installation.panels + 1 };
   }
-  const vitals: Vitals = { ...drained, water };
+  // Colheita (D-07): só com a estufa ligada, a cada 12 h; o ciclo recomeça se ela desligar.
+  const greenhouseRunning = isGreenhouseOn(state.vitals, state.installation);
+  const harvest = harvestStep(state.greenhouseHours, step, greenhouseRunning);
+  const vitals: Vitals = { ...drained, water, food: Math.min(100, drained.food + harvest.food) };
 
   const anyVitalZero = vitals.battery <= 0 || vitals.air <= 0 || vitals.water <= 0 || vitals.food <= 0;
   let vitalZeroHours = anyVitalZero ? state.vitalZeroHours + step : 0;
@@ -160,5 +171,6 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     hearts,
     vitalZeroHours,
     crew: crewStep.crew,
+    greenhouseHours: harvest.accumulated,
   };
 }

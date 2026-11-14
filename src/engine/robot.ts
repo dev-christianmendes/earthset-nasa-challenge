@@ -23,6 +23,10 @@ export const ROBOT_LOAD_PER_HOUR = 1.0;
 export const TASK_HOURS: Record<TaskKind, number> = { ice: 6, panel: 4, antenna: 8 };
 /** Água de uma viagem de gelo, em unidades de 0 a 100. */
 export const ICE_WATER_PER_TRIP = 12;
+/** Duração da viagem de gelo com a ajuda do astronauta livre (D-06). */
+export const ICE_HELP_HOURS = 4;
+/** Velocidade da viagem de gelo com ajuda: 6 h de trabalho em 4 h de jogo. */
+export const ICE_HELP_SPEED = TASK_HOURS.ice / ICE_HELP_HOURS;
 
 export function createRobot(): RobotState {
   return { queue: [], antennaInstalled: false };
@@ -71,19 +75,25 @@ export interface RobotProgress {
 /**
  * Avança a fila por `hours`. Se uma tarefa termina no meio do passo, o tempo que
  * sobra vai para a próxima. A tarefa concluída só vale a partir do fim do passo.
+ * `iceSpeed` acelera só a tarefa de gelo (ajuda do astronauta, D-06); 1 = sem ajuda.
  */
-export function progressRobot(robot: RobotState, hours: number): RobotProgress {
+export function progressRobot(robot: RobotState, hours: number, iceSpeed = 1): RobotProgress {
   if (!Number.isFinite(hours) || hours < 0) {
     throw new RangeError(`horas inválidas: ${hours}`);
+  }
+  if (!Number.isFinite(iceSpeed) || iceSpeed <= 0) {
+    throw new RangeError(`velocidade inválida: ${iceSpeed}`);
   }
   const queue = [...robot.queue];
   const completed: TaskKind[] = [];
   let left = hours;
   while (queue.length > 0 && left > 0) {
     const head = queue[0];
-    const used = Math.min(head.hoursLeft, left);
+    const rate = head.kind === 'ice' ? iceSpeed : 1;
+    const needed = head.hoursLeft / rate;
+    const used = Math.min(needed, left);
     left -= used;
-    const rest = head.hoursLeft - used;
+    const rest = head.hoursLeft - used * rate;
     if (rest > 0) {
       queue[0] = { ...head, hoursLeft: rest };
       break;

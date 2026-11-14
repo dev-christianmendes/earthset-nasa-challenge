@@ -35,6 +35,14 @@ export function crewOutside(inst: Installation, vitals: Vitals, robot: RobotStat
 }
 
 /**
+ * A tripulação pode ajudar o robô agora? Não pode durante a radiação, nem enquanto
+ * alguém ainda está na trilha até o abrigo (D-06).
+ */
+export function crewAvailableForHelp(crew: CrewState, radiation: boolean): boolean {
+  return !radiation && crew.transitLeft.every((left) => left === 0);
+}
+
+/**
  * Avança a exposição por `dt` horas. Quando a radiação começa, quem estava fora precisa de
  * TRANSIT_HOURS para chegar ao abrigo, e cada hora desse caminho é exposição. Depois, a tripulação
  * fica no abrigo até a radiação acabar. Devolve o novo estado e quantos corações a exposição tira agora.
