@@ -10,7 +10,7 @@ Plano do projeto novo, do zero. Prazo de envio: **15/11/2026, 23h59**, horário 
 - [x] **B0.4** `AI_DISCLOSURE.md` com a declaração de uso de IA; `AGENTS.md`, `README.md`, `.gitignore` e `docs/event-rules.md`.
 - [x] **B0.5** Cena verificada em navegador (desktop 1280×800 e celular 390×844). A primeira tentativa saiu preta por um bug real: `dt` negativo no primeiro quadro lançava `RangeError` e parava o laço. Corrigido em `src/main.ts`. A luz inicial escura foi corrigida na etapa B1.4 (sol nascendo baixo com intensidade mínima); ainda é um primeiro ajuste, ver B3.3.
 - [x] **B0.7** CI/CD: `.github/workflows/ci.yml` (typecheck, testes, build, auditoria, fronteira do motor) e `dependabot.yml` criados. **Rodou no GitHub** após o envio de 14/11/2026: as 4 últimas execuções em `main` terminaram com sucesso.
-- [ ] **B0.6** `[?]` Autor: enviar ao GitHub depois de revisar o histórico inicial (ver seção "Envio" abaixo).
+- [x] **B0.6** Autor: enviar ao GitHub depois de revisar o histórico inicial. Feito: envio autorizado em 14/11/2026; histórico revisado e reescrito para retirar menções ao protótipo; `main` no GitHub (ver seção "Envio" abaixo).
 
 ## Bloco 1 · Regras da base (14/11, tarde) — feito, com ressalvas
 
