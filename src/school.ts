@@ -62,6 +62,11 @@ export const EXPLANATIONS: Record<string, Explanation> = {
     why: 'Gasta energia e água. No modo "só com sobra", liga com a bateria acima de 50%.',
     source: 'Regra do jogo, ilustrativa.',
   },
+  space: {
+    what: 'O clima do Sol: tempestades e partículas que chegam à Lua.',
+    why: 'Uma tempestade G reduz a energia dos painéis. A radiação para o robô enquanto dura.',
+    source: 'NASA DONKI, cenário de 08/10/2024. Dado real de uma janela histórica.',
+  },
   hearts: {
     what: 'Você começa com 3 corações.',
     why: 'Perde 1 a cada 6 horas com energia, ar, água ou comida zerados. Chegar às 708 horas com 1 ou mais vence.',

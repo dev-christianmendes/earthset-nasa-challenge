@@ -46,9 +46,11 @@ Plano completo em `docs/arquitetura.md` (requisitos E1–E12 e R-…, camadas, f
 
 - [x] **F0** Refatoração de `src/main.ts` em `src/render/scene.ts`, `src/ui/hud.ts`, `src/data/sun.ts` e `src/main.ts` (laço e ligação). Sem mudança de comportamento: 52 testes e build iguais; captura desktop conferida.
 - [x] **C1** LOLA → `src/engine/terrain.ts` → horizonte real por site (`data-pipeline/fetch_lola.py`, 16 testes; `src/data/terrain-sites.json`). Feito: faixa de 40 km do LDEM 20 m baixada por HTTP Range; horizonte em 72 direções; sites peak/slope/rim escolhidos pelo próprio horizonte. Resultado: Sol em 448 h (peak), 182 h (slope, início do jogo), 0 h (rim). **Pendente:** verificar a convenção de azimute (suposição em `docs/data-sources.md`, seção 2) e revisar o equilíbrio: a base começa no morro (decisão do autor, 14/11), com 448 h de Sol; o teste de partida passa, mas o equilíbrio ainda não foi revisto. Rodapé atualizado.
-- [ ] **C2** DONKI → `data-pipeline/fetch_donki.py` (CME e FLR; chave `DEMO_KEY` para teste). Ver D1 (cenário histórico).
-- [ ] **C3** `src/engine/space-weather.ts` e efeito da tempestade na partida (abrigo, energia dos painéis).
-- [ ] **V1–V4** Relevo LOLA na cena, base, céu e luz (`src/render/`).
+- [x] **C2** DONKI → `data-pipeline/fetch_donki.py` (GST para Kp, SEP para radiação; cenário de 08/10/2024, decisão D1). Feito: `src/data/space-weather.json` gerado com a chave NASA (Kp máximo 8,67, G4, a partir da hora 63; 82 h de radiação). 22 testes Python.
+- [x] **C3** `src/engine/space-weather.ts`: tempestade G reduz a geração dos painéis (10% por nível), radiação para o robô; `advance` recebe o clima; HUD mostra o clima. 6 testes do motor. Na tela, o efeito aparece a partir da hora 63.
+- [x] **V1** Relevo LOLA na cena: malha de 160×160 (400 m, centrada no morro), exagero vertical 2×; crateras ilustrativas removidas.
+- [x] **V2** Painel polar: horizonte medido em 72 direções e trajetória do Sol em 709 h, com contagem de horas com Sol (`src/ui/horizon-panel.ts`).
+- [ ] **V3–V4** Base e céu com mais detalhe; luz. Ver `docs/arquitetura.md`, seção 5.
 - [ ] **I2** Patentes mudam a linguagem da tela (`src/engine/narrative.ts`).
 - [ ] **I3** Diário da base na tela (`src/ui/log-panel.ts`).
 - [ ] **F5** Revisão de copy (B3.1) e acessibilidade mínima.

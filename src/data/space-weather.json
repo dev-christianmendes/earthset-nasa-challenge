@@ -1,0 +1,2844 @@
+{
+  "start_utc": "2024-10-08 00:00",
+  "step_hours": 1,
+  "hours": 708,
+  "source": "NASA DONKI (GST e SEP), cenário de 08/10/2024; ver data-pipeline/fetch_donki.py",
+  "samples": [
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 7.67,
+      "radiation": false
+    },
+    {
+      "kp": 7.67,
+      "radiation": false
+    },
+    {
+      "kp": 7.67,
+      "radiation": false
+    },
+    {
+      "kp": 8.33,
+      "radiation": false
+    },
+    {
+      "kp": 8.33,
+      "radiation": false
+    },
+    {
+      "kp": 8.33,
+      "radiation": false
+    },
+    {
+      "kp": 8.67,
+      "radiation": false
+    },
+    {
+      "kp": 8.67,
+      "radiation": false
+    },
+    {
+      "kp": 8.67,
+      "radiation": false
+    },
+    {
+      "kp": 8.0,
+      "radiation": false
+    },
+    {
+      "kp": 8.0,
+      "radiation": false
+    },
+    {
+      "kp": 8.0,
+      "radiation": false
+    },
+    {
+      "kp": 7.67,
+      "radiation": false
+    },
+    {
+      "kp": 7.67,
+      "radiation": false
+    },
+    {
+      "kp": 7.67,
+      "radiation": false
+    },
+    {
+      "kp": 8.0,
+      "radiation": false
+    },
+    {
+      "kp": 8.0,
+      "radiation": false
+    },
+    {
+      "kp": 8.0,
+      "radiation": false
+    },
+    {
+      "kp": 7.33,
+      "radiation": false
+    },
+    {
+      "kp": 7.33,
+      "radiation": false
+    },
+    {
+      "kp": 7.33,
+      "radiation": false
+    },
+    {
+      "kp": 6.67,
+      "radiation": false
+    },
+    {
+      "kp": 6.67,
+      "radiation": false
+    },
+    {
+      "kp": 6.67,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": true
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
+      "radiation": false
+    }
+  ]
+}

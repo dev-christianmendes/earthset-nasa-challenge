@@ -5,6 +5,7 @@ import type { GameState } from '../engine/game';
 import { MAX_PANELS, isWorking } from '../engine/robot';
 import { sampleAt } from '../engine/sun';
 import { SUN } from '../data/sun';
+import { TERRAIN_MESH } from '../data/terrain-mesh';
 
 /** Paleta da cena. O azul de destaque é o mesmo --accent do HUD (index.html). */
 export const PALETTE = {
@@ -56,16 +57,6 @@ export function frameForViewport(): void {
 }
 frameForViewport();
 
-// Relevo ilustrativo: chão com ondulação suave e crateras escuras.
-const groundGeo = new THREE.PlaneGeometry(120, 120, 120, 120);
-const pos = groundGeo.attributes.position as THREE.BufferAttribute;
-for (let i = 0; i < pos.count; i++) {
-  const x = pos.getX(i);
-  const y = pos.getY(i);
-  const bump = Math.sin(x * 0.11) * 0.35 + Math.cos(y * 0.09) * 0.3 + Math.sin((x + y) * 0.23) * 0.12;
-  pos.setZ(i, bump);
-}
-groundGeo.computeVertexNormals();
 // Textura de regolito ilustrativa: grão aleatório gerado em canvas, repetido sobre o chão.
 function regolithTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -84,33 +75,52 @@ function regolithTexture(): THREE.CanvasTexture {
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(14, 14);
+  tex.repeat.set(40, 40);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+// Relevo real: malha do LOLA (400 m centrados no morro). Norte = -z, como no céu e no Sol.
+const VERTICAL_EXAGGERATION = 2; // exagero vertical; a HUD diz isso
+function buildTerrain(): THREE.BufferGeometry {
+  const { n, size_m, heights_m } = TERRAIN_MESH;
+  const step = size_m / (n - 1);
+  const half = size_m / 2;
+  const positions = new Float32Array(n * n * 3);
+  const uvs = new Float32Array(n * n * 2);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const k = j * n + i;
+      positions[3 * k] = -half + i * step;
+      positions[3 * k + 1] = heights_m[k] * VERTICAL_EXAGGERATION;
+      positions[3 * k + 2] = half - j * step;
+      uvs[2 * k] = i / (n - 1);
+      uvs[2 * k + 1] = j / (n - 1);
+    }
+  }
+  const index: number[] = [];
+  for (let j = 0; j < n - 1; j++) {
+    for (let i = 0; i < n - 1; i++) {
+      const a = j * n + i;
+      const b = a + 1;
+      const c = a + n;
+      const d = c + 1;
+      index.push(a, b, c, b, d, c); // faces viradas para cima
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  geo.setIndex(index);
+  geo.computeVertexNormals();
+  return geo;
+}
 const ground = new THREE.Mesh(
-  groundGeo,
+  buildTerrain(),
   new THREE.MeshStandardMaterial({ color: 0xffffff, map: regolithTexture(), roughness: 1, metalness: 0 }),
 );
-ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-const craterMat = new THREE.MeshStandardMaterial({ color: PALETTE.crater, roughness: 1 });
-const craters: Array<[number, number, number]> = [
-  [-18, -12, 4.5],
-  [14, -20, 6],
-  [24, 6, 3.2],
-  [-26, 10, 5.5],
-  [4, 18, 2.6],
-];
-for (const [x, z, r] of craters) {
-  const c = new THREE.Mesh(new THREE.CircleGeometry(r, 36), craterMat);
-  c.rotation.x = -Math.PI / 2;
-  c.position.set(x, 0.05, z);
-  c.receiveShadow = true;
-  scene.add(c);
-}
 
 // Sol: luz direcional com sombras.
 const sun = new THREE.DirectionalLight(PALETTE.sunlight, 2.6);

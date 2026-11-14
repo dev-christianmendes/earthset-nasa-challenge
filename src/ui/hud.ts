@@ -6,6 +6,7 @@ import { MAX_PANELS, MAX_QUEUE, type TaskKind } from '../engine/robot';
 import { MATCH_HOURS } from '../engine/clock';
 import type { GreenhouseMode } from '../engine/resources';
 import { EXPLANATIONS, SCHOOL_LABELS, type Explanation } from '../school';
+import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 
 export const TASK_LABEL: Record<TaskKind, string> = { ice: 'Gelo', panel: 'Painel', antenna: 'Antena' };
 export const GREENHOUSE_LABEL: Record<GreenhouseMode, string> = {
@@ -23,6 +24,7 @@ function el<T extends HTMLElement>(id: string): T {
 }
 
 export const ui = {
+  space: el('space'),
   hour: el('hour'),
   hearts: el('hearts'),
   batBar: el('bar-battery'),
@@ -106,7 +108,7 @@ function setBar(bar: HTMLElement, value: HTMLElement, percent: number, text: str
   bar.closest('.meter')?.classList.toggle('low', low);
 }
 
-export function renderHud(state: GameState): void {
+export function renderHud(state: GameState, weather: SpaceWeatherSample): void {
   const { vitals, installation, hearts, clock, robot: r } = state;
   ui.hour.textContent = String(Math.floor(clock.hour));
   ui.hearts.textContent = '♥'.repeat(hearts) + '♡'.repeat(Math.max(0, 3 - hearts));
@@ -118,6 +120,10 @@ export function renderHud(state: GameState): void {
   setBar(ui.foodBar, ui.foodVal, pct(vitals.food, 100), `${Math.round(vitals.food)}`, vitals.food < LOW_ALERT_PERCENT.food);
 
   ui.panels.textContent = `${installation.panels} de ${MAX_PANELS}`;
+
+  const level = stormLevel(weather.kp);
+  const storm = level === 0 ? 'clima calmo' : `tempestade G${level}, painéis a ${Math.round(solarFactor(level) * 100)}%`;
+  ui.space.textContent = weather.radiation ? `${storm} · radiação: robô parado` : storm;
   ui.greenhouse.value = installation.greenhouse;
 
   ui.queue.replaceChildren();

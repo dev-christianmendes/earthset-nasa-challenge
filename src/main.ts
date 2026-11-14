@@ -6,8 +6,11 @@ import type { TaskKind } from './engine/robot';
 import { isSunlit } from './engine/sun';
 import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
+import { WEATHER } from './data/space-weather';
+import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
 import { camera, frameForViewport, renderer, scene, updateScene } from './render/scene';
 import { renderHud, ui } from './ui/hud';
+import { mountHorizonPanel } from './ui/horizon-panel';
 
 /** Configuração inicial da base. Valores de equilíbrio do motor (docs/regras-recursos.md). */
 const INSTALLATION: Installation = {
@@ -36,7 +39,7 @@ function act(action: GameAction): void {
   } else {
     setMessage(result.reason);
   }
-  renderHud(game);
+  renderHud(game, currentWeather());
 }
 
 function setMessage(text: string): void {
@@ -63,8 +66,15 @@ ui.restart.addEventListener('click', () => {
   game = createGame({ installation: INSTALLATION });
   ui.greenhouse.value = INSTALLATION.greenhouse;
   setMessage('');
-  renderHud(game);
+  renderHud(game, currentWeather());
 });
+
+// ---------- Clima espacial (C2) ----------
+
+/** Clima da hora atual do cenário de 08/10/2024 (NASA DONKI). */
+function currentWeather(): SpaceWeatherSample {
+  return weatherAt(WEATHER, game.clock.hour);
+}
 
 // ---------- Sol (ilustrativo) ----------
 
@@ -77,14 +87,17 @@ function sunlit(hour: number): boolean {
 
 let last: number | null = null;
 
+const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, INSTALLATION.site);
+
 function frame(now: number): void {
   if (last !== null && outcomeOf(game) === 'playing') {
     const seconds = Math.min(Math.max(0, (now - last) / 1000), MAX_FRAME_SECONDS);
-    game = advance(game, seconds * HOURS_PER_SECOND, sunlit(game.clock.hour));
+    game = advance(game, seconds * HOURS_PER_SECOND, sunlit(game.clock.hour), currentWeather());
   }
   last = now;
   updateScene(game, now, sunlit(game.clock.hour));
-  renderHud(game);
+  updateHorizon(game.clock.hour);
+  renderHud(game, currentWeather());
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -97,6 +110,6 @@ window.addEventListener('resize', () => {
 });
 
 ui.greenhouse.value = INSTALLATION.greenhouse;
-renderHud(game);
+renderHud(game, currentWeather());
 requestAnimationFrame(frame);
 

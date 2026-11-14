@@ -66,10 +66,10 @@ describe('tabela real (JPL Horizons)', () => {
       Array.from({ length: 709 }, (_, h) => isSunlit(REAL, h, site, TERRAIN)).filter(Boolean).length;
     expect(count('peak')).toBeGreaterThanOrEqual(count('slope'));
     expect(count('slope')).toBeGreaterThanOrEqual(count('rim'));
-    // Medido no LOLA (14/11/2026): pico 448 h, encosta 182 h, borda 0 h de Sol.
+    // Medido no LOLA, com o Sol de 08/10/2024: pico 379 h, encosta 179 h, borda 0 h de Sol.
     // A borda é o local mais sombreado do polo, com horizonte de até 55°; sem Sol nesse relevo.
-    expect(count('peak')).toBe(448);
-    expect(count('slope')).toBe(182);
+    expect(count('peak')).toBe(379);
+    expect(count('slope')).toBe(179);
     expect(count('rim')).toBe(0);
   });
 });

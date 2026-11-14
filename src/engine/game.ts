@@ -2,6 +2,7 @@
 // Partida: estado, ações do jogador, passagem do tempo e fim. Motor puro.
 // Regra dos corações: docs/regras-recursos.md (ajustável).
 import { MATCH_HOURS, advanceClock, createClock, type Clock } from './clock';
+import { CALM, solarFactor, stormLevel, type SpaceWeatherSample } from './space-weather';
 import {
   applyFlow,
   deriveFlow,
@@ -106,10 +107,10 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
 }
 
 /**
- * Passa `dtHours` de tempo de jogo. Usa o Sol informado pelo chamador (sunlit);
- * a fonte real do Sol entra no bloco de dados. Para ao fim da partida.
+ * Passa `dtHours` de tempo de jogo. O Sol e o clima espacial vêm do chamador (sunlit, weather).
+ * Tempestade reduz a geração dos painéis; radiação para o robô. Para ao fim da partida.
  */
-export function advance(state: GameState, dtHours: number, sunlit: boolean): GameState {
+export function advance(state: GameState, dtHours: number, sunlit: boolean, weather: SpaceWeatherSample = CALM): GameState {
   if (outcomeOf(state) !== 'playing') return state;
   if (!Number.isFinite(dtHours) || dtHours < 0) {
     throw new RangeError(`horas inválidas: ${dtHours}`);
@@ -118,8 +119,9 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean): Gam
   const step = Math.min(dtHours, remaining);
   if (step <= 0) return state;
 
-  const working = isWorking(state.robot, state.vitals.battery);
-  const flow = deriveFlow(state.vitals, state.installation, sunlit, working);
+  // Radiação de partículas solares para o robô: ele não trabalha enquanto ela durar.
+  const working = isWorking(state.robot, state.vitals.battery) && !weather.radiation;
+  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, solarFactor(stormLevel(weather.kp)));
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
   const progress = working

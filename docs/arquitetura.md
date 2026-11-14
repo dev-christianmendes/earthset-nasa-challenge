@@ -33,8 +33,8 @@ Prêmios em foco (de `event-rules.md`, seção 4): **Best Use of Data**, **Best 
 |---|---|---|
 | R-CORE | Partida de um dia lunar de 708 h; vence com 1 coração ou mais, perde com 3 zerados | Feito (`src/engine/game.ts`) |
 | R-SUN | Sol com azimute e elevação reais (JPL Horizons) | Feito (B2.2) |
-| R-DATA | Relevo real (LOLA) define horizonte e sombra de cada site | **Falta (C1)** |
-| R-EVT | Eventos solares reais (DONKI) mudam a partida: tempestade pede abrigo, reduz energia dos painéis e aumenta a radiação | **Falta (C2, C3)** |
+| R-DATA | Relevo real (LOLA) define horizonte e sombra de cada site | **Feito**: horizonte no motor (C1), relevo na cena (V1) e painel polar (V2) |
+| R-EVT | Eventos solares reais (DONKI) mudam a partida: tempestade reduz energia dos painéis e a radiação para o robô | **Feito no motor e nos dados (C2, C3)**. Na tela, só o HUD; o efeito visual da tempestade ainda não existe |
 | R-ROBO | Robô com fila de tarefas (gelo, painel, antena) | Feito (B1.4) |
 | R-PAT | Patentes (cadete, explorador, comandante) mudam o consumo e a linguagem da tela | Consumo feito; linguagem **falta (I2)** |
 | R-ESC | Modo escola: rótulos curtos e explicação por recurso com fonte | Feito (B3.4) |
@@ -120,7 +120,7 @@ Regras de dado (de `AGENTS.md`):
 
 | # | Decisão | Proposta | Quem decide |
 |---|---|---|---|
-| D1 | Qual período real o DONKI usa, já que a partida se passa no futuro | Cenário histórico: uma janela de 708 h com um evento forte já registrado (ex.: maio de 2024). Rotular como cenário na tela | Autor |
+| D1 | Qual período real o DONKI usa, já que a partida se passa no futuro | Cenário histórico: uma janela de 708 h com um evento forte já registrado (decidido: 8 de outubro de 2024, ver docs/data-sources.md, seção 3). Rotular como cenário na tela | Autor |
 | D2 | Chave da API NASA | `DEMO_KEY` para teste; chave própria para o envio | Autor |
 | D3 | Tamanho do recorte LOLA | Um recorte de ~20 km no polo sul, reduzido para malha de 256 px | Claude (técnico) |
 

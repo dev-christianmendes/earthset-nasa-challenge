@@ -62,6 +62,12 @@
       .hint span { display: block; margin-top: 2px; }
       .hint b { color: var(--text); font-weight: 600; }
       body.school .hint { display: block; }
+      /* Painel polar do horizonte (B-dados): canto superior direito, só em tela larga. */
+      #horizon { top: 16px; right: 16px; width: 240px; padding: 12px; text-align: center; }
+      #horizon h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+      #horizon svg { display: block; margin: 0 auto; }
+      #horizon .cap { font-size: 11px; line-height: 1.4; color: var(--muted); margin: 6px 0 0; text-align: left; }
+      .space { font-size: 12px; color: var(--warn); margin: 8px 0 0; }
       /* Alerta (B3.1): recurso baixo fica vermelho. */
       .meter.low .bar > i { background: var(--bad) !important; }
       .meter.low .row span:last-child { color: var(--bad); font-weight: 600; }
@@ -112,6 +118,7 @@
         .meter .row { margin-top: 6px; }
         .section { margin-top: 10px; padding-top: 10px; }
         #note { display: none; }
+        #horizon { display: none; }
       }
     </style>
   </head>
@@ -146,6 +153,8 @@
       </div>
       <div class="row"><span class="label" data-label="panels">Painéis</span><span id="panels">0</span></div>
       <p class="hint" data-hint="panels"></p>
+      <p id="space" class="space" aria-live="polite">clima calmo</p>
+      <p class="hint" data-hint="space"></p>
 
       <div class="section">
         <h2 data-label="robot">Robô · fila</h2>
@@ -170,7 +179,12 @@
       </div>
     </aside>
 
-    <div id="note">Sol e relevo: dados reais (NASA/JPL Horizons e LRO LOLA). Robô, estufa e clima são ilustrativos.</div>
+    <aside id="horizon" class="panel" aria-label="Horizonte medido no morro">
+      <h2>Horizonte real</h2>
+      <div id="horizon-panel"></div>
+    </aside>
+
+    <div id="note">Sol e relevo: dados reais (NASA/JPL Horizons e LRO LOLA). Clima: cenário de 08/10/2024 (NASA DONKI). Relevo com exagero vertical de 2×. Robô e estufa são ilustrativos.</div>
 
     <div id="overlay" hidden>
       <div class="panel" role="dialog" aria-modal="true" aria-labelledby="overlay-title">

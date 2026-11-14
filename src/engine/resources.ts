@@ -65,6 +65,7 @@ export function deriveFlow(
   inst: Installation,
   sunlit: boolean,
   robotWorking = false,
+  solar = 1,
 ): HourlyFlow {
   const batteryFraction = vitals.battery / inst.batteryCapacity;
   const economy = batteryFraction < RULES.economyBelowBattery;
@@ -81,7 +82,8 @@ export function deriveFlow(
     vitals.water > 0 &&
     batteryFraction > RULES.electrolysisMinBattery;
 
-  const generation = sunlit ? inst.panels * PANEL_OUTPUT_PER_HOUR : 0;
+  // `solar` é a fração de geração que sobra com o clima espacial (1 = calmo; ver space-weather.ts).
+  const generation = sunlit ? inst.panels * PANEL_OUTPUT_PER_HOUR * solar : 0;
   const heating = HEATING_PER_HOUR[inst.site][sunlit ? 'sun' : 'shade'];
   const load =
     BASE_LOAD_PER_HOUR +

@@ -53,6 +53,9 @@ CANDIDATE_STEP_M = 500.0
 ROOT = Path(__file__).resolve().parent.parent
 RAW_PATH = ROOT / "data-pipeline" / "raw" / "lola_south_pole_band.bin"
 OUT_PATH = ROOT / "src" / "data" / "terrain-sites.json"
+MESH_PATH = ROOT / "src" / "data" / "terrain-mesh.json"
+MESH_N = 160  # vértices por lado da malha da cena
+MESH_SIZE_M = 400.0  # lado da malha, em metros, centrada no morro (site peak)
 
 
 def band_rows() -> tuple[int, int]:
@@ -161,6 +164,42 @@ def pick_sites(scored: list[tuple[float, tuple[float, float], list[float]]]) -> 
     }
 
 
+def bilinear(dem: Dem, sample: float, line: float) -> float:
+    """Elevação interpolada entre os 4 pixels vizinhos (sample e line fracionários)."""
+    s0, l0 = math.floor(sample), math.floor(line)
+    fs, fl = sample - s0, line - l0
+    h00 = dem.height(s0, l0)
+    h10 = dem.height(s0 + 1, l0)
+    h01 = dem.height(s0, l0 + 1)
+    h11 = dem.height(s0 + 1, l0 + 1)
+    return (h00 * (1 - fs) + h10 * fs) * (1 - fl) + (h01 * (1 - fs) + h11 * fs) * fl
+
+
+def build_mesh(dem: Dem, cx_m: float, cy_m: float) -> dict:
+    """Malha de MESH_N x MESH_N pontos sobre MESH_SIZE_M metros, centrada em (cx_m, cy_m).
+
+    Alturas em metros relativas ao centro (o centro fica em 0). Ordem: linha j (norte cresce),
+    coluna i (leste cresce): heights[j * MESH_N + i]. Os pontos de borda usam o pixel mais próximo.
+    """
+    step = MESH_SIZE_M / (MESH_N - 1)
+    half = MESH_SIZE_M / 2
+    center_h = bilinear(dem, *xy_to_pixel(cx_m, cy_m))
+    heights = []
+    for j in range(MESH_N):
+        y = cy_m - half + j * step
+        for i in range(MESH_N):
+            x = cx_m - half + i * step
+            sample, line = xy_to_pixel(x, y)
+            heights.append(round(bilinear(dem, sample, line) - center_h, 1))
+    return {
+        "source": "LRO LOLA LDEM_80S_20M, recorte de 400 m centrado no morro (site peak)",
+        "center_m": [round(cx_m, 1), round(cy_m, 1)],
+        "size_m": MESH_SIZE_M,
+        "n": MESH_N,
+        "heights_m": heights,
+    }
+
+
 def build(dem: Dem) -> dict:
     scored = []
     for x, y in candidates():
@@ -197,6 +236,10 @@ def main(argv: list[str] | None = None) -> int:
     result = build(dem)
     OUT_PATH.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"gravado: {OUT_PATH}", file=sys.stderr)
+    peak = result["sites"]["peak"]
+    mesh = build_mesh(dem, peak["x_m"], peak["y_m"])
+    MESH_PATH.write_text(json.dumps(mesh, separators=(",", ":"), ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"gravado: {MESH_PATH}", file=sys.stderr)
     return 0
 
 

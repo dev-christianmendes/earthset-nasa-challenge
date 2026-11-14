@@ -182,7 +182,7 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - Fonte: `LDEM_80S_20M.IMG` (MIT/PDS), 20 m por pixel, polar estereográfica, centro no polo. Confirmada em `https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL`.
   - `data-pipeline/fetch_lola.py`: baixa a faixa de 40 km por HTTP Range (121.660.800 bytes; 7 min 33 s no total, quase tudo na transferência). Calcula 72 raios por posição, com curvatura lunar.
   - `src/data/terrain-sites.json` gerado. `src/engine/terrain.ts` (`horizonAt`, interpolação e volta de 360°) e `src/engine/sun.ts` (`isSunlit` agora recebe o relevo; `SITE_HORIZON_DEG` removido).
-  - Medido: Sol em 448 h (peak), 182 h (slope), 0 h (rim). O início (slope) começa na sombra, como a captura mostra.
+  - Medido (Sol de 15/11/2026): 448 h (peak), 182 h (slope), 0 h (rim). Depois, com a janela de 08/10/2024: 379, 179 e 0 h. O início (slope) começa na sombra, como a captura mostra.
 - **Comandos e resultados:**
   - `python3 -m unittest discover -s data-pipeline/tests`: 16 testes, OK.
   - `npx vitest run`: 57 testes, OK (`tests/engine/terrain.test.ts` novo, `sun.test.ts` com contagens fixas, `partida.test.ts` ainda passa).
@@ -195,3 +195,43 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Decisão posterior (autor, 14/11):** a base começa no morro (`site: 'peak'` em `src/main.ts` e em `tests/engine/partida.test.ts`). Vitest: 57 testes passam com o morro.
 - **Pendências:** equilíbrio com o Sol real (B2.3); verificar azimute; C2 (DONKI, cenário D1); C3; V1–V4; I2–I3; F5; F6 (envio, só com pedido).
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · C2 e C3: clima espacial (DONKI), em andamento
+
+- **Arquivos:** `data-pipeline/fetch_donki.py` (novo), `data-pipeline/tests/test_fetch_donki.py` (novo), `src/engine/space-weather.ts` (novo), `src/data/space-weather.ts` (novo), `tests/engine/space-weather.test.ts` (novo), `src/engine/game.ts` (`advance` com clima), `src/engine/resources.ts` (`deriveFlow` com fator solar), `src/ui/hud.ts` (linha do clima), `src/main.ts`, `index.html` (linha `#space`, rodapé), `src/school.ts` (explicação do clima), `docs/data-sources.md` (seção 3), `docs/backlog.md`.
+- **Comandos e resultados:**
+  - `python3 -m unittest discover -s data-pipeline/tests`: 22 testes, OK.
+  - `npx vitest run tests/engine tests/school.test.ts`: 63 testes, OK (inclui 6 de clima).
+  - `npm run typecheck`: **falha** até existir `src/data/space-weather.json`, que depende do download.
+- **Falha de rede:** `fetch_donki.py` com `DEMO_KEY` deu HTTP 429. O limite do DEMO_KEY (10 por hora) foi gasto pelas consultas de teste de hoje. `FLR` deu 404. `GST` e `SEP` respondem.
+- **Pendência para destravar:** gerar `src/data/space-weather.json` com `NASA_API_KEY` (ou depois do reset do limite) e então commitar. Sem o JSON, o build quebra; por isso nada foi commitado nesta etapa.
+
+## 2026-11-14 · Revisão da data do cenário (validação de R-DATA e R-EVT)
+
+- **Motivo:** a janela de 10/05/2024 tem o Sol abaixo do horizonte no polo sul o dia inteiro (elevação de −0,7° a −1,9°). Com ela, a base não teria luz nenhuma, e a tela diria "10 May 2024" sobre uma base sem Sol.
+- **Verificação:** o Horizons foi consultado para cinco datas. Horas com Sol acima do horizonte plano: 12/03/2012, 0; 15/03/2015, 382; 05/09/2017, 4; 08/10/2024, 706; 15/11/2026, 709.
+- **Decisão:** cenário de 08/10/2024 (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI). Mudou `fetch_sun.py` (START_UTC), `fetch_donki.py` (START_UTC), a tabela `src/data/sun-south-pole.json`, os textos da tela e `docs/data-sources.md`.
+- **Comandos e resultados:**
+  - `python3 data-pipeline/fetch_sun.py`: 709 amostras, de 08/10/2024.
+  - `python3 -m unittest discover -s data-pipeline/tests`: 22 testes, OK. Os testes do Sol que usam a amostra fixa de 2026 foram mantidos, porque a fixture é de 2026.
+  - `npx vitest run`: 63 testes, OK, com as contagens atualizadas (pico 379 h, encosta 179 h, borda 0 h).
+- **Pendente:** `src/data/space-weather.json` (DONKI, bloqueado pelo limite do DEMO_KEY). Sem ele, o typecheck segue falhando.
+
+## 2026-11-14 · Dados na tela: relevo LOLA, painel polar e clima (C2 concluído)
+
+- **Chave NASA:** recebida do autor no meio da tarefa. Usada só como variável de ambiente no comando de `fetch_donki.py`; não está em nenhum arquivo do projeto (verificado com grep).
+- **Data do cenário:** 08/10/2024 (ver a revisão anterior em `docs/execution-log.md`).
+- **Arquivos:** `src/data/terrain-mesh.json` e `src/data/terrain-mesh.ts` (novos), `data-pipeline/fetch_lola.py` (função `build_mesh`, gera a malha), `src/render/scene.ts` (terreno do LOLA no lugar do relevo ilustrativo; crateras inventadas removidas), `src/ui/horizon-panel.ts` (novo, painel polar), `src/main.ts`, `index.html` (painel e rodapé com exagero de 2×), `docs/backlog.md`, `docs/arquitetura.md`, `docs/data-sources.md` (seção 4).
+- **Clima:** `python3 data-pipeline/fetch_donki.py` com a chave: `src/data/space-weather.json` gerado. Kp máximo 8,67 (G4), primeira hora com Kp ≥ 5 na hora 63, 82 h de radiação.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou (depois de trocar `center_m` para `number[]`, por erro de tipo).
+  - `npx vitest run`: 63 testes, OK.
+  - `python3 -m unittest discover -s data-pipeline/tests`: 22 testes, OK.
+  - `npm run build`: passou.
+  - Capturas `desktop-d.png` e `mobile-d.png`: painel polar com 379 h de Sol no morro; relevo visível mas suave; painel escondido no celular.
+- **Achados (não resolvidos):**
+  - A partida começa na hora 0, com o Sol abaixo do horizonte (elevação de −0,01°). A cena começa escura. Falta decidir o horário inicial (ver resposta ao autor).
+  - O relevo de 400 m com 30 m de variação mal aparece de longe; a câmera atual enquadra a base, não o relevo.
+  - O efeito visual da tempestade (céu, luz, painéis) não existe; só o texto no HUD.
+- **Commit:** feito localmente, sem push.
+
