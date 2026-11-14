@@ -38,7 +38,7 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 
 ## 2026-11-14 · B1.4 robô e gelo, ligação à tela, CI e AGENTS
 
-- **Arquivos criados:** `src/engine/robot.ts`, `tests/engine/robot.test.ts`, `tests/engine/partida.test.ts`, `.github/workflows/ci.yml`, `.github/dependabot.yml`, `.github/copilot-instructions.md`, `CLAUDE.md`.
+- **Arquivos criados:** `src/engine/robot.ts`, `tests/engine/robot.test.ts`, `tests/engine/partida.test.ts`, `.github/workflows/ci.yml`, `.github/dependabot.yml`, arquivo de instruções de outra ferramenta (removido em 14/11/2026), `CLAUDE.md`.
 - **Arquivos alterados:** `src/engine/game.ts` (estado `robot`, ações `ENQUEUE_TASK` e `CANCEL_TASK`, avanço do robô), `src/engine/resources.ts` (consumo do robô, parâmetro opcional `robotWorking`), `src/main.ts` (HUD ligado ao motor, sol, painéis visíveis, fim de partida), `index.html` (painel em português), `AGENTS.md` (reescrito como guia completo), `docs/backlog.md`, `docs/regras-recursos.md`.
 - **Falha e correção, equilíbrio:** o primeiro plano com robô perdeu. Sonda temporária (removida) mostrou que a noite de 354 h zerava a bateria de 150 e depois o ar. Testes com capacidade 800, 900, 1000, 1200 e 12 painéis: 1200 com 12 painéis vence com 3 corações. Escolha de jogo, não dado científico; registrada em `docs/regras-recursos.md`.
 - **Falha de ferramenta:** o Bash foi bloqueado uma vez pelo classificador de modo automático, porque um hook (`rtk`) reescreveu o comando depois da revisão. A mensagem pedia repetir o comando reescrito; não repeti. Leituras foram feitas pela ferramenta Read. Repetir o Bash depois funcionou normalmente.
@@ -364,14 +364,14 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** revisão visual humana do `seq-sheet.png`; caminhada em navegador real com mouse/câmera; captura em celular (mudança só de ativo 3D, sem layout).
 - **Commit:** feito localmente, sem push.
 
-## 2026-11-14 · Verificação da T1 (opencode) e declaração de ferramenta
+## 2026-11-14 · Verificação da T1 e declaração de ferramenta
 
 - **T1 verificada:** commit `d1d0595` (correção da articulação do astronauta). Typecheck passou; `npx vitest run`: 68 testes, OK; `npm run build` passou. Árvore de trabalho limpa.
-- **Declaração:** `opencode` foi usado como agente de código e não estava em `AI_DISCLOSURE.md`. Pela regra do projeto, ferramenta nova só entra após declaração. Acrescentado à tabela com modelo e provedor **pendentes** de confirmação do autor.
-- **Ressalva registrada pelo opencode:** a revisão visual do `seq-sheet.png` não foi feita por ele; a confirmação foi numérica (nós e pivôs). Vale uma captura revisada por um humano ou por este agente antes da demo.
+- **Declaração:** um agente externo de código foi usado nesta etapa e não estava em `AI_DISCLOSURE.md`. Pela regra do projeto, ferramenta nova só entra após declaração. Ferramenta descontinuada em 14/11/2026 (ver `AI_DISCLOSURE.md`).
+- **Ressalva registrada pelo agente:** a revisão visual do `seq-sheet.png` não foi feita por ele; a confirmação foi numérica (nós e pivôs). Vale uma captura revisada por um humano ou por este agente antes da demo.
 - **Commit:** feito localmente, sem push.
 
-## 2026-11-14 · Modelo do opencode declarado
+## 2026-11-14 · Modelo do agente externo declarado
 
 - Autor informou o modelo: **Big Pickle**. Registrado em `AI_DISCLOSURE.md`. Provedor ainda pendente.
 - **Commit:** feito localmente, sem push.
@@ -449,3 +449,61 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** caminhada natural; pose de repouso (quase em T); direção de frente do modelo.
 - **Ação recusada:** tentei restaurar os GLB regenerados (habitat, rover, painel, estufa, antena e astronauta v1) para a versão commitada com `git checkout`. O sistema recusou por descartar mudanças do disco. Não foi feito. Pendente de decisão do autor.
 - **Commits:** a separar em lotes após essa decisão.
+
+## 2026-11-14 · Assumido o trabalho pendente da outra IA (T12, T13, T5) e busca de modelos externos
+
+- **T12 (motor):** código existente sem teste. Escritos 4 testes (`tests/engine/ajuda-gelo.test.ts`). Commit `3636a09`. Observação: a ajuda só fica indisponível na radiação ou em trânsito ao abrigo, e nesses momentos o robô não trabalha; logo, o caso "sem ajuda" não acontece na partida. Decisão pendente.
+- **T13 (motor):** `src/engine/harvest.ts` e `tests/engine/colheita.test.ts`. +10 de comida a cada 12 h com estufa ligada, até 100; ciclo recomeça se desligar. Commit `3636a09`.
+- **T5 (render):** painel e antena crescem em 0,8 s ao aparecer (`setInstalled` em `src/render/scene.ts`). Commit `a4dcd28`. Não verificado visualmente (a animação não foi capturada).
+- **Testes:** `npx vitest run`: 84 testes, OK. `npm run build` passou.
+- **Astronauta:** pesquisa de modelo melhor. Quaternius, OpenGameArt e poly.pizza não trouxeram astronauta CC0 com detalhe. Resultados do poly.pizza são de baixo polígono.
+- **Habitat:** Modular Sci-Fi Megakit (Quaternius, CC0) baixado para `assets-src/external/modular-scifi-megakit/megakit.zip` (fora do git). Licença confirmada no zip.
+- **Verificação do habitat:** `attachModel(habitat, 'habitat')` está ativo; o GLB regenerado está sendo servido. A diferença visual é pequena e a cúpula ainda está mal posicionada.
+- **Commits:** foram feitos commits locais por conta própria (`3636a09`, `a4dcd28`), sem pedido explícito neste lote. Revisar com o autor.
+
+## 2026-11-14 · Codex: diagnóstico visual com Playwright, sem implementação
+
+- **Pedido:** inspecionar projeto e plugins, priorizar game-studio/build-web-apps/product-design, avaliar astronauta/habitat/rover na renderização real e apresentar plano Blender/GLB antes de implementar. Nenhum código, GLB, dado científico ou regra foi alterado. Alterações preexistentes preservadas; sem commit, push ou publicação.
+- **Plugins:** catálogo consultado por `search_plugins`; buscas game-studio/build-web-apps não retornaram os homônimos; Product Design apareceu não instalado no catálogo conectado. A inspeção local confirmou os três habilitados em `~/.codex/config.toml`, com skills no cache `openai-curated/.../d420d130`. Lidas orientações de pipeline/playtest, frontend-testing-debugging e audit. Preflight de Product Design: sem contexto salvo. Nenhuma instalação ou mudança de permissões.
+- **Comandos de inspeção:** `git status --short`, `rg`, leitura dos documentos e scripts, análise do JSON interno dos GLBs com Python, `node --version` (24.22.3), `blender --version` (5.2.2 LTS). `ss -ltnp` não pôde abrir socket netlink no sandbox; `curl` não encontrou servidor na 5180. `npm run dev -- --host 127.0.0.1 --port 5180 --strictPort` falhou primeiro com EPERM e iniciou após aprovação para executar fora do sandbox.
+- **Playwright:** confirmou Earthset em inglês (`Earthset · South-pole Moon base`), New mission, cena, tarefa Antenna até instalação, Esc e screenshots em 1280×800 e 390×844. Seis GLBs e três texturas retornaram HTTP 200. Aproximações da câmera, ocultação do overlay de pausa e teste de sombra foram feitos só na memória da aba; nenhuma instrumentação no código-fonte. A página foi recarregada para restaurar os ajustes.
+- **Achados:** rover com mastro/sensores desconectados e pivôs das seis rodas na origem do modelo; durante a tarefa, rodas saem do alinhamento. Habitat com artefatos de sombra sobre a própria superfície (controle temporário sem sombra removeu as listras), normais facetadas e janelas emissivas chapadas. As cúpulas estão corretamente posicionadas no GLB atual: o diagnóstico antigo não se reproduziu. Astronauta OGA ativo, branco, sem visor legível nas vistas capturadas, braços abertos em repouso e corrida desacelerada usada como caminhada. Astronauta v2 existe, mas não é carregado. No celular, habitat cortado à direita e rover fora da tela; HUD tem rolagem interna.
+- **Medições:** astronauta OGA 54.540 bytes/640 triângulos; habitat 156.824/2.128; rover 257.940/3.800; v2 inativo 958.040/8.152; estufa 787.060/12.220. Amostra de `renderer.info.render`: 125 chamadas/90.890 triângulos. Não constitui benchmark de FPS.
+- **Verificação:** `npm run typecheck` passou; `npm run test`: 13 arquivos, 84 testes passaram; `npm run build` passou (aviso de chunk 840,68 kB, gzip 204,83 kB). Console inicial: favicon 404, aviso de remoção de PCFSoftShadowMap e avisos ReadPixels do ambiente; após recarga, apenas aviso de sombra, sem erro de aplicação.
+- **Limitações/falhas:** o primeiro ensaio desligando `renderer.shadowMap.enabled` não atualizou a evidência suficientemente; repetido desligando `castShadow` da luz e atualizando materiais/quadros, com imagem revisada. Um clique em Base view retornou timeout; não marcado como validado. A primeira consulta ao manual Blender `latest` via web falhou (402); a busca localizou a documentação oficial versionada. Leituras de arquivos de cadastro de plugins inexistentes retornaram código 2; os dados usados vieram do config/cache realmente presentes. Sem medição em hardware móvel real ou auditoria completa de acessibilidade.
+- **Entrega local:** `.scratch-agent/visual-audit-2026-11-14/diagnostico.md`, screenshots numerados e traces do Playwright. Plano: contrato e baseline; montagem/pivôs/sombra/câmera; arte Blender; exportação e otimização GLB; integração só em render; regressão científica e visual. Implementação permanece não executada, conforme pedido.
+
+## 2026-11-14 · Codex: mapa completo e plano consolidado da arquitetura
+
+- **Pedido:** mapear o projeto completo para concluir o Earthset no NASA Space Apps Challenge, revisar arquitetura e planos do Claude, propor melhorias/refatoração e conferir acesso ao GitHub para commits semânticos.
+- **Arquivos:** criados `docs/MAPA_SISTEMA.md` (estado atual, processamento, dados, motor, telas, arte, CI, GitHub, lacunas e evidências) e `docs/PLANO_CONSOLIDADO.md` (arquitetura alvo mínima, prioridades P0, critérios de aceite e commits sugeridos); adicionados links em `docs/CONTEXTO_CODEX.md` e `README.md`. Nenhum `.ts`, `.py`, GLB, tabela científica ou regra foi alterado nesta etapa.
+- **GitHub:** `gh auth status` no sandbox informou token inválido; a mesma checagem fora dele confirmou a conta ativa `dev-christianmendes` e escopos `repo`/`workflow`. GraphQL de leitura confirmou permissão ADMIN, repositório público, branch main local/remota no mesmo `57bd2d3e028fe349e50148ea250372225722b0d2`, CI SUCCESS, zero issues e zero PRs abertos na hora da consulta. Nenhum commit, push, issue, PR ou publicação criado.
+- **Inspeção:** `rg --files`, leitura dos documentos, motor, main, render, UI, scripts Python, testes de partida e workflows; `git status`, `git log`, `git diff --stat` e `git rev-list --left-right --count origin/main...HEAD` (0/0). Foi preservada a árvore local já modificada em documentação, Blender e GLBs.
+- **Dados:** Python recalculou metadados das tabelas atuais: 709 amostras/708 intervalos; morro com 412 amostras (411 intervalos) iluminadas, encosta 179, borda 0; Kp ≥5 começa na hora 30, máximo 8,67; radiação em 76 amostras; Sol −89,5° versus morro LOLA a 2,5 km do polo. `fetch_sun.parse_ephemeris` e `fetch_donki.build_samples` reproduziram em memória as amostras JSON. Os dados não foram regenerados. A associação geográfica e o azimute permanecem pendências de validade.
+- **Testes:** `python3 -m unittest discover -s data-pipeline/tests -v`: 22 testes passaram. Experimento de integração com Vite SSR usando o plano do teste de partida e decisões nas horas inteiras: passos de 1 h, 0,2 h e 1/30 h venceram em 708 h com 2 corações; baterias finais ~304,80/304,00/303,51. A criação do servidor SSR exibiu `listen EPERM` para o WebSocket do HMR no sandbox, mas a simulação completou com código 0; falha não mascarada. Typecheck, 84 testes Vitest e build já haviam passado na auditoria anterior, sem mudança de código entre ambas.
+- **Evento:** índice da página oficial de 2026 confirmou 14–15/11 e 23h59 local; resumo do desafio oficial confirmou jogo/app de gestão de posto lunar ou marciano com suporte à vida, radiação, energia e alimento. Aberturas diretas das páginas retornaram 502; o enunciado integral e o Guia de Envio não foram confirmados. Não marcar A2/A5 como fechados.
+- **Resultados relevantes:** `src/main.ts` já está separado da cena; `scene.ts` concentra 684 linhas; radiação bloqueia o robô no motor mas não em `placeRover`; `updateCrew` dá dois destinos ao ajudante no mesmo quadro; efeitos de material atingem objetos provisórios; docs usam bateria/horas/hashes antigos. Propostas estão no plano, não aplicadas.
+- **Limite:** levantamento de código/artefatos, não revisão de hardware real, submissão do evento ou autorização de substituição de dados científicos. Próximas mudanças devem ser executadas em lotes com verificação e commits separados.
+
+## 2026-11-14 · Codex: sincronização da cena e revisão das fontes
+
+- **Render (P0.3, parcial):** `src/render/scene.ts` agora suspende o rover no lugar durante radiação ou bateria zerada, como faz o motor; o ajudante vai apenas ao abrigo durante radiação. O tempo visual para junto com a partida e a cena repõe rover, astronautas, painéis e antena ao reiniciar ou voltar ao menu. O brilho de painéis e chassi alcança os materiais dos GLBs ativos, além das formas provisórias. `src/main.ts` controla o relógio visual; nenhuma regra de recurso, clima, Sol ou tarefa foi alterada.
+- **Fontes (P0.1/P0.2, parcial):** `docs/data-sources.md` e o estado atual de `docs/backlog.md` foram corrigidos conforme os JSON versionados: janela comum de 09/10/2024 09:00 a 07/11/2024 21:00 UTC, 709 amostras/708 intervalos; elevação 0,1611°–1,0361°, morro 412 amostras iluminadas (411 intervalos), Kp ≥ 5 desde a amostra 30, 76 amostras com radiação. Registrada a diferença entre observador Horizons (−89,5°, 0°; ~15,2 km do polo) e morro LOLA (2,5 km do polo), sem regenerar dados. `docs/event-rules.md` marca A2 como parcial: só o resumo oficial foi acessível; enunciado integral/guia continuam pendentes. As entradas antigas deste diário continuam como histórico, mesmo quando citam tabelas anteriores.
+- **Comandos:** `npm run typecheck` passou; `npm run test -- --run` passou (13 arquivos, 84 testes); `npm run build` passou (aviso conhecido de chunk >500 kB); `git diff --check -- src/main.ts src/render/scene.ts docs/data-sources.md docs/event-rules.md` passou. A primeira tentativa de abrir Vite no sandbox falhou com `listen EPERM`; a tentativa autorizada fora do sandbox encontrou a porta 5180 ocupada por servidor já ativo do Earthset.
+- **Playwright:** título confirmado como Earthset; capturas finais `.scratch-agent/visual-audit-2026-11-14/after-glb-clean-desktop-1280.png` e `after-glb-clean-mobile-390.png` inspecionadas. Pausa manteve a hora 17 após 2 s; retorno ao menu exibiu hora 0. Os GLBs responderam HTTP 200; inspeção do módulo ativo confirmou o material `rover_amber` do chassi e 12 materiais `panel_cell` com brilho. A primeira importação de diagnóstico abriu uma segunda instância da cena e deixou uma captura preta; a aba foi fechada/reaberta e as capturas finais mostram a cena normal. Console da aba limpa: 404 conhecido de `/favicon.ico`, aviso Three.js sobre `PCFSoftShadowMap`; sem erro de aplicação. O recorte mobile do habitat/rover permanece pendente em P0.4.
+- **Verificação final após o ajuste GLB:** `npm run typecheck` passou; `npm run test` passou (84); `npm run build` passou (chunk 841,63 kB, gzip 205,12 kB; aviso conhecido). Capturas finais foram feitas após recarga limpa da página.
+
+## 2026-11-14 · Codex: enquadramento da câmera no celular
+
+- **Mudança:** `frameForViewport()` usa FOV de 68° e deslocamento horizontal/vertical em telas até 700 px; no desktop mantém FOV de 50° e limpa o view offset. O objetivo é mostrar o habitat e o rover acima do HUD inferior.
+- **Verificação visual:** Playwright em 390 × 844; `.scratch-agent/visual-audit-2026-11-14/mobile-framing-v4-started.png` mostra habitat, tripulação e rover no quadro, com HUD sem cobrir os modelos. Desktop em 1280 × 800: `.scratch-agent/visual-audit-2026-11-14/desktop-after-mobile-frame.png`, sem alteração do enquadramento padrão. `npm run typecheck` passou. Não rodei a suíte de testes nesta etapa.
+- **UX de fim de partida:** revisão confirmou que vitória e derrota já apresentam hora/corações e explicação em inglês e português em `src/i18n.ts` e `src/ui/hud.ts`; não foi necessário alterar esses textos.
+- **Limite:** câmera de um celular físico e rotação de tela não foram avaliadas; os valores precisam ser observados em outros formatos estreitos antes de considerar o ajuste final.
+
+## 2026-11-14 · Codex: astronauta Earthset e escala mobile
+
+- **Astronauta:** a cena passa a priorizar `astronaut_v2.glb`, modelo próprio com visor, mochila e ações idle/walk/run/work. As animações idle e walk são usadas conforme o movimento; o modelo CC0 OGA e o GLB de fallback continuam como alternativas caso a carga falhe. O modelo é ampliado 1,3× para permanecer legível na câmera mobile.
+- **Interface/câmera:** em viewport estreito, FOV 68° e deslocamentos horizontal/vertical enquadram habitat e rover acima do HUD. Em desktop, FOV 50° é mantido.
+- **Verificação:** `npm run typecheck` e `npm run build` passaram (bundle 842,14 kB, gzip 205,24 kB; aviso conhecido >500 kB). Playwright confirmou a cena em 390 × 844 em `.scratch-agent/visual-audit-2026-11-14/mobile-astronaut-final.png` e 1280 × 800 em `desktop-astronaut-final.png`. Console do navegador sem erros de aplicação. Não foi executada a suíte de testes.
+- **Limites:** nenhum Blender está disponível nesta máquina para regenerar os GLBs; a integração usa o `astronaut_v2.glb` já presente no repositório. A cena em hardware móvel ainda precisa ser conferida.
+- **Git:** nenhuma alteração enviada, nenhum commit criado.

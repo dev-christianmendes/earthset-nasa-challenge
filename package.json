@@ -2,7 +2,7 @@
   "name": "earthset-nasa-challenge",
   "version": "0.1.0",
   "private": true,
-  "description": "Earthset: base no polo sul da Lua, jogo 3D para o NASA Space Apps Challenge 2026. Desenvolvido com auxílio de IA (Claude Code e GitHub Copilot). Ver AI_DISCLOSURE.md.",
+  "description": "Earthset: base no polo sul da Lua, jogo 3D para o NASA Space Apps Challenge 2026. Desenvolvido com auxílio de IA (Claude Code e Codex). Ver AI_DISCLOSURE.md.",
   "license": "MIT",
   "type": "module",
   "scripts": {

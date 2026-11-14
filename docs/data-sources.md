@@ -10,15 +10,15 @@ Cada número científico do jogo tem origem aqui. O que for ilustrativo está ma
 | Alvo | Sol (10), efemérides DE441 |
 | Observador | Superfície da Lua (centro 301), lon 0°, lat −89,5°, altitude 0 km. Local **ilustrativo** perto do polo sul |
 | Grandeza | Azimute e elevação aparentes (`QUANTITIES='4'`) |
-| Período | 09/10/2024 00:00 UT até 06/11/2024 12:00 UT, passo de 1 h (708 h, um dia lunar de jogo). Escolhido porque o polo tem Sol nessa janela (706 de 709 h acima do horizonte plano). Em 10/05/2024 o Sol fica abaixo do horizonte o dia inteiro |
+| Período da tabela em uso | 09/10/2024 09:00 UTC até 07/11/2024 21:00 UTC, passo de 1 h (709 amostras, 708 intervalos). As 709 amostras estão acima do horizonte plano. |
 | Data da consulta | 14/11/2026 |
 | Texto cru | `data-pipeline/raw/horizons_sun_south_pole.txt` (para auditoria) |
 | Tabela do jogo | `src/data/sun-south-pole.json` |
 | Como gerar | `python3 data-pipeline/fetch_sun.py` (ou `--from-raw` para reprocessar o texto cru). Testes: `python3 -m unittest discover -s data-pipeline/tests` |
 
-**Resultado:** com horizonte plano, a elevação do Sol no ponto fica entre **0,93°** e **2,02°** durante toda a janela. Ou seja, **o Sol não se põe nesse local** no período. A noite do jogo vem do relevo, que bloqueia o Sol. Por isso o horizonte local entra no modelo (seção 3).
+**Resultado da tabela versionada:** com horizonte plano, a elevação do Sol no ponto fica entre **0,1611°** e **1,0361°** durante toda a janela. O Sol não se põe nesse ponto no período. A noite do jogo vem do relevo que bloqueia o Sol.
 
-**Limitação:** a tabela é de um único ponto de observação. Não há sombra de relevo nela; o bloqueio é o horizonte local da seção 3.
+**Limitação espacial:** a tabela é de um único ponto de observação, −89,5° e 0°, cerca de 15,2 km do polo. O morro `peak` do LOLA está a 2,5 km do polo, em x = −1500 m, y = −2000 m na projeção. A elevação/azimute do Sol não foram calculados exatamente para esse morro. A base usa uma aproximação regional; a sombra usa o horizonte local medido. Comparação independente da orientação do azimute ainda falta.
 
 ## 2. Horizonte local medido (LOLA, C1)
 
@@ -36,11 +36,11 @@ Cada número científico do jogo tem origem aqui. O que for ilustrativo está ma
 
 | Site | Horizonte máximo | Horas com Sol |
 |---|---|---|
-| peak (morro) | 4,3° | 379 |
+| peak (morro) | 4,3° | 412 |
 | slope (encosta) | 25,4° | 179 |
 | rim (borda) | 55,4° | 0 |
 
-Decisão (14/11/2026, autor): a base começa no **morro (peak)**, com 379 h de Sol. A encosta (179 h) e a borda (0 h) ficam como locais de comparação. O equilíbrio precisa ser revisto com isso (ver `docs/backlog.md`, C1 e B2.3).
+Decisão (14/11/2026, autor): a base começa no **morro (peak)**. A tabela atual dá 412 amostras iluminadas, equivalentes a 411 intervalos de jogo de 1 h; encosta = 179 amostras, borda = 0. O equilíbrio da partida atual foi testado com esses arquivos; qualquer regeneração do Sol ou horizonte pede nova simulação completa.
 
 **Suposição a verificar (convenção de azimute):** o azimute do Horizons (0° = norte local, sentido horário) foi ligado à projeção com norte = +y (meridiano 0°, afastando-se do polo) e leste = +x, a convenção padrão da estereográfica polar sul (EPSG:3031). Se o sinal de leste estiver invertido, o Sol nasce do lado errado. Verificação pendente: comparar uma direção conhecida do relevo com o nascer do Sol na tabela.
 
@@ -48,21 +48,21 @@ Decisão (14/11/2026, autor): a base começa no **morro (peak)**, com 379 h de S
 
 Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido do código nesta etapa.
 
-## 3. Como o Sol entra no jogo
+## 3a. Como o Sol entra no jogo
 
-- O motor recebe `sunlit` por hora, calculado em `isSunlit(table, hour, site)`: a elevação do Sol precisa passar do horizonte local do site.
+- O motor recebe `sunlit` por hora, calculado em `isSunlit(table, hour, site, terrain)`: a elevação do Sol precisa passar do horizonte local do site.
 - A tela posiciona a luz pelo azimute e pela elevação reais (`src/main.ts`). Quando o Sol está acima do horizonte mas tapado, a cena fica só com luz de fundo.
 
-## 4. Fontes avaliadas e adiadas
+## 4a. Fontes avaliadas e adiadas
 
 | Fonte | Decisão | Motivo |
 |---|---|---|
-| **NASA DONKI** (tempestades solares) | Feita (seção 3; FLR indisponível, usado GST e SEP) | A janela do jogo é futura, sem registros. Para usar, seria preciso amostrar um período passado e tratar como cenário, o que pede decisão de design. O endpoint `api.nasa.gov/DONKI/FLR` respondeu 404 na consulta de teste (14/11/2026); a rota e a chave precisam ser revisadas antes. |
-| **LOLA / PGDA** (relevo) | Adiada | O modelo de relevo é um raster grande (GeoTIFF). Fica fora do git (`.gitignore`). Entra quando o horizonte local for medido. Enquanto isso, a seção 2 é ilustrativa. |
+| **NASA DONKI** (tempestades solares) | Em uso (seção 3; GST e SEP) | Eventos históricos de outubro/novembro de 2024 formam um cenário, não previsão para a missão. O endpoint `api.nasa.gov/DONKI/FLR` respondeu 404 na consulta de teste e não entra na tabela. |
+| **LOLA / PGDA** (relevo) | Em uso (seções 2 e 4) | O raster bruto grande fica fora do git (`.gitignore`); só as tabelas derivadas entram na aplicação. |
 
 ## 5. O que é ilustrativo (lista de conferência)
 
-- Horizonte local por site (seção 2).
+- Associação da efeméride regional ao morro `peak` (seções 1 e 2); o horizonte em si foi medido no LOLA.
 - Local de observação −89,5° lat (escolha de cenário, não de dado).
 - Robô, tempos de tarefa, consumo e equilíbrio de bateria (`src/engine/robot.ts`, `src/main.ts`): regras de jogo, documentadas em `docs/regras-recursos.md`.
 - Recursos (energia, ar, água, comida): regras de jogo, sem fonte científica própria.
@@ -72,14 +72,14 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 | Item | Valor |
 |---|---|
 | Fonte | NASA DONKI: `GST` (tempestades geomagnéticas, índice Kp de 3 em 3 h, dado da NOAA) e `SEP` (partículas solares energéticas). O endpoint `FLR` respondeu 404 em 14/11/2026, por isso não é usado |
-| Janela | Cenário histórico: 708 h a partir de 09/10/2024 09:00 UTC (nascer do Sol no morro) (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI) (decisão D1 em `docs/arquitetura.md`). Rotulado como cenário na tela. Não é previsão |
+| Janela | Cenário histórico: 708 h a partir de 09/10/2024 09:00 UTC (709 amostras). O Sol e o clima começam no mesmo instante. Tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI. Rotulado como cenário na tela; não é previsão. |
 | Script | `data-pipeline/fetch_donki.py` (testes em `data-pipeline/tests/test_fetch_donki.py`) |
 | Saída | `src/data/space-weather.json`, lida por `src/engine/space-weather.ts` |
 | Respostas cruas | `data-pipeline/raw/donki_gst.json`, `donki_sep.json` (pequenas; versionadas para auditoria) |
 | Método | Kp marcado em t vale para as 3 horas anteriores, [t-3h, t) (convenção NOAA). Cada SEP marca radiação por 24 h a partir do evento; a duração não vem da DONKI, então 24 h é ilustrativo |
 | Chave | `NASA_API_KEY` no ambiente; sem ela usa `DEMO_KEY`, que tem limite baixo (10 chamadas por hora) |
 
-**Por que 09/10/2024:** o Sol no polo sul depende da estação lunar. Em 10/05/2024 ele fica abaixo do horizonte o dia inteiro (elevação de −0,7° a −1,9°); em 09/10/2024 fica acima em 706 de 709 horas. O clima e o Sol usam a mesma janela. Não é previsão.
+**Por que 09/10/2024:** o Sol no polo sul depende da estação lunar. A tabela versionada tem elevação positiva nas 709 amostras; o clima e o Sol usam a mesma janela. Não é previsão. Kp ≥ 5 começa na amostra 30, chega a 8,67; 76 amostras têm radiação. A duração de 24 h por evento SEP é uma regra ilustrativa de interpretação.
 
 ## 4. Malha do relevo na cena (V1)
 

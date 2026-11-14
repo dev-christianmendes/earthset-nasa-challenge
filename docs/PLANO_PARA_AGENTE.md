@@ -1,5 +1,8 @@
 # Plano de trabalho para o agente (passagem de contexto)
 
+> **Atenção (14/11/2026):** o agente atual é o Codex. Para contexto e pendências atualizadas, use **`docs/CONTEXTO_CODEX.md`**. Este plano é histórico; as seções 0.1 a 0.10 podem estar desatualizadas.
+
+
 Documento para um agente de IA que vai executar partes do Earthset. Leia **inteiro** antes de mexer em qualquer arquivo. Ele diz o que já existe, o que falta, em que ordem, com que critério de aceite, e o que você **não** deve decidir sozinho.
 
 Data de referência: 14/11/2026. Prazo de envio: **15/11/2026, 23h59** (meta interna 12h). Repositório: `main`, commits locais à frente do GitHub; **não faça push** sem pedido explícito do autor.
@@ -43,21 +46,22 @@ Data de referência: 14/11/2026. Prazo de envio: **15/11/2026, 23h59** (meta int
 | T2 tarefas dos astronautas | revogada (D-02); substituída por D-05 a D-08 |
 | T3 marcador do gelo visível | feita (`a21e95f`) |
 | T4 antena: aviso de tempestade (D-01) | feita (`576ec04`, `a1d82c1`, `1af398c`) |
-| T5 transição de instalação de painel e antena | pendente |
+| T5 transição de instalação de painel e antena | feita (`a4dcd28`): cresce em 0,8 s |
 | T6 revisão de texto (B3.1) | pendente |
 | T7 pausa com teclado em navegador | parcial: tela de pausa capturada; Esc não verificado |
 | T8 câmera seguindo o rover (D-03) | pendente, baixa prioridade |
 | T9 desempenho medido e peso dos GLB | pendente |
-| T11 reações visuais da tripulação (D-08) | pendente |
-| T12 astronauta ajuda o gelo (D-06) | pendente |
-| T13 astronauta colhe na estufa (D-07) | pendente |
+| T11 reações visuais da tripulação (D-08) | pendente: falta clipe de aceno no modelo |
+| T12 astronauta ajuda o gelo (D-06) | feita no motor (`3636a09`), 4 testes; sem ajuda (6 h) é inalcançável (ver D-06) |
+| T13 astronauta colhe na estufa (D-07) | feita no motor (`3636a09`), 3 testes; falta animação de colheita |
 | T14 abrigo e exposição à radiação (D-05) | feita (`76a8a34`), 76 testes |
 | T15 habitat com arte | pendente: falta corrigir a cúpula |
 | T16 rover com arte | pendente |
 | T17 astronauta, estufa, painéis, antena | pendente: depende da decisão 0.3 |
 | T18 revisão visual humana | pendente |
 
-### 0.7 O que a outra IA pode adiantar AGORA (sem depender de decisão de arte)
+### 0.7 (desatualizado: ver a tabela 0.4 e o diário; a outra IA foi desligada e as tarefas T5, T12 e T13 foram concluídas pelo agente)
+### 0.7 O que ainda pode ser feito (sem depender de decisão de arte)
 - **T12 (ajuda ao gelo, D-06), só motor:** duração da tarefa de gelo com astronauta livre (4 h) e sem ajuda (6 h), com testes em `tests/engine/robot.test.ts` ou novo arquivo. Não mexer em arte.
 - **T13 (colheita na estufa, D-07), só motor:** +10 de comida a cada 12 h com a estufa ligada (até 100), com testes. Não mexer em arte.
 - **T6 (revisão de texto, B3.1):** `src/i18n.ts` e `src/school.ts`, sem mudar regra.
@@ -278,3 +282,16 @@ O autor decidiu que a cena deve chegar ao padrão de arte. O código atual é fu
 ### T18. Revisão visual humana
 - Após T15 a T17, captura desktop e celular revisada por uma pessoa (não só pelo agente). Se a revisão não aprovar, volta para o ajuste.
 - **Aceite:** registro no diário com a decisão de quem revisou.
+
+### 0.9 Ativos externos candidatos (verificados em 14/11/2026)
+- **Astronauta:** nenhum astronauta CC0 com detalhe foi encontrado. Os resultados do poly.pizza são de baixo polígono (domínio público ou CC-BY, com atribuição obrigatória). Opções para o autor: (a) aceitar um CC-BY com atribuição; (b) modelo pago (CGTrader); (c) artista para modelar.
+- **Habitat:** Modular Sci-Fi Megakit (Quaternius, CC0, licença verificada no zip) em `assets-src/external/modular-scifi-megakit/megakit.zip` (46 MB, fora do git pelo `.gitignore`). Traz 191 peças glTF (colunas, portas, plataformas, tubos). Próximo passo: extrair e montar o habitat com essas peças.
+- **Ultimate Space Kit (Quaternius, CC0):** página oficial confirma CC0 e glTF; sem link direto de download na página.
+- **Space Station Kit (Kenney, CC0):** download manual pelo autor.
+
+### 0.10 Pendências reais (para a próxima pessoa ou IA)
+- Habitat: a cúpula bug continua no `habitat.glb` regenerado (não commitado). Decisão do autor: restaurar ou substituir pelo Megakit.
+- Astronauta: decisão do autor sobre a fonte (0.9).
+- Caminhada: o astronauta usa o clipe de corrida em câmera lenta.
+- T6 (revisão de texto), T9 (medir desempenho), T11 (aceno) ainda pendentes.
+

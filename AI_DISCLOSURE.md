@@ -7,8 +7,7 @@ Projeto: **Earthset · Base no polo sul da Lua**, NASA Space Apps Challenge 2026
 | Ferramenta | Uso | Modelo |
 |---|---|---|
 | **Claude Code** (CLI da Anthropic) | Agente de código e documentação neste repositório. Lê `CLAUDE.md`, que importa `AGENTS.md`. | **Pendente** de confirmação pelo autor. Na sessão de 14/11/2026 apareceu `claude-haiku-5-5`. |
-| **GitHub Copilot** (VS Code) | Agente e completação de código. Lê `.github/copilot-instructions.md`. | **Pendente** de confirmação pelo autor. |
-| **opencode** (CLI, opencode.ai) | Agente de código neste repositório, executado por `opencode run` a partir de `docs/PLANO_PARA_AGENTE.md`. Lê `AGENTS.md` e os documentos de `docs/`. | Modelo: **Big Pickle** (informado pelo autor em 14/11/2026). Provedor: **pendente** de confirmação. Commits com `Co-Authored-By: opencode`. |
+| **Codex** (OpenAI) | Agente de código a partir de 14/11/2026, para o restante do desenvolvimento. Lê `AGENTS.md` e os documentos de `docs/`, em especial `docs/CONTEXTO_CODEX.md`. | **Pendente**: modelo e provedor a confirmar pelo autor. Ainda sem commits atribuídos. |
 
 Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes.
 
@@ -18,7 +17,7 @@ Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes
 - **Modelos gerados por script** (Blender 5.2, scripts em `assets-src/blender/`, escritos com auxílio de IA e revisados pelo projeto): habitat, rover, painel solar, estufa, antena e astronauta.
 - **Nenhuma imagem ou modelo gerado por IA** foi usado como ativo final.
 
-## 2. Como as ferramentas são usadas aqui
+## 3. Como as ferramentas são usadas aqui
 
 - O código, os testes e a documentação são escritos com agentes guiados por `AGENTS.md` e pelos roteiros de `docs/`.
 - Dado científico é conferido na fonte listada em `docs/data-sources.md` antes de entrar no jogo.
@@ -30,11 +29,13 @@ Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes
 
 - Registro por ferramenta e por período, não por linha. Dentro do jogo não há IA generativa nesta versão.
 
-## 3. Declaração em inglês (para a página de envio)
+## 4. Declaração em inglês (para a página de envio)
 
-> **Use of Super Intelligence (SI) tools.** This project was developed with two AI tools: **Claude Code** (Anthropic), used as a coding agent to read the repository, write and test code and draft documentation, and **GitHub Copilot**, used as a coding assistant and agent. Model versions: [to be confirmed by the author]. Scientific values are checked against the NASA sources listed in the References field.
+> **Use of Super Intelligence (SI) tools.** This project was developed with AI coding agents. **Claude Code** (Anthropic) was used to read the repository, write and test code, generate Blender scripts for the 3D models and draft documentation. Model versions: [to be confirmed by the author]. Third-party assets (CC0) are listed in the References field. Scientific values are checked against the NASA sources listed in the References field.
 
-## 4. Pendências
+## 5. Pendências
 
-- [ ] Confirmar modelo de Claude Code e de GitHub Copilot.
+- [ ] Confirmar modelo de Claude Code.
+- [ ] Confirmar modelo e provedor do Codex, e acrescentar à declaração em inglês se for usado no envio.
 - [ ] Preencher a declaração em inglês com os modelos confirmados.
+- [ ] Registro do histórico: commits feitos por outro agente antes do Codex (com trailer próprio) estão no git. Decisão do autor sobre reescrever o histórico (ver `docs/CONTEXTO_CODEX.md`).

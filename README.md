@@ -16,13 +16,17 @@ npm run build      # verificação de tipos e build estático em dist/
 | Pasta | Conteúdo |
 |---|---|
 | `src/engine/` | Regras do jogo em TypeScript puro |
-| `src/main.ts` | Cena three.js e laço do jogo |
+| `src/main.ts` | Liga motor, cena e interface; controla o laço da partida |
+| `src/render/` | Cena Three.js e carregamento dos modelos GLB |
+| `src/ui/` | HUD e painel do horizonte |
+| `data-pipeline/` | Processamento offline de dados científicos |
+| `assets-src/` e `public/` | Fontes Blender, GLBs e texturas |
 | `tests/` | Testes do motor (Vitest) |
-| `docs/` | Backlog, regras do evento, diário de execução |
+| `docs/` | [Mapa do sistema](docs/MAPA_SISTEMA.md), [plano consolidado](docs/PLANO_CONSOLIDADO.md), backlog, regras e diário |
 
 ## Uso de IA
 
-Desenvolvido com auxílio de Claude Code e GitHub Copilot. Ver [`AI_DISCLOSURE.md`](AI_DISCLOSURE.md).
+Desenvolvido com auxílio de Claude Code e Codex. Ver [`AI_DISCLOSURE.md`](AI_DISCLOSURE.md).
 
 ## Licença
 

@@ -1,6 +1,6 @@
 # Earthset · Base no polo sul da Lua (projeto do evento)
 
-Este é o ponto de entrada para **qualquer agente de IA** neste repositório (Claude Code via `CLAUDE.md`, GitHub Copilot via `.github/copilot-instructions.md`, ou outro). Leia-o inteiro no início de cada sessão. Tudo que um agente novo precisa para trabalhar aqui está neste arquivo ou nos documentos que ele aponta.
+Este é o ponto de entrada para **qualquer agente de IA** neste repositório (Claude Code via `CLAUDE.md`, Codex, ou outro). Leia-o inteiro no início de cada sessão. Tudo que um agente novo precisa para trabalhar aqui está neste arquivo ou nos documentos que ele aponta.
 
 ---
 
@@ -10,7 +10,7 @@ Este é o ponto de entrada para **qualquer agente de IA** neste repositório (Cl
 - **Para quem:** banca de julgamento (critérios Impact, Creativity, Validity, Relevance, Presentation; ver `docs/event-rules.md`, seção 4) e estudantes, com modo leve previsto para escola.
 - **Prazo:** envio até **15/11/2026, 23h59** no horário local. Meta interna: 12h de 15/11.
 - **Origem:** projeto escrito do zero a partir de 14/11/2026.
-- **Ferramentas de IA declaradas:** Claude Code e GitHub Copilot (`AI_DISCLOSURE.md`). Outra ferramenta só entra depois de declarada lá.
+- **Ferramentas de IA declaradas:** Claude Code e Codex (`AI_DISCLOSURE.md`). Outra ferramenta só entra depois de declarada lá.
 - **Autor:** Christian Mendes (`dev-christianmendes`). Equipe solo até a confirmação do item A3 em `docs/event-rules.md`.
 
 ---

@@ -81,7 +81,7 @@ Fonte: FAQ, "Can participants under the age of 18 participate?".
 ## 6. Custos e ofertas
 
 - Participar é gratuito. Se alguém pedir pagamento por qualquer parte do evento, não pague e avise info@spaceappschallenge.org (FAQ).
-- As Ofertas Globais são opcionais. Úteis para o Earthset: **GitHub Copilot Free** (já usado), **Microsoft Planetary Computer** (dados ambientais, sem cadastro), **Meteomatics** (1.000 consultas por dia, por acesso gratuito durante o hackathon) e domínio gratuito (GoDaddy/Porkbun) para a página final. Nenhuma delas substitui os dados do NASA usados no jogo.
+- As Ofertas Globais são opcionais. Úteis para o Earthset: **Microsoft Planetary Computer** (dados ambientais, sem cadastro), **Meteomatics** (1.000 consultas por dia, por acesso gratuito durante o hackathon) e domínio gratuito (GoDaddy/Porkbun) para a página final. Nenhuma delas substitui os dados do NASA usados no jogo.
 - Uma oferta usada entra no campo **References** se alterar o projeto.
 
 ## 7. Regras do projeto (não vêm do evento)
@@ -95,7 +95,7 @@ Fonte: FAQ, "Can participants under the age of 18 participate?".
 | # | Ponto | Por que importa | Como resolver |
 |---|---|---|---|
 | A1 | **Resolvido (14/11/2026, pelo autor).** O projeto de envio é novo, iniciado do zero em 14/11/2026. Nenhum trabalho do projeto de envio foi feito antes do evento. | Não há ação pendente. | Nenhuma. |
-| A2 | **Enunciado oficial** do desafio "Junior Astronaut Mission Trainer" não está nos PDFs lidos. A descrição usada vem de `docs/projeto-earthset.pdf` (seção 2.1). | Os requisitos do desafio determinam a relevância (critério Relevance). | Baixar o enunciado de 28/10 e conferir cada requisito contra o jogo. |
+| A2 | **Parcial.** O [resumo oficial do desafio](https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/) confirma jogo/app interativo para estudantes gerirem posto lunar ou marciano, com suporte à vida, radiação, energia e alimentos. A abertura do enunciado integral retornou erro 502 na consulta de 14/11; os requisitos detalhados não foram lidos. | Os requisitos detalhados determinam a relevância (critério Relevance). | Obter o enunciado integral e conferir cada requisito contra o jogo; não fechar A2 apenas com o resumo. |
 | A3 | **Equipe.** O repositório foi feito como **solo**. Há na pasta Downloads um PDF "HACKATHON 2026 — Christian Mendes & Marcus Cardoso" sobre **outro projeto** (EcoScan AI). | Se Marcus Cardoso entrar na equipe do Earthset, a composição e a autoria mudam e a declaração precisa refletir isso. | Confirmar a composição da equipe no site antes do envio. |
 | A4 | **Marca d'água em imagens geradas por IA.** Essa exigência aparece no fluxo `rules-check`, mas **não está** nos PDFs lidos. | Só vale se for regra do evento. | Confirmar no Guia de Envio. Enquanto isso, o projeto não usa imagem gerada por IA (`AI_DISCLOSURE.md`, seção 2). |
 | A5 | **Termos e Guia de Envio** não lidos. | Campos obrigatórios e formato exato da demo. | Baixar e registrar aqui. |
