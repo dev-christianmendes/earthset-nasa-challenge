@@ -19,7 +19,7 @@ const INSTALLATION: Installation = {
   rank: 'explorador',
   site: 'peak',
   panels: 2,
-  batteryCapacity: 1200,
+  batteryCapacity: 1000,
   greenhouse: 'surplus',
 };
 

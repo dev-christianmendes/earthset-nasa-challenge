@@ -253,3 +253,17 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - O equilíbrio com o novo início não foi revisto (B2.3). Os testes de partida passam.
 - **Commit:** feito localmente, sem push.
 
+## 2026-11-14 · Revisão do equilíbrio com o Sol real (B2.3)
+
+- **Método:** varredura com a mesma lógica da partida (Sol de 09/10/2024 medido, horizonte do morro, clima do DONKI). Plano de referência: gelo quando a água cai, painéis e antena, estufa "só com sobra". Capacidades de 800 a 1200, morro e encosta. O teste provisório foi apagado depois.
+- **Achados:**
+  - Com capacidade 1200 (valor anterior), o plano vencia com 3 corações e folga grande: pouca tensão.
+  - Entre 950 e 1000 a vitória muda de perder para vencer com 2 corações. Entre 1000 e 1050, de 2 para 3.
+  - **Bug de teste encontrado:** os testes de partida não passavam o clima real, enquanto a tela passa. Com clima calmo, o cenário de 1000 perdia; com o clima real, vence. Corrigido em `tests/engine/partida.test.ts`.
+- **Decisão:** capacidade 1000 (`src/main.ts` e `tests/engine/partida.test.ts`). Documentada em `docs/regras-recursos.md`.
+- **Comandos e resultados:**
+  - `npx vitest run`: 66 testes, OK (com o teste novo de 2 corações).
+  - `npm run build`: passou.
+- **Pendências:** a decisão de 1000 é de jogo: o autor pode trocá-la. A tela não foi capturada de novo, porque só o número da capacidade mudou.
+- **Commit:** feito localmente, sem push.
+

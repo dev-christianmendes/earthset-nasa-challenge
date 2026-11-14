@@ -24,7 +24,7 @@ Plano do projeto novo, do zero. Prazo de envio: **15/11/2026, 23h59**, horário 
 
 - [x] **B2.1** Recorte escolhido pelo Claude, a pedido do autor (14/11/2026): **Sol real** (JPL Horizons) entra agora. DONKI e LOLA ficam para depois, com motivos em `docs/data-sources.md`, seção 4.
 - [x] **B2.2** Pipeline em Python, só biblioteca padrão: `data-pipeline/fetch_sun.py`, com 5 testes em `data-pipeline/tests/`. Gera `src/data/sun-south-pole.json` (709 amostras horárias).
-- [~] **B2.3** Sol lido da tabela gerada (`src/engine/sun.ts`). **Falta:** horizonte local medido (LOLA), DONKI e a revisão do equilíbrio com o Sol real (o teste de partida já passa com ele).
+- [x] **B2.3** Sol real (JPL Horizons), horizonte medido (LOLA) e clima (DONKI) dentro da partida. Equilíbrio revisado em 14/11/2026: capacidade da bateria 1000 (plano de referência vence com 2 corações; a base passiva perde). Ver `docs/regras-recursos.md`.
 
 ## Bloco 3 · Tela e textos (15/11, manhã)
 

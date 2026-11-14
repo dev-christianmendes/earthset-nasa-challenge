@@ -10,17 +10,20 @@ import { MAX_PANELS, type TaskKind } from '../../src/engine/robot';
 import { isSunlit, type SunTable } from '../../src/engine/sun';
 import sunJson from '../../src/data/sun-south-pole.json';
 import terrainJson from '../../src/data/terrain-sites.json';
+import weatherJson from '../../src/data/space-weather.json';
+import { weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
 import type { TerrainTable } from '../../src/engine/terrain';
 
 const SUN = sunJson as SunTable;
 const TERRAIN = terrainJson as TerrainTable;
+const WEATHER = weatherJson as SpaceWeatherTable;
 
 const INSTALLATION: Installation = {
   rank: 'explorador',
   site: 'peak',
   panels: 2,
   // Capacidade de armazenamento: escolha de equilíbrio, ajustável (ver docs/regras-recursos.md).
-  batteryCapacity: 1200,
+  batteryCapacity: 1000,
   greenhouse: 'surplus',
 };
 
@@ -46,7 +49,8 @@ function play(plan: ((g: GameState) => GameState) | null): GameState {
   let g = createGame({ installation: INSTALLATION });
   while (outcomeOf(g) === 'playing') {
     if (plan) g = plan(g);
-    g = advance(g, 1, sunlit(g.clock.hour));
+    // Clima real do cenário (DONKI), igual ao da tela.
+    g = advance(g, 1, sunlit(g.clock.hour), weatherAt(WEATHER, g.clock.hour));
   }
   return g;
 }
@@ -65,6 +69,12 @@ describe('partida completa', () => {
     expect(g.hearts).toBeGreaterThan(0);
     expect(g.robot.antennaInstalled).toBe(true);
     expect(g.installation.panels).toBe(MAX_PANELS);
+  });
+
+  it('equilíbrio com o Sol real: o plano de referência termina com 2 corações (B2.3)', () => {
+    // Capacidade 1000: com 950 o plano perde na noite; com 1050 ou mais, sobra folga (ver docs/regras-recursos.md).
+    const g = play(planHour);
+    expect(g.hearts).toBe(2);
   });
 
   it('depois do fim, nenhuma ação é aceita', () => {

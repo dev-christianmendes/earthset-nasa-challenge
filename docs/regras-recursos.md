@@ -45,7 +45,16 @@ Implementado em `src/engine/robot.ts`. Números ajustáveis.
 
 **Simplificação:** o consumo e o trabalho são calculados por passo de tempo. Se uma tarefa termina no meio do passo, o efeito vale só no fim do passo. Com passos de 1 h (testes) ou de frações de hora (tela), o erro é pequeno.
 
-**Equilíbrio (simulação em `tests/engine/partida.test.ts`):** a partida da tela começa com 2 painéis e capacidade de armazenamento de **1200**. Com 150 a noite zera a base; com 600 ou 900 e 12 painéis, perde; com 1000, vence com 1 coração; com 1200, vence com 3. Os números são escolhas de jogo, não dados científicos, e devem ser revistos quando o bloco B2 trouxer fluxos reais.
+**Equilíbrio com o Sol real (B2.3, 14/11/2026):** a partida da tela usa o Sol medido (JPL Horizons, a partir de 09/10/2024 às 09:00 UTC), o horizonte do morro (LOLA) e o clima do DONKI. Capacidade da bateria **1000** (antes 1200, valor que dava vitória com folga demais). Resultados do plano de referência (painéis, gelo e antena, estufa "só com sobra"), no morro:
+
+| Capacidade | Resultado do plano | Bateria mínima |
+|---|---|---|
+| 950 | perde na noite (hora ~665) | 0 |
+| 1000 | vence com **2 corações** | 0 (por algumas horas) |
+| 1050 | vence com 3 | 6 |
+| 1100 | vence com 3 | 45 |
+
+A base passiva perde por volta da hora 117 com qualquer capacidade. O ponto de virada (950 para 1000) é estreito: é uma escolha de jogo, não um dado. Trava em `tests/engine/partida.test.ts` (2 corações com o plano de referência). Os testes de partida passam o clima real (antes passavam clima calmo, o que escondia esse efeito).
 
 ## O que ainda não existe (fica para depois)
 
