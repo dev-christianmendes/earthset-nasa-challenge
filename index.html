@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Earthset: administre uma base no polo sul da Lua por um dia lunar. Jogo educativo para o NASA Space Apps Challenge 2026." />
+    <title>Earthset · Base no polo sul da Lua</title>
+    <style>
+      :root {
+        --bg: #03050a;
+        --panel: rgba(10, 14, 24, 0.82);
+        --line: rgba(255, 255, 255, 0.12);
+        --text: #e8edf5;
+        --muted: #9aa6b8;
+        --accent: #7fd1ff;
+        --ok: #6fe39a;
+        --warn: #ffcf6b;
+        --bad: #ff7a7a;
+      }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        overflow: hidden;
+      }
+      canvas { display: block; }
+      .panel {
+        position: fixed;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-sizing: border-box;
+      }
+      #hud {
+        top: 16px;
+        left: 16px;
+        width: 300px;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+        padding: 14px 16px;
+      }
+      h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: 0.02em; }
+      .sub { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+      .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; margin-top: 10px; }
+      .label { color: var(--muted); }
+      .hearts { color: var(--bad); font-size: 18px; letter-spacing: 2px; }
+      .bar { height: 8px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; margin-top: 4px; }
+      .bar > i { display: block; height: 100%; width: 0; border-radius: 6px; transition: width 0.25s ease; }
+      .bar.battery > i { background: linear-gradient(90deg, #ffcf6b, #6fe39a); }
+      .bar.air > i { background: var(--accent); }
+      .bar.water > i { background: #5aa8ff; }
+      .bar.food > i { background: var(--ok); }
+      .section { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 12px; }
+      .section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+      .buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+      button {
+        font: inherit;
+        color: var(--text);
+        background: rgba(127, 209, 255, 0.12);
+        border: 1px solid rgba(127, 209, 255, 0.35);
+        border-radius: 10px;
+        padding: 10px 6px;
+        font-size: 13px;
+        cursor: pointer;
+        min-height: 44px;
+      }
+      button:hover:not(:disabled) { background: rgba(127, 209, 255, 0.22); }
+      button:disabled { opacity: 0.4; cursor: not-allowed; }
+      select {
+        width: 100%;
+        font: inherit;
+        color: var(--text);
+        background: #0d1420;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        min-height: 44px;
+      }
+      #queue { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+      #queue li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+      #queue li.empty { color: var(--muted); border-bottom: 0; }
+      #queue button { min-height: 32px; min-width: 32px; padding: 2px 8px; font-size: 16px; line-height: 1; }
+      #message { min-height: 18px; color: var(--warn); font-size: 12px; margin-top: 8px; }
+      #note { position: fixed; right: 16px; bottom: 12px; color: var(--muted); font-size: 11px; background: rgba(0,0,0,0.35); padding: 4px 8px; border-radius: 8px; }
+      #overlay {
+        position: fixed; inset: 0; display: grid; place-items: center;
+        background: rgba(3, 5, 10, 0.72);
+      }
+      #overlay[hidden] { display: none; }
+      #overlay .panel { position: static; width: min(440px, calc(100vw - 32px)); padding: 24px; text-align: center; }
+      #overlay h2 { margin: 0 0 10px; font-size: 22px; }
+      #overlay p { color: var(--muted); line-height: 1.5; margin: 0 0 18px; }
+      #overlay button { padding: 12px 22px; }
+      @media (max-width: 700px) {
+        #hud { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 58vh; }
+        #note { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <aside id="hud" class="panel" aria-label="Painel da base">
+      <h1>Base no polo sul da Lua</h1>
+      <div class="sub">Hora de jogo <strong id="hour">0</strong> de 708 · <span id="hearts" class="hearts" aria-label="corações">♥♥♥</span></div>
+
+      <div class="row"><span class="label">Bateria</span><span id="val-battery">0%</span></div>
+      <div class="bar battery"><i id="bar-battery"></i></div>
+      <div class="row"><span class="label">Ar</span><span id="val-air">0</span></div>
+      <div class="bar air"><i id="bar-air"></i></div>
+      <div class="row"><span class="label">Água</span><span id="val-water">0</span></div>
+      <div class="bar water"><i id="bar-water"></i></div>
+      <div class="row"><span class="label">Comida</span><span id="val-food">0</span></div>
+      <div class="bar food"><i id="bar-food"></i></div>
+      <div class="row"><span class="label">Painéis</span><span id="panels">0</span></div>
+
+      <div class="section">
+        <h2>Robô · fila</h2>
+        <ul id="queue"></ul>
+        <div id="message" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="section">
+        <h2>Pedir ao robô</h2>
+        <div class="buttons">
+          <button type="button" data-task="ice" title="Traz 12 de água">Gelo</button>
+          <button type="button" data-task="panel" title="Instala 1 painel solar">Painel</button>
+          <button type="button" data-task="antenna" title="Instala a antena de comunicação">Antena</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Estufa</h2>
+        <select id="greenhouse" aria-label="Modo da estufa"></select>
+      </div>
+    </aside>
+
+    <div id="note">Sol: dados reais (NASA/JPL Horizons). Relevo, horizonte local e robô são ilustrativos.</div>
+
+    <div id="overlay" hidden>
+      <div class="panel" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+        <h2 id="overlay-title">Fim da partida</h2>
+        <p id="overlay-text"></p>
+        <button type="button" id="restart">Jogar de novo</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
