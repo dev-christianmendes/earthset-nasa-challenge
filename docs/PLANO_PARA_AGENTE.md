@@ -295,3 +295,5 @@ O autor decidiu que a cena deve chegar ao padrão de arte. O código atual é fu
 - Caminhada: o astronauta usa o clipe de corrida em câmera lenta.
 - T6 (revisão de texto), T9 (medir desempenho), T11 (aceno) ainda pendentes.
 
+
+> **Plano superado (14/11/2026, noite).** Este documento é histórico. O plano vigente é `docs/PLANO_CONSOLIDADO.md`, e o estado do código está em `docs/CONTEXTO_CODEX.md`.

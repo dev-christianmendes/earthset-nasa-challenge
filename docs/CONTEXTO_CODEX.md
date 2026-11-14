@@ -8,6 +8,13 @@ Prazo de envio do desafio: **15/11/2026, 23h59** (meta interna 12h).
 
 ---
 
+> **Atualização de escopo (14/11/2026, noite).** Este documento é o ponto de entrada, mas as seções 4 (pendências) e 3.2 (direção visual) estão **superadas**. Use, nesta ordem:
+> 1. `docs/PLANO_CONSOLIDADO.md`: plano vigente, com cortes P0, P1 e P2.
+> 2. `docs/DECISOES.md`: decisões D-11 a D-15 (direção Cinematic Scientific Sci-Fi, LUMA por regras, objetivos, ordem da tripulação, desempenho, fontes).
+> 3. `docs/VISUAL_DIRECTION.md`: direção visual vigente.
+> 4. O estado do código abaixo (seção 3.1) continua válido, com estes acréscimos: LUMA (`src/engine/guide.ts`), objetivos (`src/engine/objectives.ts`), ordem da tripulação (`crewOrder`) e briefing estão na árvore de trabalho, sem commit, com 93 testes passando.
+
+
 ## 0. Leia nesta ordem
 
 1. Este arquivo (seções 1 a 5).

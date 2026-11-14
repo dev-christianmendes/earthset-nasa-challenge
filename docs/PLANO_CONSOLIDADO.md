@@ -1,91 +1,61 @@
-# Plano consolidado para fechar o Earthset
+# Plano consolidado (escopo v3, 14/11/2026)
 
-**Proposta para revisão, 14/11/2026.** Base: [mapa do sistema observado](MAPA_SISTEMA.md), [arquitetura original](arquitetura.md), [backlog](backlog.md), [decisões do autor](DECISOES.md) e auditoria visual local em `.scratch-agent/visual-audit-2026-11-14/diagnostico.md`. Este plano não registra tarefas como concluídas e não autoriza publicar ou submeter a demo. A meta interna é 15/11 às 12h locais; o prazo do evento é 23h59.
+Este é o plano vigente. Substitui os planos anteriores de execução (`docs/PLANO_PARA_AGENTE.md` é histórico). Decisões de base: D-11 a D-15 em `docs/DECISOES.md`. Estado do código: `docs/CONTEXTO_CODEX.md`.
 
-## Direção
+**Prazo: 15/11/2026, 23h59 (meta interna 12h).** Tudo que está em P0 precisa estar pronto antes disso, incluindo a entrega. P1 entra se P0 estiver fechado. P2 não é prometido para esta entrega.
 
-Conservar a aplicação estática Vite/TypeScript/Three.js e o motor puro já funcional. Fechar um caminho demonstrável de **decisão → consequência → explicação**, com dados e limites científicos honestos. A arte e a arquitetura devem servir essa demonstração. Para a versão do evento, favorecer correções isoladas, rastreáveis e testáveis; evitar novos subsistemas amplos.
+## 0. Princípios
+- O motor é a fonte da verdade. Visual, LUMA e objetivos só leem o estado; a única exceção é enviar ações válidas (`dispatch`).
+- Cada etapa termina com: typecheck, testes, build, captura revisada (desktop e celular) e entrada no diário.
+- Commit e push só com pedido explícito do autor.
 
-O [desafio oficial](https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/) pede que estudantes administrem um posto lunar ou marciano e percebam os compromissos entre suporte à vida, radiação, energia e alimentos. A partida existente já cobre esses verbos. A lacuna principal é torná-los compreensíveis e defendê-los na demo. O enunciado completo e o guia de envio ainda precisam de leitura efetiva.
+## 1. Corte por prioridade
 
-## Arquitetura alvo mínima
+### P0 — obrigatório para a entrega
+1. **Ler o enunciado oficial e o Guia de Envio** (pendências A2 e A5 de `docs/event-rules.md`). Confirmar requisitos antes de qualquer outra coisa.
+2. **Jogo jogável no início:** briefing, objetivos visíveis, LUMA com dicas, ordem da tripulação (auto/abrigar). Já implementado na árvore de trabalho; falta verificação visual e commit (com pedido).
+3. **HUD no estilo v3:** cartões com ícones, hierarquia, LUMA separado, painel polar mantido. Mudança só de `index.html` e `src/ui/`.
+4. **Iluminação e câmera v3:** sombras duras, exposição fixa, plano de abertura no briefing.
+5. **Sol visível** na posição calculada (disco com brilho); **Terra** com textura simples.
+6. **Desempenho:** medir com `?perf=1` na máquina do autor; registrar.
+7. **Entrega:** vídeo de 30 s ou 7 slides em inglês; lista de referências com todas as fontes e licenças; declaração de IA em inglês (incluindo a LUMA por regras); preenchimento da página de envio.
 
-```mermaid
-flowchart LR
-  DATA[Tabelas versionadas] --> ENV[Leitor do cenário por hora]
-  ENV --> CTRL[Controlador da sessão]
-  ACTION[DOM: ações] --> CTRL
-  CTRL --> ENGINE[Motor puro]
-  ENGINE --> STATE[GameState]
-  STATE --> VIEW[Estado de apresentação derivado]
-  ENV --> VIEW
-  VIEW --> HUD[HUD / horizonte]
-  VIEW --> SCENE[Three.js / GLB]
-```
+### P1 — se P0 estiver fechado
+8. **Habitat com módulos do Megakit (CC0)**, substituindo o cilindro atual. Ver `docs/ART_ASSET_PIPELINE.md`, seção de fontes.
+9. **Astronauta v3:** decidir entre `astronaut_v2` corrigido, Kenney Animated Characters (CC0, verificar) ou modelo CC-BY com atribuição.
+10. **Rover:** avaliar modelo da NASA 3D Resources (sem logotipo, crédito verificado); senão manter o procedural com materiais técnicos.
+11. **Terreno:** pedras e crateras decorativas (CC0), com instanciamento.
+12. **Animação da estufa** (colheita) e **aceno da tripulação** ao aviso da antena.
 
-**Contratos propostos:**
+### P2 — depois da entrega
+13. Seguir o rover pela câmera (D-03).
+14. Diário da base (I3) e linguagem das patentes (I2).
+15. Estrelas e céu com refinamento; efeitos de partículas em tempestade.
+16. Acessibilidade completa (navegação por teclado ponta a ponta).
 
-1. **Motor:** `GameState`, `dispatch`, `advance`, `outcomeOf`. Somente ele muda recursos, fila, corações e relógio. Manter assinaturas atuais durante as primeiras correções.
-2. **Cenário:** um leitor puro recebe hora e site, devolve Sol, `sunlit`, Kp/radiação e aviso. A associação espacial/temporal deve ser auditada antes de qualquer regeneração de tabela.
-3. **Estado de apresentação:** um valor derivado do `GameState` e do cenário informa se robô trabalha, se tripulação está a caminho/abrigada, se estufa está operacional e o que o HUD deve anunciar. UI/cena recebem a mesma interpretação; não são outra fonte de regras.
-4. **Controlador da sessão:** ações da interface, relógio real, iniciar/pausar/reiniciar e atualização dos adaptadores. `GameState` segue separado das flags de tela, mas o ciclo de vida fica explícito.
-5. **Render:** cena e assets são consumidores. Posições e efeitos representam a missão; não determinam conclusão de tarefa. A extração de `scene.ts` em módulos só ocorre ao mexer nas partes correspondentes.
-6. **Dados:** Python offline gera JSON sob `src/data`; validar tamanho, cronologia, coordenadas e hashes contra os brutos. O build nunca consulta API NASA.
+## 2. Ordem executável (P0 e P1)
 
-Esse desenho admite implementar `scene-snapshot.ts`/`session.ts` pequenos quando os defeitos concretos forem corrigidos. Não exige event bus, React, servidor, persistência da partida ou reescrita do motor para o evento.
+| # | Tarefa | Arquivos | Aceite |
+|---|---|---|---|
+| 1 | Ler A2 e A5; registrar requisitos | `docs/event-rules.md` | requisitos listados e conferidos |
+| 2 | Verificar e commitar LUMA, objetivos, briefing, tripulação (com pedido) | `src/engine/{objectives,guide,game,crew}.ts`, `src/ui/hud.ts`, `index.html`, `src/i18n.ts`, testes | captura do briefing e do HUD; 93+ testes |
+| 3 | HUD v3 (cartões, ícones, hierarquia) | `index.html`, `src/ui/hud.ts` | captura desktop e celular, sem sobreposição |
+| 4 | Iluminação v3 (sombras duras, exposição fixa) e plano de abertura | `src/render/scene.ts` | captura da base em dia e em noite |
+| 5 | Sol visível na posição calculada | `src/render/scene.ts` (`sunlit`, `sun`) | disco no céu coincide com a elevação/azimute da tabela |
+| 6 | Terra com textura simples | `src/render/scene.ts` | Terra visível e coerente com o cenário |
+| 7 | Medir desempenho (`?perf=1`) | — | número registrado no diário |
+| 8 | Entrega (vídeo ou slides, referências, declaração) | `docs/`, `AI_DISCLOSURE.md` | conteúdo pronto; envio só com pedido |
+| 9 | Habitat com Megakit | `assets-src/blender/`, `public/models/` | habitat legível, GLB < 300 KB |
+| 10 | Astronauta v3 | `public/models/`, `src/render/scene.ts` | captura próxima sem braço solto |
+| 11 | Rover | idem | captura com leitura de robô |
+| 12 | Pedras e crateras | `src/render/scene.ts` | sem custo acima do orçamento |
 
-## Ordem executável
+## 3. Riscos e decisões de corte
+- **O prazo não cobre P1 inteiro.** Se até o meio-dia de 15/11 P0 não estiver fechado, P1 é cancelado e a entrega sai com o que estiver pronto.
+- **Modelos de terceiros:** cada um exige verificação de licença antes do uso; se a verificação atrasar, mantém-se o procedural.
+- **Sem decisão do autor** sobre push, envio e astronauta, esses itens ficam parados.
 
-| Prioridade | Entrega e escopo | Critério de aceite | Commit semântico sugerido |
-| --- | --- | --- | --- |
-| **P0.1** | Matriz do desafio e dos guias de envio; confirmar A2/A3/A5 e formato oficial; corrigir afirmações de status da documentação | Cada requisito oficial tem evidência, lacuna ou decisão pendente. A2 só fecha após leitura integral. Equipe/evento confirmados pelo autor | `docs(evento): confere desafio e requisitos de envio` |
-| **P0.2** | Revisão científica do cenário: posição do Sol versus site LOLA, convenção azimutal, janela DONKI; distinguir dado de efeito ilustrativo | Documento com coordenadas, método e comparação independente. Se mudar JSON/regra, teste de partida e interface revisados antes de substituir dados | `docs(dados): audita coerência do cenário lunar` e, se cabível, `fix(dados): alinha posição e horizonte do cenário` |
-| **P0.3** | Contrato de apresentação e correções visuais de estado: radiação realmente para o rover; tripulação abriga sem segundo destino; GLB ativo recebe cor/brilho; reinício e pausa consistentes | Estado do motor e cena coincidem em trabalho, radiação, instalações e recomeço. Teste de domínio apenas onde muda regra; Playwright para o resto | `fix(render): alinha rover e tripulação ao estado da partida` |
-| **P0.4** | Usabilidade mínima: enquadramento mobile, foco da fila, orientação de início, estados de perda/vitória com causa e aprendizado, revisão EN/PT | Fluxo completo em 1280×800 e 390×844; controles acessíveis por teclado; mensagens entendidas sem abrir código | `fix(tela): melhora leitura da missão no celular` e `feat(tela): explica resultado da missão` |
-| **P0.5** | Arte crítica: pivôs/montagem do rover, sombra do habitat, astronauta legível; integrar GLB sem apagar alterações locais | Critérios da auditoria visual passam; nomes/pivôs/clipes validados; screenshots comparáveis. Licenças e atribuições registradas | `fix(assets): corrige montagem e pivôs do rover`; `fix(render): ajusta sombras e enquadramento` |
-| **P0.6** | Pacote de entrega em inglês: referência de todos os dados/bibliotecas/ativos, declaração de SI completa, demo de 30 s **ou** até 7 slides, prova de execução | Materiais dentro do limite oficial; créditos verificáveis; link/teste da demo; roteiro mostra o desafio e o resultado | `docs(envio): prepara referências e roteiro da demonstração` |
-
-**Sequência recomendada sob prazo curto:** começar P0.1 e P0.2 em paralelo apenas como leituras; depois P0.3 e P0.4; aplicar os consertos de maior impacto de P0.5; reservar tempo protegido para P0.6. O corte mínimo para a banca é uma partida compreensível, dados bem qualificados e material de envio completo. Arte adicional não deve consumir a janela de submissão.
-
-### Trabalho que pode seguir depois do núcleo
-
-| Origem | Estado e proposta |
-| --- | --- |
-| T6 / F5 | Revisão de texto, rótulos e acessibilidade; entra em P0.4 |
-| T7 | Pausa/Esc/retorno ao menu: já existe; falta teste de fluxo e reset; entra em P0.3/P0.4 |
-| T9 | Medir FPS, carregamento e memória em máquina real; escolher otimização pelo gargalo; começar após correções P0.3 |
-| T11 / D-08 | Aceno e trabalho visual na estufa; úteis para demo se houver tempo, sem alterar regra |
-| T13 | Colheita já está no motor; animação ainda falta. O bônus de comida deve ser explicado |
-| T15–T18 | Arte completa e revisão humana; fazer após corrigir montagem, sombras e câmera e antes do envio apenas se couber |
-| I2 / R-PAT | Patente altera consumo, mas não há seleção nem linguagem própria. Se for incluída na demo, implementar preparação e copy juntas; caso contrário documentar como extensão |
-| I3 / R-LOG | Diário não existe. O motor não emite eventos públicos; pode ser derivado por diferenças entre estados para eventos básicos, sem mudar recursos. Prioridade após P0 |
-| T8 | Seguir rover é opcional; ajuda na demo se a câmera base já estiver correta |
-
-### Fora do caminho crítico
-
-Salvar/carregar partida, multiplayer, backend, painel de administração, física de rover, novas fontes de dados, mudança de engine, LOD complexo e redesign integral. Considerar só com problema medido ou novo requisito oficial. O projeto é estático e a exigência principal é demonstrar as decisões da base.
-
-## Decisões que exigem revisão explícita
-
-| Ponto | Alternativas já concretas | Recomendação técnica |
-| --- | --- | --- |
-| **Posição científica** | Recalcular Sol para o site LOLA; escolher site próximo ao observador; ou apresentar Sol regional aproximado | Auditar azimute/coordenadas primeiro. A decisão final pode mexer no equilíbrio; registrar nova simulação e origem |
-| **Modelos locais não commitados** | Promover após correções visuais ou manter versão anterior | Avaliar os GLBs servidos localmente, sem `git checkout` destrutivo. O bug antigo das cúpulas não se reproduz |
-| **Astronauta final** | Refinar OGA CC0; corrigir v2 próprio; outro asset com licença compatível | Comparar aparência/animações em runtime e licenças. Não trocar só por contagem de polígonos |
-| **Ajuda ao gelo D-06** | Manter simplificação de 4 h sempre que trabalha; criar condição real para 6 h | Para o evento, explicar a simplificação; alterar a regra só com revisão do equilíbrio |
-| **Equipe e submissão** | Local Event solo ou outra composição; destino final de hospedagem | Confirmar no site do evento. Preparar conteúdo antes de qualquer envio |
-
-## Critérios para uma etapa estar pronta
-
-1. Resultado visível e comportamento descritos em uma frase verificável; ligação ao item do backlog/decisão.
-2. Testes adequados ao risco: `npm run typecheck`, `npm run test`, `python3 -m unittest discover -s data-pipeline/tests` quando dados mudarem, `npm run build`; testar partida completa se mudar Sol, horizonte, clima, recursos ou tempos.
-3. Se a tela mudar, capturas desktop/celular vistas de fato; para bug visual temporal, capturar antes/depois no mesmo estado e câmera. Console e HTTP sem erros relevantes. FPS em hardware real para alegação de desempenho.
-4. `docs/data-sources.md` para ciência, `docs/regras-recursos.md` para números de jogo, `docs/ART_ASSET_PIPELINE.md` para ativos externos. Ilustrativo marcado na tela e na explicação.
-5. `docs/execution-log.md` registra comandos, resultados, falhas e limites. Backlog só recebe `[x]` quando o aceite passar.
-6. Commit por unidade revisável, mensagem Conventional Commits em português. Conferir `git diff --cached` antes do commit para não incorporar mudanças antigas de outro assunto. Verificar CI após push autorizado; não incluir trailer de outra ferramenta de IA.
-
-## GitHub e colaboração
-
-A conta `dev-christianmendes` foi validada com permissão ADMIN; main local/remota estão em `57bd2d3`, CI bem-sucedido. Há alterações locais preexistentes em documentação, Blender e GLBs. Não criar um commit único com tudo: separar a autoria e o propósito de cada mudança, revisar os diffs e só então fazer commits/push conforme o fluxo aprovado pelo autor. Nenhuma ação de escrita no GitHub integra este plano; ele é uma proposta concreta para análise.
-
-Quando escolher a hospedagem da demo, validar caminhos absolutos/`BASE_URL`, carregamento dos GLBs e fluxo completo no endereço publicado. A submissão ao evento e o site hospedado são entregas distintas.
+## 4. O que não muda
+- Motor, dados científicos (Sol, LOLA, DONKI), regras de equilíbrio (bateria 1000, 2 corações no plano de referência), D-05 a D-08.
+- Interface em inglês por padrão, com português.
+- Nenhum logotipo da NASA; nenhum conteúdo gerado por IA como ativo.

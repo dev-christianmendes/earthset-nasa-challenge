@@ -199,3 +199,20 @@ Se o prazo apertar, a ordem de corte é: F5 e F4 antes de F3; F3 antes de F2; **
 - Multiplayer, contas, backend próprio.
 - Modelos 3D importados de terceiros (a base é geometria própria).
 - Imagem gerada por IA na demo (A4).
+
+
+## Escopo v3 (14/11/2026): requisitos novos e status
+
+| ID | Requisito | Estado |
+|---|---|---|
+| R-LUMA | Assistente que guia o jogador por regras, sem IA generativa em tempo de jogo | implementado (`guide.ts`), na árvore de trabalho |
+| R-OBJ | Objetivos visíveis com progresso | implementado (`objectives.ts`), na árvore de trabalho |
+| R-CREW | Ordem da tripulação com custo de jogo | implementado, na árvore de trabalho |
+| R-BRIEF | Briefing antes da partida | implementado, na árvore de trabalho |
+| R-VIS3 | Direção Cinematic Scientific Sci-Fi | em andamento (P0 e P1 em `docs/PLANO_CONSOLIDADO.md`) |
+| R-SUN | Sol visível na posição calculada | P0 |
+| R-EARTH | Terra com textura | P0 |
+| R-PERF | Orçamento de desempenho e medição | P0 (medição) |
+| R-SRC | Política de fontes de ativos | decidido (D-15) |
+
+Camadas: inalteradas. O motor recebe apenas `crewOrder` e as funções puras novas (`objectives.ts`, `guide.ts`).

@@ -39,3 +39,9 @@ Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes
 - [ ] Confirmar modelo e provedor do Codex, e acrescentar à declaração em inglês se for usado no envio.
 - [ ] Preencher a declaração em inglês com os modelos confirmados.
 - [ ] Registro do histórico: commits feitos por outro agente antes do Codex (com trailer próprio) estão no git. Decisão do autor sobre reescrever o histórico (ver `docs/CONTEXTO_CODEX.md`).
+
+
+## 6. LUMA (assistente do jogo)
+
+- A LUMA, guia do jogador, usa **regras fixas** para escolher a dica (`src/engine/guide.ts`). **Não há modelo de linguagem nem IA generativa em tempo de jogo nesta versão.** Os textos são escritos pelo projeto (`src/i18n.ts`).
+- Se uma versão futura usar um modelo de linguagem, ele será declarado aqui antes de ser incluído.

@@ -33,3 +33,18 @@ Status: descreve o que existe hoje e o que está sendo implementado.
 ## Limites conhecidos
 - Sem gerenciador de ativos externos: nenhum GLB carregado ainda.
 - Sem sistema de partículas.
+
+
+## Escopo v3 (14/11/2026): renderização cinematográfica
+
+Direção: Cinematic Scientific Sci-Fi (D-11). Orçamento: D-14.
+
+- **Sol:** disco brilhante na direção calculada (azimute e elevação da tabela). Visível quando acima do horizonte do morro; atenuado abaixo. Não há trajetória solar inventada.
+- **Luz:** direcional do Sol com sombras duras (mapa de 2048 px, só para objetos grandes); preenchimento frio; luz de cultivo na estufa; farol do robô.
+- **Exposição:** tone mapping ACES com exposição fixa (sem variação por quadro).
+- **Materiais:** não metálicos para tecido e plástico; metálicos só com mapa de ambiente. Modelos externos chegam com metalness 1 e precisam ser ajustados ao carregar.
+- **Instanciamento:** pedras e módulos repetidos.
+- **LOD:** objetos pequenos e distantes com menos triângulos (P1).
+- **Pré-compilação:** `renderer.compile` após carregar os modelos (já implementado).
+- **Medição:** `?perf=1` mostra FPS, chamadas de desenho e triângulos.
+- **Apresentação fora do motor:** o relógio visual só avança com a partida ativa e não pausada (já implementado).

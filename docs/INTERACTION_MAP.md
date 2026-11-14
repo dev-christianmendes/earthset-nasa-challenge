@@ -67,3 +67,15 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 1. Sem itens coletáveis de verdade; o gelo é só uma tarefa.
 2. Astronautas sem tarefas próprias (coleta, reparo) e sem nome.
 3. Sem animação de implantação do painel e da antena.
+
+
+## Escopo v3 (14/11/2026): interações novas
+
+| Componente | O jogador faz | Motor muda | Mostra | Estado |
+|---|---|---|---|---|
+| Objetivos | nada (são metas) | nenhum; derivados do estado | cartão com progresso e marca | implementado (`objectives.ts`), na árvore de trabalho |
+| Ordem da tripulação | escolhe Auto ou Abrigar | `crewOrder`; abrigada não ajuda gelo, não colhe, não se expõe | botões com estado ativo | implementado, na árvore de trabalho |
+| LUMA | nada (guia) | nenhum; lê o estado | cartão violeta com uma dica | implementado (`guide.ts`), na árvore de trabalho |
+| Briefing | "Começar missão" | nenhum; inicia a simulação | tela de missão e controles | implementado, na árvore de trabalho |
+| Sol | nada | nenhum | disco na posição calculada | P0 (a implementar) |
+| Terra | nada | nenhum | esfera com textura | P0 (a implementar) |

@@ -507,3 +507,24 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Verificação:** `npm run typecheck` e `npm run build` passaram (bundle 842,14 kB, gzip 205,24 kB; aviso conhecido >500 kB). Playwright confirmou a cena em 390 × 844 em `.scratch-agent/visual-audit-2026-11-14/mobile-astronaut-final.png` e 1280 × 800 em `desktop-astronaut-final.png`. Console do navegador sem erros de aplicação. Não foi executada a suíte de testes.
 - **Limites:** nenhum Blender está disponível nesta máquina para regenerar os GLBs; a integração usa o `astronaut_v2.glb` já presente no repositório. A cena em hardware móvel ainda precisa ser conferida.
 - **Git:** nenhuma alteração enviada, nenhum commit criado.
+
+
+## 2026-11-14 · Mudança de escopo v3 (documentação)
+
+- Direção visual: Cinematic Scientific Sci-Fi (D-11). Substitui a direção Astroneer e o D-09.
+- LUMA por regras, sem IA generativa em tempo de jogo (D-12). Objetivos e ordem da tripulação (D-13). Orçamento de desempenho (D-14). Política de fontes de ativos (D-15).
+- Documentos atualizados: `docs/DECISOES.md`, `docs/VISUAL_DIRECTION.md` (reescrito), `docs/PLANO_CONSOLIDADO.md` (reescrito, com corte P0/P1/P2), `docs/ART_ASSET_PIPELINE.md`, `docs/backlog.md` (bloco 6), `docs/UI_UX_SPECIFICATION.md`, `docs/RENDERING_ARCHITECTURE.md`, `docs/INTERACTION_MAP.md`, `docs/arquitetura.md`, `AI_DISCLOSURE.md` (seção sobre a LUMA), `docs/PLANO_PARA_AGENTE.md` (marcado como superado).
+- Nenhum código foi alterado nesta etapa.
+- **Risco:** o escopo v3 não cabe no prazo inteiro. P0 é o corte; P1 entra só se P0 fechar.
+- **Commit:** não feito, por falta de pedido explícito.
+
+## 2026-11-14 · V3.3 (HUD compacto), V3.4 (luz e câmera), V3.5 (Sol e Terra)
+
+- **HUD:** espaçamentos reduzidos e barras de recursos em duas colunas no desktop. Medido em 1280×800: conteúdo de 662 px, sem rolagem.
+- **Luz:** sombras nítidas (PCF simples, viés calibrado), contraste maior (ambiente 0,6 com Sol; 0,4 na sombra), exposição fixa 1,05.
+- **Câmera:** plano de abertura de 7 s ao começar a missão, com órbita desligada nesse trecho. Início do trajeto conferido; o término não foi capturado no navegador de teste (lento demais), então depende de confirmação no computador do autor.
+- **Sol:** disco e halo na direção calculada pela tabela JPL, visíveis só quando a luz chega à base (regra `lit`). Posição conferida contra a tabela JPL no código; conferência visual com o Sol aceso ainda pendente no computador do autor.
+- **Terra:** textura Blue Marble (NASA, domínio público; `public/textures/earth/`, com LICENSE.txt). Verificado com a câmera apontada para ela. Fora do enquadramento padrão (39° do centro), como na posição real.
+- **Verificação:** typecheck, 93 testes e build passam. Os ajustes temporários de tela foram feitos com backup e restaurados, conferidos com cmp.
+- **Commit:** não feito, por falta de pedido explícito.
+
