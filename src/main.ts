@@ -16,9 +16,10 @@ import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
 import { camera, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, updateScene } from './render/scene';
-import { greenhouse } from './render/base-layout';
+import { antenna, greenhouse, habitat, powerUnit, processor, storage } from './render/base-layout';
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
-import { mountContext, renderContext, selectedObject, showContext } from './ui/context-panel';
+import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
+import { warningAhead } from './engine/facilities';
 import { goTo, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
 import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updateCinematic } from './render/cinematic';
 import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
@@ -50,7 +51,8 @@ const LIT: boolean[] = Array.from({ length: MATCH_HOURS + 1 }, (_, h) => isSunli
 setLightMap(LIT);
 const sunlit = (hour: number): boolean => LIT[Math.min(MATCH_HOURS, Math.max(0, Math.floor(hour)))];
 const weatherNow = (): SpaceWeatherSample => weatherAt(WEATHER, game.clock.hour);
-const warningNow = (): number | null => antennaWarning(WEATHER, game.clock.hour, game.robot.antennaInstalled);
+const warningNow = (): number | null => antennaWarning(WEATHER, game.clock.hour, game.robot.antennaInstalled, warningAhead(game.antennaTuneLeft));
+const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, kp: weatherNow().kp, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], warningHours: warningNow() });
 
 // ---------- Ações ----------
 
@@ -87,7 +89,7 @@ function selectObject(id: SelectableId | null): void {
   if (id) setTool(null);
   showContext(id);
   setHighlight(id);
-  if (id) renderContext(game, weatherNow().radiation, SPEEDS[speedIndex]);
+  if (id) renderContext(game, contextInfo());
 }
 
 mountContext(document.getElementById('ctx') as HTMLElement, {
@@ -100,7 +102,7 @@ mountContext(document.getElementById('ctx') as HTMLElement, {
     // Ordem recebida: confirmação imediata e um enquadramento curto (o jogador mantém o controle da câmera).
     if (action.type === 'ASSIGN_AGENT_TASK') {
       showToast(t('toast.order'), t(`task.${action.kind}`));
-      goTo('greenhouse', performance.now(), 0.9);
+      goTo(action.kind === 'calibrate' ? 'energy' : action.kind === 'tune' ? 'antenna' : 'greenhouse', performance.now(), 0.9);
     }
     if (action.type === 'ENQUEUE_TASK') {
       showToast(t('toast.order'), t(`mission.${action.kind}`));
@@ -182,7 +184,7 @@ function renderNow(now: number): void {
   const weather = weatherNow();
   const warning = warningNow();
   renderHud(game, { weather, warningHours: warning, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
-  if (started && selectedObject()) renderContext(game, weather.radiation, SPEEDS[speedIndex]);
+  if (started && selectedObject()) renderContext(game, contextInfo());
   if (started) updateLuma(lumaAdvice(game, warning, MODES[mode].luma), game.clock.hour, now);
 }
 
@@ -465,8 +467,9 @@ function maybeAutostart(): void {
   if (!import.meta.env.DEV) return;
   // Gancho só de desenvolvimento para os testes de interface: posição de um objeto na tela (px).
   (window as unknown as { __earthset: unknown }).__earthset = {
-    screenOf(id: 'rover' | 'crew0' | 'crew1' | 'greenhouse'): [number, number] | null {
-      const object = id === 'rover' ? robot : id === 'greenhouse' ? greenhouse : crewObject(id === 'crew0' ? 0 : 1);
+    screenOf(id: SelectableId): [number, number] | null {
+      const fixed: Partial<Record<SelectableId, THREE.Object3D>> = { rover: robot, greenhouse, habitat, antenna, processor, storage, panels: powerUnit };
+      const object = fixed[id] ?? crewObject(id === 'crew0' ? 0 : 1);
       if (!object) return null;
       const v = object.getWorldPosition(new THREE.Vector3());
       v.y += 0.8;

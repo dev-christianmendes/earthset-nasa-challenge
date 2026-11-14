@@ -80,3 +80,12 @@ A base passiva perde por volta da hora 117 com qualquer capacidade. O ponto de v
 | Radiação ou abrigo | a tarefa fica suspensa; quem está fora conta como exposto (`crew.ts`) |
 
 A comida passiva da estufa (0,38 por hora, acima) continua. A colheita é um ganho adicional que depende do jogador.
+
+
+## Instalações (D-19, 14/11/2026)
+
+| Item | Regra |
+|---|---|
+| Calibrar painéis | geração × (1 + 0,12 × horas restantes / 120); custa 10 de energia na ordem; ida e volta de 10 h, trabalho de 4 h; só repete com menos de 60 h restantes |
+| Ajustar antena | exige antena instalada; custa 5 de energia; aviso de tempestade em 12 h (antes 6 h) por 150 h; ida e volta de 6 h, trabalho de 3 h; só repete com menos de 75 h restantes |
+| Qualquer tarefa de astronauta | uma de cada tipo por vez; abrigo e radiação suspendem; quem está fora conta como exposto |

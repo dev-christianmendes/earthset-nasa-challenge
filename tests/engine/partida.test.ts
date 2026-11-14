@@ -57,6 +57,20 @@ function planWithCrew(g: GameState): GameState {
   return s;
 }
 
+/**
+ * O plano de referência mais calibração dos painéis e ajuste da antena (D-19), mas só com Sol: calibrar na noite
+ * longa gasta energia sem render nada (o equilíbrio é apertado, a hora da ordem é a decisão).
+ */
+function planWithFacilities(g: GameState, onlyLit = true): GameState {
+  let s = planHour(g);
+  if (onlyLit && !sunlit(g.clock.hour)) return s;
+  for (const kind of ['calibrate', 'tune'] as const) {
+    const r = dispatch(s, { type: 'ASSIGN_AGENT_TASK', kind });
+    if (r.ok) s = r.state;
+  }
+  return s;
+}
+
 function play(plan: ((g: GameState) => GameState) | null): GameState {
   let g = createGame({ installation: INSTALLATION });
   while (outcomeOf(g) === 'playing') {
@@ -97,6 +111,19 @@ describe('partida completa', () => {
     expect(g.hearts).toBeGreaterThanOrEqual(1);
     expect(g.crop.harvests).toBeGreaterThan(15);
     expect(g.agentTasksDone.harvest).toBe(g.crop.harvests);
+  });
+
+  it('calibrar e ajustar a antena só com Sol mantém a vitória e usa as duas tarefas (D-19)', () => {
+    const g = play(planWithFacilities);
+    expect(outcomeOf(g)).toBe('won');
+    expect(g.hearts).toBeGreaterThanOrEqual(1);
+    expect(g.agentTasksDone.calibrate).toBeGreaterThan(3);
+    expect(g.agentTasksDone.tune).toBeGreaterThan(2);
+  });
+
+  it('calibrar também na noite longa gasta energia sem render e faz a base perder (a hora da ordem importa)', () => {
+    const g = play((x) => planWithFacilities(x, false));
+    expect(outcomeOf(g)).toBe('lost');
   });
 
   it('depois do fim, nenhuma ação é aceita', () => {

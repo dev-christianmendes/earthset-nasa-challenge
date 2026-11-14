@@ -41,5 +41,5 @@ Plano vigente: `docs/PLANO_CONSOLIDADO.md`. Decisões: D-11 a D-15.
 - [x] **G8.4 (P1)** Seleção por toque na cena (raycasting) e painel contextual: estufa, astronautas e rover completos; habitat, painéis, antena, processador e armazenamento com informação e atalho.
 - [x] **G8.5 (P1)** Plantas por estágio de crescimento (`crop.ts`, modelo da estufa sem plantas embutidas).
 - [x] **G8.6 (P2)** Rover: selecionar na cena, lançar missões pelo painel contextual (custos, duração e motivo da recusa vindos do motor), etapas, tempo restante em horas de jogo e segundos reais, fila com cancelamento, câmera que acompanha, partida e parada suaves.
-- [ ] **G8.7 (P3)** Painéis solares, antena, habitat, processador e armazenamento com decisões próprias.
+- [x] **G8.7 (P3)** Painéis (calibrar e instalar), antena (ajustar ou reparar), habitat (ordem de abrigo, consumo e exposição), processador (estado e missão de gelo) e armazenamento (estoques e autonomia), todos pelo painel contextual (D-19).
 - [ ] **G8.8 (P4)** Acessibilidade (teclado), documentação final e polimento.

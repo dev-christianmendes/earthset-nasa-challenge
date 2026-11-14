@@ -7,8 +7,10 @@
 
 export const AGENT_COUNT = 2;
 
-export type AgentTaskKind = 'inspect' | 'harvest' | 'maintain';
-export const AGENT_TASK_KINDS: readonly AgentTaskKind[] = ['inspect', 'harvest', 'maintain'];
+export type AgentTaskKind = 'inspect' | 'harvest' | 'maintain' | 'calibrate' | 'tune';
+export const AGENT_TASK_KINDS: readonly AgentTaskKind[] = ['inspect', 'harvest', 'maintain', 'calibrate', 'tune'];
+/** Tarefas feitas na estufa (o painel da estufa só oferece estas). */
+export const GREENHOUSE_TASKS: readonly AgentTaskKind[] = ['inspect', 'harvest', 'maintain'];
 
 export type AgentPhase = 'prep' | 'out' | 'work' | 'back';
 export type AgentStatus = 'idle' | 'assigned' | 'walking' | 'working' | 'returning' | 'resting' | 'sheltering';
@@ -28,12 +30,14 @@ export interface AgentState {
 
 /** Horas de jogo (ilustrativas; equilíbrio, não dado científico). */
 export const PREP_HOURS = 0.25;
-/** Cada trecho de ida ou volta: ~10 m a ~2 m/s de jogo a 1× (a 4× vira corrida). */
+/** Cada trecho de ida ou volta até a estufa: ~10 m a ~2 m/s de jogo a 1× (a 4× vira corrida). */
 export const TRAVEL_HOURS = 5;
+/** Trecho de ida ou volta por tarefa: proporcional ao caminho até o destino (campo solar é o mais longe). */
+export const TRAVEL_HOURS_BY_KIND: Record<AgentTaskKind, number> = { inspect: 5, harvest: 5, maintain: 5, calibrate: 10, tune: 6 };
 export const REST_HOURS = 1;
-export const WORK_HOURS: Record<AgentTaskKind, number> = { inspect: 2, harvest: 3, maintain: 5 };
+export const WORK_HOURS: Record<AgentTaskKind, number> = { inspect: 2, harvest: 3, maintain: 5, calibrate: 4, tune: 3 };
 /** Custo imediato de energia (unidades da bateria) ao ordenar a tarefa. */
-export const TASK_ENERGY_COST: Record<AgentTaskKind, number> = { inspect: 0, harvest: 0, maintain: 15 };
+export const TASK_ENERGY_COST: Record<AgentTaskKind, number> = { inspect: 0, harvest: 0, maintain: 15, calibrate: 10, tune: 5 };
 /** Desgaste removido ao concluir (inspeção) ou zerado (manutenção). */
 export const INSPECT_WEAR_RELIEF = 20;
 /** Só vale a manutenção a partir deste desgaste. */
@@ -48,7 +52,7 @@ export function createAgents(): readonly AgentState[] {
 function phaseHours(kind: AgentTaskKind, phase: AgentPhase): number {
   if (phase === 'prep') return PREP_HOURS;
   if (phase === 'work') return WORK_HOURS[kind];
-  return TRAVEL_HOURS;
+  return TRAVEL_HOURS_BY_KIND[kind];
 }
 
 export function newTask(kind: AgentTaskKind): AgentTask {
@@ -103,7 +107,8 @@ export function cancelAgentTask(agent: AgentState): AgentState {
   const task = agent.task;
   if (!task || task.phase === 'back') return agent;
   if (task.phase === 'prep') return { ...agent, task: null };
-  const walked = task.phase === 'out' ? TRAVEL_HOURS - task.hoursLeft : TRAVEL_HOURS;
+  const trip = TRAVEL_HOURS_BY_KIND[task.kind];
+  const walked = task.phase === 'out' ? trip - task.hoursLeft : trip;
   return { ...agent, task: { kind: task.kind, phase: 'back', hoursLeft: Math.max(0, walked) } };
 }
 

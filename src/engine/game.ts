@@ -18,6 +18,7 @@ import {
   type AgentState,
   type AgentTaskKind,
 } from './astronaut';
+import { CALIBRATION_HOURS, TUNE_HOURS, calibrationFactor, canRecalibrate, canRetune } from './facilities';
 import {
   CARE_LEVELS,
   HARVEST_FOOD,
@@ -68,6 +69,9 @@ export interface GameState {
   readonly agents: readonly AgentState[];
   /** Tarefas de astronauta concluídas, por tipo. */
   readonly agentTasksDone: Readonly<Record<AgentTaskKind, number>>;
+  /** Horas restantes da calibração dos painéis e do ajuste da antena (D-19). */
+  readonly calibrationLeft: number;
+  readonly antennaTuneLeft: number;
   /** Ordem do jogador para a tripulação: automática (trabalha) ou abrigar (fica dentro). */
   readonly crewOrder: CrewOrder;
   /** Missões do robô concluídas, por tipo (capítulos e eventos da LUMA leem daqui). */
@@ -106,7 +110,9 @@ export function createGame(options: NewGameOptions): GameState {
     crew: createCrew(),
     crop: createCrop(),
     agents: createAgents(),
-    agentTasksDone: { inspect: 0, harvest: 0, maintain: 0 },
+    agentTasksDone: { inspect: 0, harvest: 0, maintain: 0, calibrate: 0, tune: 0 },
+    calibrationLeft: 0,
+    antennaTuneLeft: 0,
     crewOrder: 'auto',
     missionsDone: { ice: 0, panel: 0, antenna: 0 },
   };
@@ -164,6 +170,9 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
       if (state.crewOrder === 'shelter') return { ok: false, reason: 'crew-sheltering' };
       if (action.kind === 'harvest' && state.crop.growth < 100) return { ok: false, reason: 'crop-not-ready' };
       if (action.kind === 'maintain' && state.crop.wear < MAINTAIN_MIN_WEAR) return { ok: false, reason: 'no-wear' };
+      if (action.kind === 'calibrate' && !canRecalibrate(state.calibrationLeft)) return { ok: false, reason: 'already-calibrated' };
+      if (action.kind === 'tune' && !state.robot.antennaInstalled) return { ok: false, reason: 'no-antenna' };
+      if (action.kind === 'tune' && !canRetune(state.antennaTuneLeft)) return { ok: false, reason: 'already-tuned' };
       if (state.agents.some((a) => a.task?.kind === action.kind)) return { ok: false, reason: 'task-in-progress' };
       if (state.vitals.battery < TASK_ENERGY_COST[action.kind]) return { ok: false, reason: 'low-battery' };
       const index = action.agent ?? state.agents.findIndex(isAvailable);
@@ -205,7 +214,7 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
 
   // Radiação de partículas solares para o robô: ele não trabalha enquanto ela durar.
   const working = isWorking(state.robot, state.vitals.battery) && !weather.radiation;
-  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, solarFactor(stormLevel(weather.kp)), state.crop);
+  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, solarFactor(stormLevel(weather.kp)) * calibrationFactor(state.calibrationLeft), state.crop);
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
   // Com a tripulação livre, o astronauta ajuda na viagem de gelo (D-06).
@@ -226,6 +235,8 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   const sheltered = weather.radiation || state.crewOrder === 'shelter';
   let crop = stepCrop(state.crop, step, flow.greenhouseOn);
   let agentTasksDone = state.agentTasksDone;
+  let calibrationLeft = Math.max(0, state.calibrationLeft - step);
+  let antennaTuneLeft = Math.max(0, state.antennaTuneLeft - step);
   let foodGain = 0;
   const agents = state.agents.map((agent) => {
     const r = stepAgent(agent, step, sheltered);
@@ -236,6 +247,8 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
         foodGain += HARVEST_FOOD;
       }
       if (r.completed === 'maintain') crop = { ...crop, wear: 0 };
+      if (r.completed === 'calibrate') calibrationLeft = CALIBRATION_HOURS;
+      if (r.completed === 'tune') antennaTuneLeft = TUNE_HOURS;
       if (r.completed === 'inspect') crop = { ...crop, wear: Math.max(0, crop.wear - INSPECT_WEAR_RELIEF) };
     }
     return r.agent;
@@ -265,6 +278,8 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     crop,
     agents,
     agentTasksDone,
+    calibrationLeft,
+    antennaTuneLeft,
     crewOrder: state.crewOrder,
     missionsDone,
   };

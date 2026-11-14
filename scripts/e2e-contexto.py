@@ -117,6 +117,41 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     check("cancelar a missão esvazia a fila", pg.evaluate("document.querySelectorAll('#ctx-body .ctx-queue li').length") == 0)
 
+    # 5c. Demais objetos da base (P3): cada um abre o painel certo e oferece uma decisão
+    pg.click("[data-tool=base]"); pg.click("[data-cam=overview]"); pg.click("#side-close"); pg.wait_for_timeout(1800)
+    for who, expected in [("habitat", "Habitat"), ("panels", "Solar panels"), ("antenna", "Antenna"), ("processor", "Ice processor"), ("storage", "Storage")]:
+        pos = screen_of(who)
+        pg.mouse.click(pos[0], pos[1] + (14 if who == "habitat" else 0)); pg.wait_for_timeout(350)
+        check(f"tocar em {who} abre '{expected}'", title() == expected, title())
+    # armazenamento: barras e estimativas
+    rows = pg.evaluate("[...document.querySelectorAll('#ctx-body .status-list li')].map(l=>l.textContent)")
+    check("armazenamento mostra os quatro estoques e os painéis guardados", len(rows) >= 5, str(rows[:5]))
+    # antena: sem antena instalada, a ordem de ajuste não existe e o painel explica
+    pos = screen_of("antenna"); pg.mouse.click(pos[0], pos[1]); pg.wait_for_timeout(350)
+    check("antena sem instalar oferece a missão do rover, não o ajuste", pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].some(b=>b.textContent.includes('Antenna repair'))") and not pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].some(b=>b.textContent.includes('Tune antenna'))"))
+    # painéis: calibrar manda um astronauta ao campo solar
+    pos = screen_of("panels"); pg.mouse.click(pos[0], pos[1]); pg.wait_for_timeout(350)
+    pg.evaluate("window.__t0 = performance.now(); window.__seen = null; new MutationObserver(()=>{ if(!window.__seen && document.querySelector('.ctx-progress:not([hidden])')) window.__seen = performance.now() }).observe(document.getElementById('ctx-body'), {childList:true, subtree:true, attributes:true})")
+    pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].find(b=>b.textContent.startsWith('Calibrate panels')).click()")
+    pg.wait_for_timeout(150)
+    seen = pg.evaluate("window.__seen ? window.__seen - window.__t0 : null")
+    check("calibrar painéis mostra o estado em ate 150 ms", seen is not None and seen <= 150, f"{seen}")
+    before = screen_of("crew0") or screen_of("crew1")
+    pg.wait_for_timeout(3000)
+    check("o astronauta está em tarefa fora do habitat", any("Calibrate" in s for s in progress()), str(progress()))
+    pg.evaluate("document.querySelector('.ctx-progress:not([hidden]) button').click()")
+    pg.wait_for_timeout(300)
+    # habitat: ordem de abrigo vira estado visível (volta à visão geral antes)
+    pg.click("[data-tool=base]"); pg.click("[data-cam=overview]"); pg.click("#side-close"); pg.wait_for_timeout(1800)
+    pos = screen_of("habitat"); pg.mouse.click(pos[0], pos[1] + 14); pg.wait_for_timeout(350)
+    check("habitat reaberto depois da tarefa", title() == "Habitat", title())
+    pg.evaluate("[...document.querySelectorAll('#ctx-body .seg button')].find(b=>b.textContent.includes('Shelter')).click()")
+    pg.wait_for_timeout(300)
+    check("ordem de abrigo aparece no painel do habitat", "shelter" in pg.evaluate("document.getElementById('ctx-body').textContent").lower())
+    pg.evaluate("[...document.querySelectorAll('#ctx-body .seg button')].find(b=>b.textContent.includes('Work')).click()")
+    pg.wait_for_timeout(300)
+    pg.keyboard.press("Escape")
+
     # 6. Abrir uma ferramenta fecha o painel contextual
     pg.click("[data-tool=energy]"); pg.wait_for_timeout(300)
     check("abrir um painel de ferramenta fecha o contextual", title() == "", title())

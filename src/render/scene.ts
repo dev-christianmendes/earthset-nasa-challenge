@@ -6,7 +6,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { GameState } from '../engine/game';
 import { isGreenhouseOn } from '../engine/resources';
-import { phaseFraction } from '../engine/astronaut';
+import { phaseFraction, type AgentTaskKind } from '../engine/astronaut';
+import { calibrationFactor } from '../engine/facilities';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 import { isWorking, type TaskKind } from '../engine/robot';
 import { missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
@@ -15,7 +16,7 @@ import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
 import { attachModel, loadGltf, loadModel } from './assets';
 import { VERTICAL_EXAGGERATION, surfaceHeight } from './terrain-height';
-import { ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, ICE_PROCESSOR, ICE_ROUTE, PANEL_SLOTS, type Spot } from './layout';
+import { ANTENNA, ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, ICE_PROCESSOR, ICE_ROUTE, PANEL_SLOTS, type Spot } from './layout';
 import { base, loadBaseLayoutModels, updateBase } from './base-layout';
 import { updateCrop } from './crop';
 
@@ -533,9 +534,24 @@ const GH_WORK_SPOTS: readonly Spot[] = [
   { x: GREENHOUSE.x + 3.1, z: GREENHOUSE.z - 1.9 },
   { x: GREENHOUSE.x + 2.4, z: GREENHOUSE.z + 1.7 },
 ];
-/** Rota de casa até a estufa: contorna o habitat pelo lado leste. */
-function crewPath(i: number): Path {
-  return [crew[i].home, { x: 4.4, z: 5.4 }, GH_WORK_SPOTS[i] ?? GH_WORK_SPOTS[0]];
+/** Onde cada tarefa acontece: estufa, campo solar ou antena. */
+type Site = 'greenhouse' | 'panels' | 'antenna';
+const SITE_OF: Record<AgentTaskKind, Site> = { inspect: 'greenhouse', harvest: 'greenhouse', maintain: 'greenhouse', calibrate: 'panels', tune: 'antenna' };
+/** Ponto de trabalho no campo solar (primeira coluna, lado norte) e para onde o astronauta olha. */
+const PANEL_FIELD_WORK: Spot = { x: -7.2, z: -8 };
+const PANEL_FIELD_FOCUS: Spot = { x: PANEL_SLOTS[0].x, z: PANEL_SLOTS[0].z };
+/** Rota de casa até o local da tarefa: contorna o habitat (leste e norte, ou leste e sul). */
+function crewPath(i: number, kind: AgentTaskKind): Path {
+  const home = crew[i].home;
+  const site = SITE_OF[kind];
+  if (site === 'panels') return [home, { x: 6.5, z: -8 }, { x: -2, z: -9 }, PANEL_FIELD_WORK];
+  if (site === 'antenna') return [home, { x: 6.5, z: -7 }, ANTENNA_WORK];
+  return [home, { x: 4.4, z: 5.4 }, GH_WORK_SPOTS[i] ?? GH_WORK_SPOTS[0]];
+}
+/** Alvo para onde o astronauta olha enquanto trabalha. */
+function siteFocus(kind: AgentTaskKind): Spot {
+  const site = SITE_OF[kind];
+  return site === 'panels' ? PANEL_FIELD_FOCUS : site === 'antenna' ? ANTENNA : GREENHOUSE;
 }
 const CREW_FOLLOW_SPEED = 9;
 const CREW_SHELTER_SPEED = 6;
@@ -554,7 +570,7 @@ function updateCrew(state: GameState, t: number, dt: number, view: RoverView, ra
     }
     const task = state.agents[i]?.task ?? null;
     if (task) {
-      const out = crewPath(i);
+      const out = crewPath(i, task.kind);
       const spot = out[out.length - 1];
       if (task.phase === 'prep') {
         followCrew(member, member.home.x, member.home.z, dt, CREW_FOLLOW_SPEED);
@@ -563,7 +579,8 @@ function updateCrew(state: GameState, t: number, dt: number, view: RoverView, ra
       } else if (task.phase === 'work') {
         followCrew(member, spot.x, spot.z, dt, CREW_FOLLOW_SPEED);
         member.working = !member.moving;
-        faceTowards(member, GREENHOUSE.x, GREENHOUSE.z);
+        const focus = siteFocus(task.kind);
+        faceTowards(member, focus.x, focus.z);
       } else {
         const p = along(task.phase === 'out' ? out : [...out].reverse(), phaseFraction(task));
         followCrew(member, p.x, p.z, dt, CREW_FOLLOW_SPEED);
@@ -721,7 +738,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     antennaRepairing: view.working && view.kind === 'antenna' && (view.phase === 'operate' || view.phase === 'deliver'),
     processing: view.working && view.kind === 'ice' && view.phase === 'deliver',
     iceActive: state.robot.queue.some((q) => q.kind === 'ice'),
-    panelGlow: 0.6 * solarFactor(level) * (lit ? 1 : 0.25),
+    panelGlow: 0.6 * solarFactor(level) * calibrationFactor(state.calibrationLeft) * (lit ? 1 : 0.25),
     earthAz: EARTH_AZ,
     earthEl: EARTH_EL,
   });

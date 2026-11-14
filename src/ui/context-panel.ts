@@ -4,10 +4,11 @@
 // então o motivo exibido é sempre o do motor. O painel só desenha e repassa as ordens.
 import {
   AGENT_TASK_KINDS,
+  GREENHOUSE_TASKS,
   INSPECT_WEAR_RELIEF,
   PREP_HOURS,
   TASK_ENERGY_COST,
-  TRAVEL_HOURS,
+  TRAVEL_HOURS_BY_KIND,
   WORK_HOURS,
   agentStatus,
   taskFraction,
@@ -25,12 +26,26 @@ import {
   hoursToReady,
   type Care,
 } from '../engine/greenhouse';
-import { GREENHOUSE } from '../engine/resources';
+import { CALIBRATION_BONUS, CALIBRATION_HOURS, TUNE_HOURS, WARNING_AHEAD_TUNED, calibrationFactor, warningAhead } from '../engine/facilities';
+import { EXPOSURE_HOURS_PER_HEART } from '../engine/crew';
+import { GREENHOUSE, PANEL_OUTPUT_PER_HOUR, deriveFlow } from '../engine/resources';
+import { isWorking } from '../engine/robot';
+import { solarFactor, stormLevel } from '../engine/space-weather';
 import { PHASES, missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
-import { MAX_PANELS, type TaskKind } from '../engine/robot';
+import { ICE_WATER_PER_TRIP, MAX_PANELS, type TaskKind } from '../engine/robot';
 import { t } from '../i18n';
 import type { SelectableId } from '../render/picking';
 import type { Tool } from './hud';
+
+/** O que a interface sabe do mundo fora do estado do motor (clima, luz, aviso de tempestade, velocidade). */
+export interface ContextInfo {
+  radiation: boolean;
+  kp: number;
+  lit: boolean;
+  speed: number;
+  /** Horas até a próxima tempestade avisada pela antena (null: sem aviso). */
+  warningHours: number | null;
+}
 
 export interface ContextHandlers {
   act(action: GameAction): void;
@@ -55,6 +70,7 @@ let updaters: Updater[] = [];
 let shelteredNow = false;
 let radiationNow = false;
 let speedNow = 1;
+let world: ContextInfo = { radiation: false, kp: 0, lit: true, speed: 1, warningHours: null };
 
 const TOOL_FOR: Partial<Record<SelectableId, Tool>> = {
   habitat: 'crew',
@@ -104,11 +120,19 @@ const hours = (n: number): string => String(Math.round(n * 10) / 10);
 const num = (n: number, digits = 2): string => String(Math.round(n * 10 ** digits) / 10 ** digits);
 
 function taskTotal(kind: AgentTaskKind): number {
-  return PREP_HOURS + TRAVEL_HOURS + WORK_HOURS[kind] + TRAVEL_HOURS;
+  return PREP_HOURS + TRAVEL_HOURS_BY_KIND[kind] * 2 + WORK_HOURS[kind];
 }
 
 function taskDetail(kind: AgentTaskKind): string {
-  return t(`task.${kind}.d`, { h: hours(taskTotal(kind)), wear: INSPECT_WEAR_RELIEF, food: HARVEST_FOOD, cost: TASK_ENERGY_COST.maintain });
+  return t(`task.${kind}.d`, {
+    h: hours(taskTotal(kind)),
+    wear: INSPECT_WEAR_RELIEF,
+    food: HARVEST_FOOD,
+    cost: TASK_ENERGY_COST[kind],
+    bonus: Math.round(CALIBRATION_BONUS * 100),
+    span: kind === 'tune' ? TUNE_HOURS : CALIBRATION_HOURS,
+    ahead: WARNING_AHEAD_TUNED,
+  });
 }
 
 function taskButton(state: GameState, kind: AgentTaskKind, agent?: number): HTMLElement {
@@ -179,7 +203,7 @@ interface View {
 
 function greenhouseView(state: GameState): View {
   const crop = state.crop;
-  const blocked = AGENT_TASK_KINDS.map((k) => `${k}:${whyNot(state, { type: 'ASSIGN_AGENT_TASK', kind: k }) ?? ''}`).join('|');
+  const blocked = GREENHOUSE_TASKS.map((k) => `${k}:${whyNot(state, { type: 'ASSIGN_AGENT_TASK', kind: k }) ?? ''}`).join('|');
   const sig = ['gh', cropStage(crop), crop.irrigation, crop.lighting, state.installation.greenhouse, blocked, state.agents.map((a) => a.task?.kind ?? '-').join(',')].join('/');
   return {
     title: t('ctx.greenhouse'),
@@ -215,7 +239,7 @@ function greenhouseView(state: GameState): View {
         careControl(t('gh2.lighting'), s.crop.lighting, LIGHTING, 'gh2.lighting.hint', (level) => ({ type: 'SET_GREENHOUSE_CARE', lighting: level })),
       );
       const tasks = make('div', 'ctx-tasks');
-      for (const kind of AGENT_TASK_KINDS) tasks.append(taskButton(s, kind));
+      for (const kind of GREENHOUSE_TASKS) tasks.append(taskButton(s, kind));
       const progress = [0, 1].map((i) => agentProgress(i, t(`ctx.crew${i}`)));
       return [
         bar((st) => st.crop.growth / 100, 'green'),
@@ -349,21 +373,175 @@ function roverView(state: GameState): View {
   };
 }
 
-function infoView(id: SelectableId): View {
-  const lines: Record<string, (s: GameState) => string> = {
-    habitat: (s) => t('ctx.info.habitat', { air: Math.round(s.vitals.air), water: Math.round(s.vitals.water), food: Math.round(s.vitals.food) }),
-    panels: (s) => t('ctx.info.panels', { n: s.installation.panels, pct: Math.round((s.vitals.battery / s.installation.batteryCapacity) * 100) }),
-    antenna: (s) => t(s.robot.antennaInstalled ? 'ctx.info.antenna.on' : 'ctx.info.antenna.off'),
-    processor: (s) => t('ctx.info.processor', { n: s.missionsDone.ice }),
-    storage: (s) => t('ctx.info.storage', { food: Math.round(s.vitals.food), water: Math.round(s.vitals.water) }),
-  };
+/** Fluxo por hora agora (energia, ar, água e comida), com o mesmo cálculo do motor. */
+function flowNow(state: GameState): ReturnType<typeof deriveFlow> {
+  const working = isWorking(state.robot, state.vitals.battery) && !world.radiation;
+  const solar = solarFactor(stormLevel(world.kp)) * calibrationFactor(state.calibrationLeft);
+  return deriveFlow(state.vitals, state.installation, world.lit, working, solar, state.crop);
+}
+
+const signed = (n: number, digits = 1): string => `${n > 0 ? '+' : ''}${num(n, digits)}`;
+
+function agentProgressBlocks(): HTMLElement[] {
+  return [0, 1].map((i) => agentProgress(i, t(`ctx.crew${i}`)));
+}
+
+function tasksFor(state: GameState, kinds: readonly AgentTaskKind[]): HTMLElement {
+  const box = make('div', 'ctx-tasks');
+  for (const kind of kinds) box.append(taskButton(state, kind));
+  return box;
+}
+
+function missionButton(state: GameState, kind: TaskKind): HTMLElement {
+  const action: GameAction = { type: 'ENQUEUE_TASK', kind };
+  const why = whyNot(state, action);
+  const button = make('button', 'ctx-task');
+  button.type = 'button';
+  button.append(make('b', undefined, t(`mission.${kind}`)), make('small', undefined, `${t(`mission.${kind}.p`)} ${missionDetail(kind, state)}`));
+  if (why) {
+    button.disabled = true;
+    button.title = why;
+    button.append(make('em', undefined, why));
+  } else {
+    button.classList.add('primary');
+    button.addEventListener('click', () => handlers.act(action));
+  }
+  return button;
+}
+
+function blockedSig(state: GameState, kinds: readonly AgentTaskKind[]): string {
+  return kinds.map((k) => `${k}:${whyNot(state, { type: 'ASSIGN_AGENT_TASK', kind: k }) ?? ''}`).join('|') + `|${state.agents.map((a) => a.task?.kind ?? '-').join(',')}`;
+}
+
+function panelsView(state: GameState): View {
+  const sig = `panels/${blockedSig(state, ['calibrate'])}/${whyNot(state, { type: 'ENQUEUE_TASK', kind: 'panel' }) ?? ''}/${state.installation.panels}`;
   return {
-    title: t(`ctx.${id}`),
-    signature: `info/${id}`,
+    title: t('ctx.panels'),
+    signature: sig,
+    build: (s) => {
+      const list = make('ul', 'status-list');
+      list.append(
+        row(t('pan.count'), (v, st) => void (v.textContent = t('pan.count.v', { n: st.installation.panels, max: MAX_PANELS }))),
+        row(t('pan.output'), (v, st) => {
+          const maxOut = st.installation.panels * PANEL_OUTPUT_PER_HOUR;
+          const now = world.lit ? maxOut * solarFactor(stormLevel(world.kp)) * calibrationFactor(st.calibrationLeft) : 0;
+          v.textContent = world.lit ? t('pan.output.v', { now: num(now, 1), max: num(maxOut, 1) }) : t('pan.dark');
+        }),
+        row(t('pan.calibration'), (v, st) => {
+          v.textContent = st.calibrationLeft > 0 ? t('pan.calibration.v', { pct: Math.round((calibrationFactor(st.calibrationLeft) - 1) * 100), h: Math.ceil(st.calibrationLeft) }) : t('pan.calibration.none');
+        }),
+        row(t('pan.battery'), (v, st) => void (v.textContent = `${Math.round((st.vitals.battery / st.installation.batteryCapacity) * 100)}%`)),
+      );
+      return [list, bar((st) => st.vitals.battery / st.installation.batteryCapacity, 'amber'), heading(t('ctx.tasks')), tasksFor(s, ['calibrate']), ...agentProgressBlocks(), heading(t('ctx.missions')), missionButton(s, 'panel')];
+    },
+  };
+}
+
+function antennaView(state: GameState): View {
+  const installed = state.robot.antennaInstalled;
+  const sig = `antenna/${installed}/${blockedSig(state, ['tune'])}/${whyNot(state, { type: 'ENQUEUE_TASK', kind: 'antenna' }) ?? ''}`;
+  return {
+    title: t('ctx.antenna'),
+    signature: sig,
+    build: (s) => {
+      const list = make('ul', 'status-list');
+      list.append(
+        row(t('ant.status'), (v, st) => void (v.textContent = t(st.robot.antennaInstalled ? 'ctx.info.antenna.on' : 'ctx.info.antenna.off'))),
+        row(t('ant.lead'), (v, st) => void (v.textContent = st.robot.antennaInstalled ? t('ant.lead.v', { h: warningAhead(st.antennaTuneLeft) }) : '—')),
+        row(t('ant.tuned'), (v, st) => void (v.textContent = st.antennaTuneLeft > 0 ? t('ant.tuned.v', { h: Math.ceil(st.antennaTuneLeft) }) : t('ant.tuned.none'))),
+        row(t('ant.next'), (v, st) => {
+          v.textContent = !st.robot.antennaInstalled ? '—' : world.warningHours === null ? t('ant.next.none') : t('ant.next.v', { h: Math.ceil(world.warningHours) });
+        }),
+      );
+      const nodes: HTMLElement[] = [list];
+      if (installed) nodes.push(heading(t('ctx.tasks')), tasksFor(s, ['tune']), ...agentProgressBlocks());
+      else nodes.push(heading(t('ctx.missions')), make('p', 'ctx-hint', t('ant.offline')), missionButton(s, 'antenna'));
+      return nodes;
+    },
+  };
+}
+
+function habitatView(state: GameState): View {
+  return {
+    title: t('ctx.habitat'),
+    signature: `habitat/${state.crewOrder}`,
+    build: (s) => {
+      const crew = make('ul', 'status-list');
+      for (const i of [0, 1]) {
+        crew.append(row(t(`ctx.crew${i}`), (v, st) => void (v.textContent = t(`agent.status.${agentStatus(st.agents[i], shelteredNow)}`))));
+      }
+      const rates = make('ul', 'status-list');
+      const rate = (label: string, pick: (f: ReturnType<typeof deriveFlow>) => number): HTMLElement =>
+        row(label, (v, st) => void (v.textContent = t('hab.rate', { v: signed(pick(flowNow(st)), 2) })));
+      rates.append(
+        rate(t('hab.air'), (f) => f.air),
+        rate(t('hab.water'), (f) => f.water),
+        rate(t('hab.food'), (f) => f.food),
+        rate(t('hab.energy'), (f) => f.energy),
+        row(t('hab.exposure'), (v, st) => void (v.textContent = t('hab.exposure.v', { h: num(st.crew.exposureHours % EXPOSURE_HOURS_PER_HEART, 1), max: EXPOSURE_HOURS_PER_HEART }))),
+      );
+      const seg = make('div', 'seg');
+      for (const order of ['auto', 'shelter'] as const) {
+        const b = make('button', s.crewOrder === order ? 'active' : '', t(`hab.order.${order}`));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', String(s.crewOrder === order));
+        b.addEventListener('click', () => handlers.act({ type: 'SET_CREW_ORDER', order }));
+        seg.append(b);
+      }
+      return [heading(t('hab.crew')), crew, heading(t('hab.order')), seg, heading(t('ctx.status')), rates];
+    },
+  };
+}
+
+function processorView(state: GameState): View {
+  return {
+    title: t('ctx.processor'),
+    signature: `processor/${whyNot(state, { type: 'ENQUEUE_TASK', kind: 'ice' }) ?? ''}`,
+    build: (s) => {
+      const list = make('ul', 'status-list');
+      list.append(
+        row(t('proc.state'), (v, st) => {
+          const task = st.robot.queue[0];
+          const processing = task?.kind === 'ice' && missionPhase(task) === 'deliver';
+          const coming = st.robot.queue.some((q) => q.kind === 'ice');
+          v.textContent = t(processing ? 'proc.state.working' : coming ? 'proc.state.waiting' : 'proc.state.idle');
+        }),
+        row(t('proc.trips'), (v, st) => void (v.textContent = String(st.missionsDone.ice))),
+        row(t('proc.water'), (v, st) => void (v.textContent = `+${st.missionsDone.ice * ICE_WATER_PER_TRIP}`)),
+        row(t('sto.water'), (v, st) => void (v.textContent = `${Math.round(st.vitals.water)}`)),
+      );
+      return [list, bar((st) => st.vitals.water / 100), heading(t('ctx.missions')), missionButton(s, 'ice')];
+    },
+  };
+}
+
+function storageView(state: GameState): View {
+  return {
+    title: t('ctx.storage'),
+    signature: `storage/${state.installation.panels}`,
     build: () => {
-      const status = make('ul', 'status-list');
-      status.append(row(t('ctx.status'), (v, st) => void (v.textContent = lines[id]?.(st) ?? '')));
-      return [status];
+      const box = make('div');
+      const entry = (label: string, level: (st: GameState) => number, flow: (f: ReturnType<typeof deriveFlow>) => number, limit: (st: GameState) => number, tone: string): HTMLElement[] => {
+        const list = make('ul', 'status-list');
+        list.append(
+          row(label, (v, st) => {
+            const per = flow(flowNow(st));
+            const left = per < -1e-6 ? t('sto.lasts', { h: Math.round(level(st) / -per) }) : t('sto.grows');
+            v.textContent = `${Math.round(level(st))} / ${Math.round(limit(st))} · ${left}`;
+          }),
+        );
+        return [list, bar((st) => level(st) / limit(st), tone)];
+      };
+      box.append(
+        ...entry(t('sto.battery'), (st) => st.vitals.battery, (f) => f.energy, (st) => st.installation.batteryCapacity, 'amber'),
+        ...entry(t('sto.air'), (st) => st.vitals.air, (f) => f.air, () => 100, ''),
+        ...entry(t('sto.water'), (st) => st.vitals.water, (f) => f.water, () => 100, ''),
+        ...entry(t('sto.food'), (st) => st.vitals.food, (f) => f.food, () => 100, 'green'),
+      );
+      const crates = make('ul', 'status-list');
+      crates.append(row(t('sto.crates'), (v, st) => void (v.textContent = String(Math.max(0, MAX_PANELS - st.installation.panels)))));
+      box.append(crates);
+      return [box];
     },
   };
 }
@@ -373,7 +551,11 @@ function viewFor(id: SelectableId, state: GameState): View {
   if (id === 'crew0') return crewView(state, 0);
   if (id === 'crew1') return crewView(state, 1);
   if (id === 'rover') return roverView(state);
-  return infoView(id);
+  if (id === 'panels') return panelsView(state);
+  if (id === 'antenna') return antennaView(state);
+  if (id === 'habitat') return habitatView(state);
+  if (id === 'processor') return processorView(state);
+  return storageView(state);
 }
 
 // ---------- API ----------
@@ -398,10 +580,12 @@ export function showContext(id: SelectableId | null): void {
 }
 
 /** Atualiza o painel: reconstrói só quando algo discreto mudou; barras e números mudam no lugar. */
-export function renderContext(state: GameState, radiation: boolean, speed = 1): void {
+export function renderContext(state: GameState, info: ContextInfo): void {
   if (!selected) return;
-  radiationNow = radiation;
-  speedNow = speed;
+  world = info;
+  radiationNow = info.radiation;
+  speedNow = info.speed;
+  const radiation = info.radiation;
   shelteredNow = radiation || state.crewOrder === 'shelter';
   const view = viewFor(selected, state);
   if (view.signature !== signature) {
