@@ -1,11 +1,27 @@
 # Pipeline de ativos 3D
 
-Status: **parcial**. Nenhum ativo externo foi adotado ainda; os objetos atuais são geometria procedural do Three.js.
+Status: **parcial**. Cinco modelos GLB gerados por script no Blender, carregados pelo Three.js. Nenhum ativo de terceiros.
 
 ## Situação atual (14/11/2026)
-- Blender: **não instalado** neste ambiente. Modelagem em Blender depende de instalação ou de uma máquina com Blender.
-- Ativos externos: nenhum. Só se adota um modelo com licença verificada, atribuição registrada aqui e sem marca da NASA.
+- **Blender 5.2.2** instalado sem administrador, em `~/tools/blender-5.2.2-linux-x64` (arquivo oficial, soma SHA256 conferida com a publicada em download.blender.org). Roda em modo de fundo com Python.
+- **Modelos** (`public/models/`), gerados por `assets-src/blender/build_assets.py`:
+  - `habitat.glb`: casco cilíndrico com biséis, tampas e faixa em teal, escotilha e três janelas emissivas.
+  - `rover.glb`: chassi âmbar arredondado, seis rodas (nomes `wheel_*`, giram quando trabalha), mastro, câmera e farol (`beacon`, pisca e fica vermelho na radiação).
+  - `solar_panel.glb`: suporte e painel inclinado.
+  - `greenhouse.glb`: cúpula translúcida com três nervuras.
+  - `antenna.glb`: mastro e prato.
+- **Autoria:** geometria escrita neste projeto, por script. Sem modelo de terceiros, sem imagem ou modelo gerado por IA.
+- **Limite:** a modelagem é procedural e simples. Não atinge o padrão visual de Astroneer. Astronautas não foram modelados.
+- Ativos externos: nenhum. Se um for adotado, registrar aqui: origem, autor, licença e alterações.
 - Ativos gerados por IA: **proibidos** (`AI_DISCLOSURE.md`, `AGENTS.md`).
+
+## Como regenerar
+```
+~/tools/blender-5.2.2-linux-x64/blender --background --factory-startup --python assets-src/blender/build_assets.py -- public/models
+```
+
+## Escala e origem
+Escala no Blender é o tamanho total: cubo de tamanho 1 com escala 2 mede 2 m. Cada modelo tem origem no ponto do grupo do three.js que o recebe (`src/render/scene.ts`, função `loadBaseModels`).
 
 ## Fluxo previsto
 1. Identificar o objeto e a função no jogo.

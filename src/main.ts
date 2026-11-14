@@ -8,7 +8,7 @@ import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
 import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
-import { camera, controls, frameForViewport, renderer, resetView, scene, updateScene } from './render/scene';
+import { camera, controls, frameForViewport, loadBaseModels, renderer, resetView, scene, updateScene } from './render/scene';
 import { renderHud, ui } from './ui/hud';
 import { t } from './i18n';
 import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
@@ -130,5 +130,6 @@ window.addEventListener('resize', () => {
 
 ui.greenhouse.value = INSTALLATION.greenhouse;
 renderHud(game, currentWeather());
+// Modelos GLB: carregam em segundo plano; até lá, as formas provisórias da cena continuam visíveis.
+loadBaseModels().catch((error: unknown) => console.error('modelos 3D não carregaram:', error));
 requestAnimationFrame(frame);
-

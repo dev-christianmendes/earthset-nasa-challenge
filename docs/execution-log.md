@@ -283,3 +283,16 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** arrastar, zoom e toque da câmera (headless não simula o mouse). Desempenho não medido em máquina real.
 - **Não feito (fases 3 a 5):** modelos GLB (depende de Blender ou de ativos licenciados), astronautas, itens de missão, tela inicial, preparação, pausa, vitória e derrota redesenhadas, animações do rover, efeitos de tempestade além do brilho dos painéis.
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · Blender instalado e primeiros modelos GLB
+
+- **Blender:** `apt` e `snap` exigem senha de administrador (indisponível). Baixado o arquivo oficial portátil, Blender 5.2.2 LTS, de `download.blender.org/release/Blender5.2/`. SHA256 conferido com `blender-5.2.2.sha256`. Extraído em `~/tools/blender-5.2.2-linux-x64`. Teste: `bpy.app.version_string` = 5.2.2 LTS. O arquivo compactado foi apagado.
+- **Modelos:** `assets-src/blender/build_assets.py` gera `public/models/{habitat,rover,solar_panel,greenhouse,antenna}.glb` (cerca de 420 KB no total).
+- **Erro encontrado e corrigido:** escala no Blender é tamanho total, não meia dimensão. Cinco objetos estavam pela metade ou com comprimento errado (habitat com 3 m em vez de 6 m; painel com 0,8 m em vez de 1,6 m). Conferido com `dimensions` antes da exportação.
+- **Código:** `src/render/assets.ts` (carrega cada GLB uma vez e anexa uma cópia ao grupo), `src/render/scene.ts` (`loadBaseModels`, peças do rover, rodas giram só com o robô trabalhando), `src/main.ts` (chamada em segundo plano; as formas provisórias ficam até o carregamento).
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou. `npx vitest run`: 66 testes, OK. `npm run build`: passou.
+  - Captura `desktop-h.png`: habitat, estufa, painéis, antena (oculta até instalar) e rover carregados. Sem erros de carregamento no console.
+- **Não verificado:** animação das rodas em movimento (captura parada); desempenho dos modelos em máquina real; GLB do rover (219 KB) poderia ser reduzido.
+- **Commit:** feito localmente, sem push.
+

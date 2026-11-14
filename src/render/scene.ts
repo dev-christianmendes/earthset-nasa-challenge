@@ -8,6 +8,7 @@ import { MAX_PANELS, isWorking } from '../engine/robot';
 import { sampleAt } from '../engine/sun';
 import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
+import { attachModel } from './assets';
 
 /** Paleta da cena. O azul de destaque é o mesmo --accent do HUD (index.html). */
 export const PALETTE = {
@@ -359,8 +360,38 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   // Tempestade: os painéis perdem brilho na proporção da geração (ver solarFactor).
   panelMat.emissiveIntensity = 0.6 * solarFactor(stormLevel(weather.kp));
   // Radiação de partículas solares: o farol do robô fica vermelho enquanto dura.
-  beaconMat.color.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
-  beaconMat.emissive.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
-  beacon.visible = !working || Math.sin(t * 4) > -0.2;
+  rover.beaconMat.color.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
+  rover.beaconMat.emissive.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
+  rover.beacon.visible = !working || Math.sin(t * 4) > -0.2;
+  // Rodas giram só quando o robô trabalha (estado vindo do motor).
+  if (working) for (const wheel of rover.wheels) wheel.rotation.z = -t * 6;
 }
 
+// ---------- Modelos 3D (assets-src/blender) ----------
+
+/** Peças do rover que a animação usa. Começam como as formas provisórias e são trocadas pelo modelo. */
+export const rover: {
+  beacon: THREE.Object3D;
+  beaconMat: THREE.MeshStandardMaterial;
+  wheels: THREE.Object3D[];
+} = { beacon, beaconMat, wheels: [] };
+
+/** Troca as formas provisórias pelos modelos GLB. Enquanto carregam, o código continua funcionando. */
+export function loadBaseModels(): Promise<unknown> {
+  return Promise.all([
+    attachModel(habitat, 'habitat'),
+    attachModel(greenhouse, 'greenhouse'),
+    attachModel(baseAntenna, 'antenna'),
+    ...panelMeshes.map((unit) => attachModel(unit, 'solar_panel')),
+    attachModel(robot, 'rover').then((model) => {
+      const beaconNode = model.getObjectByName('beacon');
+      if (beaconNode instanceof THREE.Mesh) {
+        const mat = (beaconNode.material as THREE.MeshStandardMaterial).clone();
+        beaconNode.material = mat;
+        rover.beacon = beaconNode;
+        rover.beaconMat = mat;
+      }
+      rover.wheels = model.children.filter((child) => child.name.startsWith('wheel_'));
+    }),
+  ]);
+}
