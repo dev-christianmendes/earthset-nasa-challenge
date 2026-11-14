@@ -167,7 +167,7 @@ Data: 14/11/2026.
 - **Bloco 0 (fundação):** feito, exceto B0.6 (envio ao GitHub, autor).
 - **Bloco 1 (regras da base):** B1.1 e B1.3 feitos. B1.2 parcial: estufa feita; tarefas do robô entraram com o robô. **B1.4 (robô e gelo) feito** nesta etapa, com 41 testes passando. **B1.5 (frio e aquecimento sem energia) feito**, pela regra de bateria zerada; temperatura separada fica fora desta versão.
 - **Bloco 2 (dados):** aberto. Depende de decisão do autor (B2.1).
-- **Bloco 3 (tela):** HUD ligado ao motor; painel de robô, estufa, fim de partida e cena com luz de sol. Visual refinado em B3.3 (textura, modelos da base, paleta única, estrelas). Falta o B3.4 (modo escola e explicações). Ver backlog.
+- **Bloco 3 (tela):** HUD ligado ao motor; painel de robô, estufa, fim de partida e cena com luz de sol. Visual refinado em B3.3 (textura, modelos da base, paleta única, estrelas). Modo escola (B3.4) feito: rótulos curtos e explicações por recurso. Próximo: B4 (envio). Ver backlog.
 - **Bloco 4 (envio):** aberto. O projeto de envio é novo, iniciado do zero em 14/11/2026. Não há bloqueio de elegibilidade pendente.
 
 **Riscos abertos:** A2 (enunciado oficial não lido), A3 (composição da equipe), A5 (Termos e Guia de Envio não lidos).

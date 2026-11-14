@@ -8,6 +8,7 @@ import { MAX_PANELS, MAX_QUEUE, isWorking, type TaskKind } from './engine/robot'
 import { MATCH_HOURS } from './engine/clock';
 import { isSunlit, sampleAt, type SunTable } from './engine/sun';
 import sunJson from './data/sun-south-pole.json';
+import { EXPLANATIONS, SCHOOL_LABELS, type Explanation } from './school';
 
 /** Sol real: JPL Horizons, gerado por data-pipeline/fetch_sun.py (ver docs/data-sources.md). */
 const SUN = sunJson as SunTable;
@@ -129,6 +130,47 @@ ui.restart.addEventListener('click', () => {
   setMessage('');
   renderHud();
 });
+
+// ---------- Modo escola (B3.4) ----------
+
+const schoolToggle = el<HTMLInputElement>('school-mode');
+
+// Guarda o texto normal de cada rótulo, para voltar a ele ao desligar o modo escola.
+for (const node of document.querySelectorAll<HTMLElement>('[data-label]')) {
+  node.dataset.normal = node.textContent ?? '';
+}
+
+function fillHint(node: HTMLElement, text: Explanation): void {
+  const lines: Array<[string, string]> = [
+    ['O que é: ', text.what],
+    ['Por que muda: ', text.why],
+    ['Fonte: ', text.source],
+  ];
+  node.replaceChildren(
+    ...lines.map(([title, body]) => {
+      const line = document.createElement('span');
+      const strong = document.createElement('b');
+      strong.textContent = title;
+      line.append(strong, body);
+      return line;
+    }),
+  );
+}
+for (const node of document.querySelectorAll<HTMLElement>('[data-hint]')) {
+  const text = EXPLANATIONS[node.dataset.hint ?? ''];
+  if (text) fillHint(node, text);
+}
+
+function applySchoolMode(on: boolean): void {
+  document.body.classList.toggle('school', on);
+  for (const node of document.querySelectorAll<HTMLElement>('[data-label]')) {
+    const school = SCHOOL_LABELS[node.dataset.label ?? ''];
+    node.textContent = on && school ? school : (node.dataset.normal ?? '');
+  }
+}
+schoolToggle.addEventListener('change', () => applySchoolMode(schoolToggle.checked));
+// O navegador pode lembrar o estado da caixa ao recarregar a página.
+applySchoolMode(schoolToggle.checked);
 
 // ---------- Sol (ilustrativo) ----------
 

@@ -146,3 +146,17 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Limite:** as capturas mostram o estado inicial (2 painéis, sem antena). Os estados com 12 painéis e com antena instalada não foram capturados; o código que os mostra está no `updateScene`.
 - **Commit:** feito localmente, sem push (não foi pedido nesta etapa).
 - **Pendências:** B3.4 (modo escola e explicações); B4 (envio).
+
+## 2026-11-14 · B3.4 modo escola e explicações por recurso
+
+- **Arquivos alterados:** `src/school.ts` (novo: `SCHOOL_LABELS` e `EXPLANATIONS`, textos sem DOM), `src/main.ts` (caixa "Modo escola", troca de rótulos, preenchimento das explicações), `index.html` (caixa, `data-label` e `data-hint` nos elementos, CSS `.hint` que só aparece com `body.school`), `tests/school.test.ts` (novo: texto não vazio e curto, fonte classificada como real ou regra do jogo, rótulo curto), `docs/backlog.md` (B3.4 marcado), `AGENTS.md` (bloco 3 e próximo passo), esta entrada.
+- **Decisão:** as explicações dizem a fonte de cada número. Só o Sol é dado real (JPL Horizons); o resto é regra do jogo ou ilustrativo, como no rodapé do HUD.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npm run test`: 6 arquivos, 52 testes (49 antigos e 3 novos), todos passaram.
+  - `npm run build`: passou.
+  - Vite em `http://localhost:5180/`, Chrome headless: captura desktop com o modo escola ligado e celular 390×844 com o modo ligado. Rótulos trocam e as explicações aparecem sob cada recurso.
+- **Verificação de captura:** para tirar a captura com o modo ligado, marquei a caixa no HTML por um instante e desfiz a mudança logo depois (confirmado com grep; `index.html` tem a caixa sem `checked`).
+- **Limite:** com o modo ligado, o HUD fica longo e rola no desktop e no celular. Aceito, porque o modo é opcional. A caixa não lembra a escolha ao recarregar a página.
+- **Commit:** feito localmente, sem push (não foi pedido nesta etapa).
+- **Pendências:** B4 (envio: vídeo ou slides em inglês, referências, declaração de IA em inglês).
