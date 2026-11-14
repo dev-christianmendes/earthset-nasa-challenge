@@ -3,6 +3,7 @@
 // Regra dos corações: docs/regras-recursos.md (ajustável).
 import { MATCH_HOURS, advanceClock, createClock, type Clock } from './clock';
 import { CALM, solarFactor, stormLevel, type SpaceWeatherSample } from './space-weather';
+import { advanceCrew, createCrew, crewOutside, type CrewState } from './crew';
 import {
   applyFlow,
   deriveFlow,
@@ -35,6 +36,8 @@ export interface GameState {
   readonly hearts: number;
   /** Horas seguidas com algum recurso vital zerado. */
   readonly vitalZeroHours: number;
+  /** Tripulação: exposição à radiação (D-05). */
+  readonly crew: CrewState;
 }
 
 export type GameAction =
@@ -60,6 +63,7 @@ export function createGame(options: NewGameOptions): GameState {
     robot: createRobot(),
     hearts: MAX_HEARTS,
     vitalZeroHours: 0,
+    crew: createCrew(),
   };
 }
 
@@ -144,6 +148,10 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     vitalZeroHours -= HOURS_PER_HEART_LOSS;
   }
 
+  // Tripulação: quem está fora quando a radiação começa leva 1 hora para entrar; cada 12 h de exposição tira 1 coração.
+  const crewStep = advanceCrew(state.crew, crewOutside(state.installation, state.vitals, state.robot), weather.radiation, step);
+  hearts = Math.max(0, hearts - crewStep.heartsLost);
+
   return {
     clock: advanceClock(state.clock, step),
     installation,
@@ -151,5 +159,6 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     robot: progress.robot,
     hearts,
     vitalZeroHours,
+    crew: crewStep.crew,
   };
 }

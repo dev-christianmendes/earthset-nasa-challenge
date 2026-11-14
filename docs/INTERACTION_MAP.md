@@ -33,7 +33,7 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 | Radiação | nada | para o robô enquanto durar | farol vermelho; HUD diz "robô parado" | o rover fica parado no local, sem indicação de abrigo |
 | Cancelar tarefa | × na fila | remove a tarefa | fila atualiza; o rover **volta à base caminhando** a 4 m/s (corrigido) | — |
 | Base sem tarefa | nada | fila vazia | rover parado na base, farol apagado | — |
-| Tripulação (2 astronautas) | nada (são automáticos) | a estufa ligada vem de `isGreenhouseOn` (motor); o astronauta da estufa cuida dela quando ligada; o outro vai ao local da tarefa quando o rover trabalha | caminham, balançam braços e pernas ao andar | sem tarefas próprias (coleta, reparo); sem nome nem função na tela |
+| Tripulação (2 astronautas) | nada (são automáticos) | a estufa ligada vem de `isGreenhouseOn` (motor); o astronauta da estufa cuida dela quando ligada; o outro vai ao local da tarefa quando o rover trabalha; na radiação, quem estava fora leva 1 h para entrar, e 12 h de exposição somadas tiram 1 coração (`src/engine/crew.ts`) | caminham e balançam braços e pernas; na radiação correm para a escotilha | tarefas de gelo com ajuda (T12), colheita (T13) e reações ao aviso (T11) ainda não existem; sem nome nem função na tela |
 
 ## Itens de missão
 

@@ -142,7 +142,7 @@ Cada tarefa tem: **objetivo**, **arquivos**, **aceite**. Faça uma por vez, regi
 ### T13. Astronauta colhe na estufa (D-07)
 - **Aceite:** com a estufa ligada, +10 de comida a cada 12 h (até 100). Teste do motor. Animação de colheita na estufa.
 
-### T14. Abrigo e exposição à radiação (D-05, por último)
+### T14. Abrigo e exposição à radiação (D-05) — **feita** (ver `docs/DECISOES.md`)
 - **Aceite:** tripulação fora na radiação acumula exposição; 1 coração a cada 6 h. Testes do motor (com e sem abrigo). Penalidade ajustável só com partida passando.
 
 ### T10. Demo e envio (só com pedido do autor)

@@ -49,8 +49,8 @@ scene.fog = new THREE.Fog(PALETTE.space, 60, 220);
 
 export const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 600);
 // Enquadramento padrão: olha um pouco à esquerda, para a base aparecer à direita do painel de HUD.
-const DEFAULT_CAMERA_POSITION = new THREE.Vector3(-13, 5, -9);
-const DEFAULT_TARGET = new THREE.Vector3(-17, 1, -15.5);
+const DEFAULT_CAMERA_POSITION = new THREE.Vector3(2, 17, 30);
+const DEFAULT_TARGET = new THREE.Vector3(-8, 1, 0);
 camera.position.copy(DEFAULT_CAMERA_POSITION);
 
 // Câmera orbital em torno da base: arrastar gira, roda ou pinça aproxima, limites de distância e inclinação.
@@ -59,7 +59,7 @@ controls.target.copy(DEFAULT_TARGET);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.enablePan = false;
-controls.minDistance = 5;
+controls.minDistance = 10;
 controls.maxDistance = 70;
 controls.minPolarAngle = THREE.MathUtils.degToRad(20);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(82);
@@ -424,6 +424,8 @@ const crew: Crew[] = [
   { node: null, x: 2.6, z: 4.6, home: { x: 2.6, z: 4.6 }, moving: false, legs: [], arms: [] },
 ];
 const CREW_WALK_SPEED = 1.3; // m/s
+/** Abrigo: em frente à escotilha do habitat (lado +z, onde fica a porta). */
+const SHELTER = { x: 0, z: 3.6 } as const;
 
 /** Anda até (tx, tz) e devolve se ainda está andando. */
 function walkCrew(member: Crew, tx: number, tz: number, dt: number): void {
@@ -449,10 +451,14 @@ function animateCrew(member: Crew, t: number): void {
 }
 
 /** Astronautas: o da estufa cuida dela quando ela está ligada; o outro ajuda o rover no local da tarefa. */
-function updateCrew(state: GameState, t: number, dt: number, workSite: { x: number; z: number } | null): void {
+function updateCrew(state: GameState, t: number, dt: number, workSite: { x: number; z: number } | null, radiation: boolean): void {
   const greenhouseRunning = isGreenhouseOn(state.vitals, state.installation);
   const [keeper, helper] = crew;
-  if (greenhouseRunning) {
+  if (radiation) {
+    // Radiação: a tripulação corre para a escotilha (D-05).
+    walkCrew(keeper, SHELTER.x, SHELTER.z, dt);
+    walkCrew(helper, SHELTER.x + 0.9, SHELTER.z, dt);
+  } else if (greenhouseRunning) {
     const phase = Math.floor(t / 4) % 2 === 0;
     // Caminho fora da cúpula (centro em -5.5, 3; raio 2.4): os dois pontos ficam a mais de 3 m do centro.
     walkCrew(keeper, phase ? -3.0 : -4.0, phase ? 5.2 : 6.6, dt);
@@ -486,7 +492,7 @@ export function loadCrewModels(): Promise<unknown> {
 }
 
 /** Deslocamento em relação ao rover parado no local: o marcador fica ao lado, não sobre o modelo. */
-const ICE_MARKER_OFFSET = { x: 2.6, z: 2.0 };
+const ICE_MARKER_OFFSET = { x: 3.0, z: -3.0 };
 /** Marcador do gelo no local da tarefa de gelo (item de missão). Visível enquanto há tarefa de gelo na fila. */
 const iceMarker = new THREE.Mesh(
   new THREE.IcosahedronGeometry(1.1, 0),
@@ -526,7 +532,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   const dt = lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
   lastNow = now;
   const { working, moving, workSite } = placeRover(state, t, dt);
-  updateCrew(state, t, dt, workSite);
+  updateCrew(state, t, dt, workSite, weather.radiation);
   robotBodyMat.emissiveIntensity = working ? 1 : 0.2;
   // Tempestade: os painéis perdem brilho na proporção da geração (ver solarFactor).
   panelMat.emissiveIntensity = 0.6 * solarFactor(stormLevel(weather.kp));
@@ -540,7 +546,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   iceMarker.visible = state.robot.queue.some((task) => task.kind === 'ice');
   const iceMarkerX = SITE.ice.x + ICE_MARKER_OFFSET.x;
   const iceMarkerZ = SITE.ice.z + ICE_MARKER_OFFSET.z;
-  iceMarker.position.set(iceMarkerX, surfaceHeight(iceMarkerX, iceMarkerZ) + 1.5 + Math.sin(t * 2) * 0.15, iceMarkerZ);
+  iceMarker.position.set(iceMarkerX, surfaceHeight(iceMarkerX, iceMarkerZ) + 2.5 + Math.sin(t * 2) * 0.15, iceMarkerZ);
   iceMarker.rotation.y = t * 0.6;
 }
 

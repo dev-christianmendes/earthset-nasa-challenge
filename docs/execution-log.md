@@ -384,3 +384,14 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Captura:** `antenna-warning.png` (ajuste temporário: antena instalada, hora 26; main.ts restaurado e conferido com diff). Aviso aparece no HUD e a antena aparece no teto do habitat.
 - **Pendente:** a decisão D-02 (astronautas sem tarefas) foi tomada pelo agente; o autor questionou. Aguardando definição do autor sobre tarefas dos astronautas.
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · T14: abrigo e exposição à radiação (D-05)
+
+- **Motor:** `src/engine/crew.ts` (novo). Quem está fora por atividade leva 1 h para entrar quando a radiação começa; cada hora conta como exposição; 12 h somadas dos dois astronautas tiram 1 coração. `advance` em `src/engine/game.ts` chama `advanceCrew`; `GameState` ganhou o campo `crew`.
+- **Render:** na radiação, a tripulação corre para a escotilha (`updateCrew` em `src/render/scene.ts`).
+- **Testes:** `tests/engine/crew.test.ts` (6 testes: sem radiação, dentro do habitat, caminho de 1 h por astronauta, 12 h = 1 coração, partida com estufa ligada, partida sem radiação).
+- **Comandos e resultados:** `npm run typecheck` passou; `npx vitest run`: 76 testes, OK; `npm run build` passou. Captura da tela inicial limpa: `clean-title.png`.
+- **Incidente, corrigido:** o commit `1863635` e o seguinte continham em `src/main.ts` ajustes temporários de teste que eu não tinha revertido de forma limpa: `started = true`, `paused = true`, uma tarefa de gelo inserida no início e a tela inicial escondida. A causa foi usar um backup feito depois de um ajuste anterior. Corrigido com `git checkout` da versão de `576ec04` (commit `73e72fd`). Regra daqui em diante: nunca fazer backup de um arquivo já alterado para teste; usar sempre o commit limpo como referência, e conferir com `git diff` antes de commitar.
+- **Não verificado:** a animação de correr para a escotilha em movimento (só o código); o equilíbrio da partida com a penalidade ativa (o teste de partida passa, mas a exposição real no cenário não foi medida).
+- **Commit:** feito localmente, sem push.
+

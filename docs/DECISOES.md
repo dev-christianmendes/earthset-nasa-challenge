@@ -34,7 +34,9 @@ Registro das decisões tomadas pelo agente com delegação do autor (14/11/2026:
 4. D-03 (seguir robô).
 5. T6, T7, T9 (texto, pausa, desempenho).
 
-## D-05. Abrigo da tripulação na radiação (regra + visual)
+## D-05. Abrigo da tripulação na radiação (regra + visual) — **implementada (T14)**
+
+Implementação: `src/engine/crew.ts`, ligada em `advance` (`src/engine/game.ts`). Quem está fora por atividade (estufa ligada; robô trabalhando) leva 1 hora para entrar quando a radiação começa; essa hora conta como exposição. A soma das exposições dos dois astronautas, a cada 12 h, tira 1 coração. Testes em `tests/engine/crew.test.ts`. Na cena, a tripulação corre para a escotilha durante a radiação.
 
 - **Decisão (penalidade definida pelo autor delegando, 14/11/2026):** durante a radiação, cada hora que um astronauta passa fora do habitat conta como exposição. A cada **12 horas** de exposição acumulada, perde **1 coração**. O abrigo é automático: ao início da radiação (ou ao aviso da antena, D-01), o astronauta corre para a escotilha. Se estava no local de uma tarefa, a exposição começa quando ele sai e termina quando entra.
 - **Por que 12 horas e não 6:** a regra de 6 horas do motor é para recursos zerados (falta contínua). A radiação é um evento pontual. Com 6 horas, um evento poderia custar um coração inteiro; o cenário tem 82 horas de radiação.
