@@ -12,6 +12,25 @@ import sunJson from './data/sun-south-pole.json';
 /** Sol real: JPL Horizons, gerado por data-pipeline/fetch_sun.py (ver docs/data-sources.md). */
 const SUN = sunJson as SunTable;
 
+/** Paleta da cena. O azul de destaque é o mesmo --accent do HUD (index.html). */
+const PALETTE = {
+  space: 0x03050a,
+  crater: 0x3e4049,
+  habitat: 0xdfe4ec,
+  habitatAccent: 0x7fd1ff,
+  hatch: 0x2a2c33,
+  greenhouse: 0x9fe8b0,
+  greenhouseRib: 0xdfe4ec,
+  panel: 0x3f7fd0,
+  panelGlow: 0x0c2446,
+  metal: 0xdfe4ec,
+  robot: 0xffc857,
+  track: 0x2a2c33,
+  sunlight: 0xfff1d6,
+  skyFill: 0x8fa6c8,
+  groundFill: 0x1a1c24,
+} as const;
+
 /** Configuração inicial da base. Valores de equilíbrio do motor (docs/regras-recursos.md). */
 const INSTALLATION: Installation = {
   rank: 'explorador',
@@ -130,8 +149,8 @@ renderer.toneMappingExposure = 1.05;
 document.body.insertBefore(renderer.domElement, document.body.firstChild);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x03050a);
-scene.fog = new THREE.Fog(0x03050a, 60, 220);
+scene.background = new THREE.Color(PALETTE.space);
+scene.fog = new THREE.Fog(PALETTE.space, 60, 220);
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 600);
 camera.position.set(2, 17, 30);
@@ -189,7 +208,7 @@ ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-const craterMat = new THREE.MeshStandardMaterial({ color: 0x3e4049, roughness: 1 });
+const craterMat = new THREE.MeshStandardMaterial({ color: PALETTE.crater, roughness: 1 });
 const craters: Array<[number, number, number]> = [
   [-18, -12, 4.5],
   [14, -20, 6],
@@ -206,7 +225,7 @@ for (const [x, z, r] of craters) {
 }
 
 // Sol: luz direcional com sombras.
-const sun = new THREE.DirectionalLight(0xfff1d6, 2.6);
+const sun = new THREE.DirectionalLight(PALETTE.sunlight, 2.6);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.left = -30;
@@ -217,7 +236,7 @@ sun.shadow.camera.near = 1;
 sun.shadow.camera.far = 120;
 scene.add(sun);
 scene.add(sun.target);
-const ambient = new THREE.HemisphereLight(0x8fa6c8, 0x1a1c24, 0.35);
+const ambient = new THREE.HemisphereLight(PALETTE.skyFill, PALETTE.groundFill, 0.35);
 scene.add(ambient);
 
 // Céu: estrelas e a Terra, ao fundo.
@@ -244,21 +263,48 @@ scene.add(earth);
 const base = new THREE.Group();
 scene.add(base);
 
-const habitat = new THREE.Mesh(
-  new THREE.CylinderGeometry(2.2, 2.2, 6, 24),
-  new THREE.MeshStandardMaterial({ color: 0xdfe4ec, roughness: 0.5, metalness: 0.2 }),
-);
-habitat.rotation.z = Math.PI / 2;
+const habitat = new THREE.Group();
 habitat.position.set(0, 2.2, 0);
-habitat.castShadow = true;
+const habitatMat = new THREE.MeshStandardMaterial({ color: PALETTE.habitat, roughness: 0.5, metalness: 0.2 });
+const hull = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 6, 24), habitatMat);
+hull.rotation.z = Math.PI / 2;
+hull.castShadow = true;
+habitat.add(hull);
+// Tampas e faixa de cor: o módulo lê como estrutura pressurizada.
+const accentMat = new THREE.MeshStandardMaterial({ color: PALETTE.habitatAccent, roughness: 0.4 });
+for (const x of [-3.02, 3.02]) {
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.06, 24), accentMat);
+  cap.rotation.z = Math.PI / 2;
+  cap.position.x = x;
+  habitat.add(cap);
+}
+const band = new THREE.Mesh(new THREE.CylinderGeometry(2.23, 2.23, 0.3, 24), accentMat);
+band.rotation.z = Math.PI / 2;
+habitat.add(band);
+// Escotilha de entrada na frente do módulo.
+const hatch = new THREE.Mesh(
+  new THREE.BoxGeometry(1.2, 1.6, 0.3),
+  new THREE.MeshStandardMaterial({ color: PALETTE.hatch, roughness: 0.6 }),
+);
+hatch.position.set(0, -0.6, 2.25);
+habitat.add(hatch);
 base.add(habitat);
 
-const greenhouse = new THREE.Mesh(
-  new THREE.SphereGeometry(2.4, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-  new THREE.MeshStandardMaterial({ color: 0x9fe8b0, transparent: true, opacity: 0.35, roughness: 0.1 }),
-);
+const greenhouse = new THREE.Group();
 greenhouse.position.set(-5.5, 0, 3);
-greenhouse.castShadow = true;
+const dome = new THREE.Mesh(
+  new THREE.SphereGeometry(2.4, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+  new THREE.MeshStandardMaterial({ color: PALETTE.greenhouse, transparent: true, opacity: 0.35, roughness: 0.1 }),
+);
+dome.castShadow = true;
+greenhouse.add(dome);
+// Nervuras: arcos de metal sobre a cúpula, para ela ler como estufa e não como bolha.
+const ribMat = new THREE.MeshStandardMaterial({ color: PALETTE.greenhouseRib, metalness: 0.4, roughness: 0.4 });
+for (let i = 0; i < 3; i++) {
+  const rib = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.05, 6, 32, Math.PI), ribMat);
+  rib.rotation.y = (i * Math.PI) / 3;
+  greenhouse.add(rib);
+}
 base.add(greenhouse);
 
 // Antena de comunicação no teto do habitat: aparece quando o robô instala a antena (B1.4).
@@ -280,29 +326,38 @@ baseAntenna.position.set(1.2, 4.4, 0);
 baseAntenna.visible = false;
 base.add(baseAntenna);
 
-const panelMat = new THREE.MeshStandardMaterial({ color: 0x3f7fd0, roughness: 0.25, metalness: 0.5, emissive: 0x0c2446, emissiveIntensity: 0.6 });
-const panelMeshes: THREE.Mesh[] = [];
+const panelMat = new THREE.MeshStandardMaterial({ color: PALETTE.panel, roughness: 0.25, metalness: 0.5, emissive: PALETTE.panelGlow, emissiveIntensity: 0.6 });
+const postMat = new THREE.MeshStandardMaterial({ color: PALETTE.metal, metalness: 0.4, roughness: 0.4 });
+const panelMeshes: THREE.Group[] = [];
 for (let i = 0; i < MAX_PANELS; i++) {
   const col = i % 6;
   const row = Math.floor(i / 6);
+  // Cada unidade é um suporte com o painel inclinado, presa ao chão.
+  const unit = new THREE.Group();
+  unit.position.set(-3 + col * 2 + 2, 0, 5 + row * 2.4);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.2, 8), postMat);
+  post.position.y = 0.6;
+  post.castShadow = true;
+  unit.add(post);
   const panel = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.1), panelMat);
-  panel.position.set(-3 + col * 2 + 2, 1.1, 5 + row * 2.4);
+  panel.position.y = 1.2;
   panel.rotation.x = -0.45;
   panel.castShadow = true;
   panel.receiveShadow = true;
-  panel.visible = false;
-  base.add(panel);
-  panelMeshes.push(panel);
+  unit.add(panel);
+  unit.visible = false;
+  base.add(unit);
+  panelMeshes.push(unit);
 }
 
 // Robô de coleta: corpo, duas esteiras, antena com luz de status. Modelo ilustrativo.
 const robot = new THREE.Group();
-const robotBodyMat = new THREE.MeshStandardMaterial({ color: 0xffc857, emissive: 0x402800, roughness: 0.4 });
+const robotBodyMat = new THREE.MeshStandardMaterial({ color: PALETTE.robot, emissive: 0x402800, roughness: 0.4 });
 const robotBody = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.4, 0.8), robotBodyMat);
 robotBody.position.y = 0.35;
 robotBody.castShadow = true;
 robot.add(robotBody);
-const trackMat = new THREE.MeshStandardMaterial({ color: 0x2a2c33, roughness: 0.9 });
+const trackMat = new THREE.MeshStandardMaterial({ color: PALETTE.track, roughness: 0.9 });
 for (const z of [-0.5, 0.5]) {
   const track = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.22, 0.18), trackMat);
   track.position.set(0, 0.11, z);
@@ -339,11 +394,11 @@ function updateScene(hour: number, now: number): void {
   );
   if (sunlit(hour)) {
     sun.intensity = 3.2;
-    ambient.intensity = 0.6;
+    ambient.intensity = 0.8;
   } else {
     // Sol acima do horizonte plano, mas tapado pelo relevo: só a luz de fundo.
     sun.intensity = 0;
-    ambient.intensity = 0.45;
+    ambient.intensity = 0.55;
   }
   sun.target.position.set(0, 0, 0);
 

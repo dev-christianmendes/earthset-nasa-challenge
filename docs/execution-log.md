@@ -133,3 +133,16 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - `npm run build`: passou (aviso de chunk acima de 500 kB, já existia).
   - Vite em `http://localhost:5180/` (título "Earthset · Base no polo sul da Lua"), Chrome headless: `desktop.png` 1280×800 e `mobile.png` 390×844, revisados. Botões Gelo, Painel e Antena visíveis no celular; estrelas visíveis no desktop; robô legível.
 - **Pendências:** B3.3 segue parcial (paleta, modelos extras da base, céu); B3.4.
+
+## 2026-11-14 · B3.3 concluído: paleta, modelos da base e refinamentos
+
+- **Arquivos alterados:** `src/main.ts` (objeto `PALETTE` com as cores da cena, usado nos materiais; habitat com tampas, faixa e escotilha; estufa com nervuras; painéis em suportes; luz ambiente um pouco mais forte), `docs/backlog.md` (B3.3 marcado `[x]`, com o limite assumido), `AGENTS.md` (linha do bloco 3 atualizada), esta entrada.
+- **Decisão:** o céu fica preto com estrelas. A Lua não tem atmosfera, e um gradiente seria invenção. O relevo segue ilustrativo, como o B2 registra.
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npm run test`: 6 arquivos, 49 testes, todos passaram.
+  - `npm run build`: passou.
+  - Vite em `http://localhost:5180/` (título confirmado), Chrome headless: `desktop-b33c.png` 1280×800 e `mobile-b33c.png` 390×844, revisados. Habitat, estufa e painéis lidos com clareza; botões do celular visíveis.
+- **Limite:** as capturas mostram o estado inicial (2 painéis, sem antena). Os estados com 12 painéis e com antena instalada não foram capturados; o código que os mostra está no `updateScene`.
+- **Commit:** feito localmente, sem push (não foi pedido nesta etapa).
+- **Pendências:** B3.4 (modo escola e explicações); B4 (envio).
