@@ -6,6 +6,85 @@ Data de referência: 14/11/2026. Prazo de envio: **15/11/2026, 23h59** (meta int
 
 ---
 
+## 0. ESTADO ATUAL (atualizado em 14/11/2026, noite). Leia isto antes de tudo.
+
+### 0.1 Git
+- Branch `main`. Último commit: `1af398c`. Há **2 commits locais não enviados** (`a1d82c1`, `1af398c`, da outra IA).
+- **Não faça push** sem pedido explícito do autor. **Não faça commit** sem pedido explícito (regra 7 de `AGENTS.md`). Commit e push só quando o autor pedir.
+- Já enviado ao GitHub até `a21e95f`, incluindo T14 (`76a8a34`).
+
+### 0.2 Alerta: arquivos não commitados que o jogo já usa
+- `public/models/*.glb` (habitat, rover, solar_panel, greenhouse, antenna, astronaut) foram **regenerados** e não estão commitados. O Vite serve essa pasta, então o jogo já mostra essas versões.
+- **Bug conhecido:** `habitat.glb` tem as duas cúpulas das extremidades mal posicionadas (uma aparece embaixo do casco). A correção (girar só a malha da cúpula e depois posicionar o objeto) está planejada em `build_habitat` de `assets-src/blender/build_assets.py`, mas **não foi aplicada**.
+- `greenhouse.glb` ficou com 787 KB (esferas das plantas com muitas faces). `rover.glb` com 258 KB.
+- **Decisão pendente do autor:** restaurar os GLB do HEAD enquanto a arte não é aprovada, ou aceitar as versões regeneradas. Não decida isso sozinho.
+
+### 0.3a Ativos externos (decisão D-10, autor)
+- Política: ativo de terceiros entra se a licença for verificada na fonte (de preferência CC0) e registrada em `docs/ART_ASSET_PIPELINE.md`.
+- **Em uso:** superfície lunar "Moon Dusted 01" (Poly Haven, CC0) no chão, `public/textures/moon/` (a versão com pegadas foi removida).
+- **Em uso:** astronauta de baixo polígono com animação (OpenGameArt, CC0), `public/models/astronaut_oga.glb`, na tripulação. Qualidade cartunesca; primeira versão externa, aceita pelo autor.
+- **Candidato para o habitat:** Space Station Kit (Kenney, CC0). Aguarda o autor baixar o zip em `assets-src/external/space-station-kit/` (download automático bloqueado).
+- Próximos candidatos: pedras e crateras decorativas (Poly Haven, CC0; verificar cada um).
+
+### 0.3 Astronauta: decisão pendente, NÃO continuar iterando sem ela
+- `astronaut.glb`: versão atual no jogo (primitivas, pivôs de braço e perna). Corrigida em T1 (`d1d0595`), validada por números, não por imagem.
+- `astronaut_v2.glb`: malha única, esqueleto com 16 ossos, skinning automático, clipes `idle`, `walk`, `run`, `work`. **Não está ligado ao jogo.** Problemas na última revisão: braço direito com fresta no ombro, luva solta na pose de trabalho (não acompanha o punho), torso em caixa, enquadramento da prévia cortando os pés.
+- Atualização: o autor pediu para usar modelo externo licenciado. Já há um candidato CC0 (`astronaut_oga.glb`), que não atende ao acabamento pedido. **Falta decidir**: adotar o candidato como base, buscar outro modelo externo, ou modelar à mão.
+- **Opções anteriores** (referência):
+  1. Modelo externo licenciado, com esqueleto e clipes. Integrar, validar escala, registrar atribuição.
+  2. Modelagem manual por um artista no Blender. O script só exporta e valida.
+  3. Manter o procedural só como placeholder e focar no restante.
+- Até a decisão: não modificar `build_astronaut_v2.py` nem ligar `astronaut_v2.glb` ao jogo.
+
+### 0.4 Status das tarefas (atualizado)
+| Tarefa | Estado |
+|---|---|
+| T1 articulação do astronauta | feita (`d1d0595`), validada por números |
+| T2 tarefas dos astronautas | revogada (D-02); substituída por D-05 a D-08 |
+| T3 marcador do gelo visível | feita (`a21e95f`) |
+| T4 antena: aviso de tempestade (D-01) | feita (`576ec04`, `a1d82c1`, `1af398c`) |
+| T5 transição de instalação de painel e antena | pendente |
+| T6 revisão de texto (B3.1) | pendente |
+| T7 pausa com teclado em navegador | parcial: tela de pausa capturada; Esc não verificado |
+| T8 câmera seguindo o rover (D-03) | pendente, baixa prioridade |
+| T9 desempenho medido e peso dos GLB | pendente |
+| T11 reações visuais da tripulação (D-08) | pendente |
+| T12 astronauta ajuda o gelo (D-06) | pendente |
+| T13 astronauta colhe na estufa (D-07) | pendente |
+| T14 abrigo e exposição à radiação (D-05) | feita (`76a8a34`), 76 testes |
+| T15 habitat com arte | pendente: falta corrigir a cúpula |
+| T16 rover com arte | pendente |
+| T17 astronauta, estufa, painéis, antena | pendente: depende da decisão 0.3 |
+| T18 revisão visual humana | pendente |
+
+### 0.7 O que a outra IA pode adiantar AGORA (sem depender de decisão de arte)
+- **T12 (ajuda ao gelo, D-06), só motor:** duração da tarefa de gelo com astronauta livre (4 h) e sem ajuda (6 h), com testes em `tests/engine/robot.test.ts` ou novo arquivo. Não mexer em arte.
+- **T13 (colheita na estufa, D-07), só motor:** +10 de comida a cada 12 h com a estufa ligada (até 100), com testes. Não mexer em arte.
+- **T6 (revisão de texto, B3.1):** `src/i18n.ts` e `src/school.ts`, sem mudar regra.
+- **T5 (transição de instalação de painel e antena):** só render, sem arte nova.
+- **T9 (desempenho):** medir quadros por segundo e peso dos GLB e da textura (a textura de regolito soma cerca de 2,5 MB; a estufa tem 787 KB; o astronauta v2 tem 958 KB).
+- **Não fazer agora:** T15 a T18 (arte) e ligar qualquer astronauta novo ao jogo, até o autor decidir.
+
+### 0.8 O que precisa mudar fora do código (aguarda o autor)
+1. **Commit e push** de tudo que está pendente. Há 2 commits locais da outra IA e mudanças não commitadas (modelos regenerados, textura, scripts, previews, documentação). Só com pedido explícito.
+2. **Decisão sobre `public/models/*.glb` regenerados:** o `habitat.glb` tem a cúpula mal posicionada e é o que o jogo serve agora. Restaurar do HEAD ou aceitar.
+3. **`AI_DISCLOSURE.md`:** declarar que parte dos ativos é de terceiros (CC0) e que os scripts do Blender foram feitos com IA.
+4. **Entrega (B4, mais tarde):** lista de referências com as licenças de `docs/ART_ASSET_PIPELINE.md`.
+
+Ordem sugerida agora: (a) decisão do autor sobre 0.2, 0.3 e 0.8; (b) T12 e T13 (motor, independentes de arte); (c) T6 e T5; (d) T9; (e) T15 a T18 após a decisão de arte.
+
+### 0.5 Regras aprendidas (erros já cometidos)
+- **Nunca** fazer backup de um arquivo já alterado para teste. Use sempre o commit limpo como referência: `git show <commit>:caminho > arquivo` ou `git checkout <commit> -- caminho`. Depois confira com `git diff`.
+- Ajustes temporários de tela (começar a partida, esconder a tela inicial, inserir tarefa) devem ser revertidos com `git checkout`, e não com cópia de backup. Esse erro já pôs ajustes de teste em `main.ts` por dois commits (corrigido em `73e72fd`).
+- Chave NASA: nunca gravar em arquivo ou commit. Use só `NASA_API_KEY` no ambiente.
+- Blender: escala é tamanho total. Use `transform_apply` só na escala quando a origem precisa ficar no pivô; `transform_apply` sem parâmetro também move a localização.
+
+### 0.6 Arquivos de apoio
+- `docs/DECISOES.md`: decisões D-01 a D-09 (incluindo a penalidade da D-05 e o trabalho de arte da D-09).
+- `docs/INTERACTION_MAP.md`: comportamento de cada componente.
+- `docs/execution-log.md`: diário de todas as etapas.
+- `assets-src/blender/`: `build_assets.py` (habitat, rover, painel, estufa, antena, astronauta v1), `build_astronaut_v2.py`, `preview_assets.py`, `preview_astronaut_v2.py`, e a pasta `previews/` com as prévias.
+
 ## 1. O projeto em uma página
 
 - **O quê:** jogo 3D no navegador. O jogador administra uma base no polo sul da Lua durante um dia lunar de 708 horas de jogo. Vence chegando às 708 h com pelo menos 1 coração; perde quando os 3 corações acabam.
@@ -179,3 +258,23 @@ Ao concluir cada tarefa:
 6. Não faça push.
 
 Se algo não puder ser verificado, escreva isso no diário. Não declare pronto sem verificação.
+
+## 6b. Trabalho de arte para o nível visual (D-09)
+
+O autor decidiu que a cena deve chegar ao padrão de arte. O código atual é funcional, mas os modelos são geometria simples. Estas tarefas são de arte e devem seguir `docs/VISUAL_DIRECTION.md` (paleta, formas arredondadas, leitura clara).
+
+### T15. Habitat com detalhe de arte
+- **Arquivos:** `assets-src/blender/build_assets.py` (`build_habitat`), `public/models/habitat.glb`.
+- **Aceite:** módulo com proporções definidas, painéis e vigas visíveis, iluminação de janelas coerente com a paleta; captura desktop revisada por humano.
+
+### T16. Rover com leitura de robô
+- **Arquivos:** `build_rover`, `public/models/rover.glb`, e `src/render/scene.ts` se as rodas precisarem de nós novos.
+- **Aceite:** chassi, sensores, mastro e rodas bem legíveis a 20 m; rodas giram na viagem; farol visível. Peso do GLB reduzido sem perder detalhe principal.
+
+### T17. Astronauta e base com acabamento
+- **Arquivos:** `build_astronaut`, `build_greenhouse`, `build_solar_panel`, `build_antenna`.
+- **Aceite:** astronauta legível (capacete, viseira, mochila) em câmera próxima; estufa com plantas visíveis quando ligada; painéis com células visíveis; antena com prato reconhecível.
+
+### T18. Revisão visual humana
+- Após T15 a T17, captura desktop e celular revisada por uma pessoa (não só pelo agente). Se a revisão não aprovar, volta para o ajuste.
+- **Aceite:** registro no diário com a decisão de quem revisou.

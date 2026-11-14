@@ -407,6 +407,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Arquivos de documento alterados:** `docs/INTERACTION_MAP.md` (marcador do gelo e lista de lacunas), `docs/PLANO_PARA_AGENTE.md` (T3 marcada como feita) e este `docs/execution-log.md`.
 - **Commit:** feito localmente, sem push.
 
+## 2026-11-14 · Nível visual registrado como trabalho de arte (D-09)
+
+- Autor: os modelos devem chegar ao nível visual com trabalho de arte. Registrado em `docs/DECISOES.md` (D-09) e no plano (`docs/PLANO_PARA_AGENTE.md`, seção 6b, tarefas T15 a T18).
+- Nenhum código ou modelo foi alterado nesta etapa.
+- **Commit:** não feito, por falta de pedido explícito (regra 7 de `AGENTS.md`). Mudanças na árvore de trabalho.
+
 ## 2026-11-14 · T4: aviso da antena no motor e texto do modo escola
 
 - **Contexto:** a D-01 já estava implementada (commit `576ec04`). Esta etapa fecha o aceite "teste do motor cobre as duas situações" e leva o texto da decisão ao modo escola.
@@ -418,3 +424,28 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Captura:** a captura `antenna-warning.png` do commit `576ec04` continua válida; a mudança desta etapa é de lógica pura e texto, sem alterar o HUD. Não foi refeita por causa da sessão concorrente de arte na mesma árvore.
 - **Commit:** feito localmente, sem push.
 
+
+## 2026-11-14 · Atualização do plano para agentes
+
+- `docs/PLANO_PARA_AGENTE.md` ganhou a seção 0 (estado atual): git (2 commits locais não enviados), arquivos regenerados não commitados que o jogo já serve, bug da cúpula do habitat (não corrigido), decisão pendente sobre o astronauta (três opções), tabela de status das tarefas, ordem sugerida e regras aprendidas.
+- Nenhum arquivo de modelo foi alterado nesta etapa.
+- **Commit:** não feito (sem pedido explícito do autor).
+
+## 2026-11-14 · Ativos externos: regolito (em uso) e astronauta (candidato)
+
+- **Licenças verificadas na fonte:** Poly Haven (página com `cc0` na licença; API sem campo de licença, mas a página declara CC0 1.0); OpenGameArt node 44447 (página declara CC0).
+- **Regolito:** `public/textures/moon/` (1K: diffuse, normal, roughness), com `LICENSE.txt`. Ligado ao chão em `src/render/scene.ts` (`moonGroundMaterial`); a textura procedural continua como reserva. Captura `moon-texture.png` (tela inicial): regolito visível.
+- **Astronauta:** `assets-src/external/astronaut_oga/astronaut.blend` (com `LICENSE.txt`), convertido por `assets-src/blender/convert_oga_astronaut.py` para `public/models/astronaut_oga.glb` (54 KB; malha, 11 ossos, clipes `default` e `run`). Prévias em `assets-src/blender/previews/oga/oga_sheet.png`. Avaliação: cartunesco, sem visor nem traje detalhado; clipe `run` desajeitado. **Não ligado ao jogo.**
+- **Ferramenta:** `preview_astronaut_v2.py` corrigido: câmera agora calculada a partir do tamanho do modelo.
+- **Comandos e resultados:** `npm run typecheck` passou; `npx vitest run`: 77 testes, OK; `npm run build` passou; `main.ts` conferido (sem ajustes de teste).
+- **Não commitado** (regra 7 de `AGENTS.md`).
+
+## 2026-11-14 · Ativos externos: superfície sem pegadas e astronauta CC0 na cena
+
+- **Superfície:** trocada a textura com pegadas pela CC0 "Moon Dusted 01" (Poly Haven), em `public/textures/moon/dusted_*.jpg` com `LICENSE.txt`.
+- **Astronauta:** `public/models/astronaut_oga.glb` (CC0) entra na cena com `AnimationMixer` (`default` → repouso, `run` → corrida; a caminhada usa a corrida em 0,45×). Três problemas corrigidos: origem no centro do corpo (deslocada 0,96 m), material metálico que ficava preto (trocado por traje fosco), e `Object3D.clone()` que não copia o esqueleto (passou a usar `SkeletonUtils.clone`).
+- **Fallback:** se o modelo novo falhar, volta ao `astronaut.glb` com animações procedurais.
+- **Habitat:** Space Station Kit (Kenney, CC0) identificado; download automático bloqueado (kenney.nl devolve 403; itch.io exige clique). Pendente de download manual pelo autor.
+- **Não verificado:** caminhada natural; pose de repouso (quase em T); direção de frente do modelo.
+- **Ação recusada:** tentei restaurar os GLB regenerados (habitat, rover, painel, estufa, antena e astronauta v1) para a versão commitada com `git checkout`. O sistema recusou por descartar mudanças do disco. Não foi feito. Pendente de decisão do autor.
+- **Commits:** a separar em lotes após essa decisão.

@@ -39,3 +39,17 @@ Registre cada ativo externo neste arquivo: origem, autor, licença, data de aces
 
 ## Prioridade de modelagem
 1. Habitat principal · 2. Rover · 3. Painéis solares · 4. Estufa · 5. Antena.
+
+## Ativos externos (registro de licenças)
+
+Verificados em 14/11/2026, pela página de cada asset e, quando havia, pela API. Só entram ativos com licença clara e registrada aqui.
+
+| Ativo | Arquivo no projeto | Origem | Licença | Estado |
+|---|---|---|---|---|
+| Superfície lunar (diffuse, normal, roughness, 1K) | `public/textures/moon/dusted_*.jpg` | Poly Haven, "Moon Dusted 01" (https://polyhaven.com/a/moon_dusted_01) | CC0 1.0 (página) | **em uso** no chão do cenário (`moonGroundMaterial` em `src/render/scene.ts`). Substitui "Moon Footprints 01", que tinha pegadas em toda a superfície e foi removida |
+| Astronauta de baixo polígono, rigado, com clipes `default` e `run` | `public/models/astronaut_oga.glb` (fonte: `assets-src/external/astronaut_oga/astronaut.blend`) | OpenGameArt, node 44447 (https://opengameart.org/node/44447) | CC0 (página) | **em uso** na tripulação (`loadCrewModels`, com `AnimationMixer`). Qualidade cartunesca; sem clipe de caminhada (a caminhada usa a corrida mais lenta). Material trocado para não metálico |
+| Space Station Kit (módulos de estação, GLB ou glTF) | ainda não baixado | Kenney, https://kenney.nl/assets/space-station-kit (itch.io: https://kenney-assets.itch.io/space-station-kit) | CC0 1.0 (página do itch.io) | **candidato para o habitat**. O download automático é bloqueado (kenney.nl devolve 403; o itch.io exige clique). Aguarda o autor baixar o zip em `assets-src/external/space-station-kit/` |
+
+Ativos gerados pelo projeto (script no Blender): habitat, rover, painel, estufa, antena e astronauta v1 e v2 (`assets-src/blender/`). Não são de terceiros.
+
+Regras: licença CC0 não exige atribuição, mas o projeto registra a origem mesmo assim. Sem marca da NASA. Sem imagem ou modelo gerado por IA. Ativo de licença incerta não entra.

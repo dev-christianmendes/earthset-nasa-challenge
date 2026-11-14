@@ -66,3 +66,17 @@ Implementação: `src/engine/crew.ts`, ligada em `advance` (`src/engine/game.ts`
 2. D-06 (gelo com ajuda).
 3. D-07 (colheita).
 4. D-05 (abrigo e exposição, o mais complexo, por último).
+
+## D-09. Nível visual: trabalho de arte, no plano
+
+- **Decisão (autor, 14/11/2026):** o nível visual da cena deve chegar ao padrão de arte (referência: Astroneer, sem copiar identidade ou ativos). Isso é trabalho de arte, não só de código: entra como tarefas T15 a T18 em `docs/PLANO_PARA_AGENTE.md`.
+- **Modelos atuais:** são geometria procedural de primeira versão, gerada por `assets-src/blender/build_assets.py`. Não são o padrão final.
+- **Fonte:** o trabalho de arte é feito no Blender, pelo script do projeto, ou com ativo externo licenciado e registrado em `docs/ART_ASSET_PIPELINE.md`. Nada de imagem ou modelo gerado por IA.
+
+## D-10. Ativos externos licenciados (política)
+
+- **Decisão (autor, 14/11/2026):** o projeto pode usar modelos e texturas de terceiros, desde que a licença seja verificada na fonte, seja compatível com a entrega (de preferência CC0) e esteja registrada em `docs/ART_ASSET_PIPELINE.md`.
+- **Aplicado:** superfície lunar "Moon Dusted 01" (Poly Haven, CC0) no chão. A primeira escolha, "Moon Footprints 01", foi removida: tinha pegadas em toda a superfície, o que poluía o visual.
+- **Aplicado (autor pediu implementar):** astronauta de baixo polígono (OpenGameArt, CC0), com animação de repouso e de corrida, no lugar do astronauta primitivo. Qualidade cartunesca, aceita como primeira versão externa.
+- **Candidato para o habitat:** Space Station Kit da Kenney (CC0). Download manual pelo autor (ver `docs/ART_ASSET_PIPELINE.md`).
+- **Não aplicado:** efeitos visuais (tempestade, radiação, painel polar) continuam procedurais, porque a fonte externa não resolve nada aqui. Pedras e crateras decorativas (ex.: Poly Haven "Moon Meteor 01", CC0, a verificar) ficam para uma próxima etapa.

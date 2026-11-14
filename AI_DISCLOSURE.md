@@ -12,6 +12,12 @@ Projeto: **Earthset · Base no polo sul da Lua**, NASA Space Apps Challenge 2026
 
 Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes.
 
+## 2. Ativos de terceiros e geração de código de arte
+
+- **Ativos de terceiros** (todos sob CC0 1.0, verificados na fonte, registrados em `docs/ART_ASSET_PIPELINE.md`): textura de superfície lunar (Poly Haven, Moon Dusted 01) e astronauta de baixo polígono com animações (OpenGameArt, nó 44447).
+- **Modelos gerados por script** (Blender 5.2, scripts em `assets-src/blender/`, escritos com auxílio de IA e revisados pelo projeto): habitat, rover, painel solar, estufa, antena e astronauta.
+- **Nenhuma imagem ou modelo gerado por IA** foi usado como ativo final.
+
 ## 2. Como as ferramentas são usadas aqui
 
 - O código, os testes e a documentação são escritos com agentes guiados por `AGENTS.md` e pelos roteiros de `docs/`.
