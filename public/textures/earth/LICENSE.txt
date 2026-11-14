@@ -1,0 +1,8 @@
+Textura da Terra (earth_land_shallow_topo_2048.jpg)
+Origem: NASA, "Blue Marble" (produto land shallow topo), arquivo "Land shallow topo 2048.jpg" no Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Land_shallow_topo_2048.jpg
+Licença: domínio público (a página do arquivo declara "Public domain", por ser criação da NASA; diretrizes de mídia da NASA: material da NASA não tem copyright, salvo indicação).
+Crédito pedido pela NASA: "NASA Earth Observatory".
+Alterações: redimensionado para 2048 x 1024 e convertido para JPEG.
+Sem logotipo da NASA.
+Verificar na fonte oficial antes do envio: https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/
