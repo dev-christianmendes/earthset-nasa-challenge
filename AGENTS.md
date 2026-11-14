@@ -33,7 +33,7 @@ Este é o ponto de entrada para **qualquer agente de IA** neste repositório (Cl
 
 ## 3. Como rodar e verificar
 
-Pré-requisito: **Node 24** (o CI usa 24; local hoje 24.14). Gerenciador: npm com `package-lock.json`.
+Pré-requisito: **Node 24** (o CI usa 24; local hoje 24.22.3). Gerenciador: npm com `package-lock.json`.
 
 | Comando | Para quê |
 |---|---|
@@ -128,7 +128,7 @@ CLAUDE.md                   Importa este arquivo para o Claude Code
 - **Dependabot** abre PRs semanais para npm e ações do GitHub. Revisar antes de aceitar.
 - **Estado atual:** o CI está criado e **ainda não rodou**, porque nada foi enviado ao GitHub (regra 7). Primeiro envio: quando o autor pedir.
 - **Vulnerabilidades conhecidas (aceitas):** `npm audit` aponta 3 problemas em `vitest` 3.2.7 e `tinypool` (dev-only, não entram no build). A correção indicada é trocar para vitest 5, que é uma mudança maior. Não há correção em 3.x até a data desta versão. Revisar depois do evento. A dependência de produção (three.js) tem 0 vulnerabilidades.
-- **Pendência de ambiente:** `context-mode` exige Node 24.15 ou mais novo (`ctx_doctor` falha com Node 24.14). Ver `docs/execution-log.md`.
+- **Ambiente:** `context-mode` exige Node 24.15 ou mais novo. Resolvido: Node 24.22.3 é o padrão local e `ctx_doctor` passa em todos os checks (ver `docs/execution-log.md`, entrada de 14/11, Node).
 
 ---
 

@@ -68,3 +68,14 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Item A1:** resolvido pelo autor (projeto novo). Bloqueio removido de backlog, event-rules, AI_DISCLOSURE e AGENTS.
 - **Envio:** autorizado pelo autor. Repositório `dev-christianmendes/earthset-nasa-challenge` (público, vazio) recebeu os commits em Conventional Commits, com push para `main`.
 - **Pendências:** reiniciar a sessão para o context-mode; B1.5 (frio); B3.2 (enquadramento no celular); B3.3 (visual); B2.3 (LOLA e DONKI); B3.4 (modo escola); B4 (envio).
+
+## 2026-11-14 · Node 24.22.3 e ferramentas de economia de token
+
+- **Arquivos alterados:** `AGENTS.md` (versão local do Node na seção 3; pendência de ambiente na seção 6 marcada como resolvida), `docs/execution-log.md` (esta entrada).
+- **Node:** versão local 24.22.3, padrão do nvm. Verificado com `node --version` (v24.22.3). Atende ao mínimo de 24.15 do context-mode.
+- **Comandos e resultados:**
+  - `ctx_doctor` (context-mode 2.1.10): 11 de 11 checks PASS, com Node v24.22.3. D2 node: ok. D9 index: 4 fontes, 69 chunks.
+  - `rtk --version`: rtk 1.2.0. Hook `rtk hook claude` presente em `~/.claude/settings.json`.
+  - Leitura de `docs/backlog.md` com `rtk cat`: 45 linhas, igual a `wc -l`. Uma leitura anterior, feita com `cat` direto no Bash, saiu com 2 linhas em vez de 45. Não reproduzido em três tentativas seguintes; causa não identificada.
+  - `rtk gain`: 956 tokens economizados em 37 comandos (12,3%).
+- **Pendências:** testar `rtk bulk-read` e `rtk code-write` (`RTK.md`, não testados); rastrear a leitura incompleta da primeira tentativa se voltar.
