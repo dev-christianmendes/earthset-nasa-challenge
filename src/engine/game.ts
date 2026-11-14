@@ -44,7 +44,7 @@ export type GameAction =
 
 export type DispatchResult =
   | { readonly ok: true; readonly state: GameState }
-  | { readonly ok: false; readonly reason: string };
+  | { readonly ok: false; readonly reason: string };  // código do motivo (ver src/i18n.ts, chaves reason.*)
 
 export type Outcome = 'playing' | 'won' | 'lost';
 
@@ -75,12 +75,12 @@ const TASK_KINDS: readonly TaskKind[] = ['ice', 'panel', 'antenna'];
 /** Valida e aplica uma ação do jogador. Nunca altera o estado original. */
 export function dispatch(state: GameState, action: GameAction): DispatchResult {
   if (outcomeOf(state) !== 'playing') {
-    return { ok: false, reason: 'a partida já terminou' };
+    return { ok: false, reason: 'match-over' };
   }
   switch (action.type) {
     case 'SET_GREENHOUSE': {
       if (!GREENHOUSE_MODES.includes(action.mode)) {
-        return { ok: false, reason: `modo de estufa inválido: ${String(action.mode)}` };
+        return { ok: false, reason: 'invalid-mode' };
       }
       return {
         ok: true,
@@ -89,7 +89,7 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
     }
     case 'ENQUEUE_TASK': {
       if (!TASK_KINDS.includes(action.kind)) {
-        return { ok: false, reason: `tarefa desconhecida: ${String(action.kind)}` };
+        return { ok: false, reason: 'unknown-task' };
       }
       const reason = rejectTask(state.robot, action.kind, state.installation.panels);
       if (reason !== null) return { ok: false, reason };
@@ -97,12 +97,12 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
     }
     case 'CANCEL_TASK': {
       if (!Number.isInteger(action.index) || action.index < 0 || action.index >= state.robot.queue.length) {
-        return { ok: false, reason: `não há tarefa na posição ${String(action.index)}` };
+        return { ok: false, reason: 'no-task-at-index' };
       }
       return { ok: true, state: { ...state, robot: cancelTask(state.robot, action.index) } };
     }
     default:
-      return { ok: false, reason: 'ação desconhecida' };
+      return { ok: false, reason: 'unknown-action' };
   }
 }
 

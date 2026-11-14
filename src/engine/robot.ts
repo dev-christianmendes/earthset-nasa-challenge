@@ -28,20 +28,21 @@ export function createRobot(): RobotState {
   return { queue: [], antennaInstalled: false };
 }
 
+/** Código do motivo para recusar uma tarefa. A tela traduz o código (src/i18n.ts). */
+export type RejectReason = 'queue-full' | 'panel-limit' | 'antenna-exists';
+
 /** Motivo para recusar a tarefa, ou null se ela pode entrar na fila. */
 export function rejectTask(
   robot: RobotState,
   kind: TaskKind,
   panelsInstalled: number,
-): string | null {
-  if (robot.queue.length >= MAX_QUEUE) return `fila cheia (máximo de ${MAX_QUEUE} tarefas)`;
+): RejectReason | null {
+  if (robot.queue.length >= MAX_QUEUE) return 'queue-full';
   const queuedPanels = robot.queue.filter((t) => t.kind === 'panel').length;
-  if (kind === 'panel' && panelsInstalled + queuedPanels >= MAX_PANELS) {
-    return `limite de ${MAX_PANELS} painéis atingido`;
-  }
+  if (kind === 'panel' && panelsInstalled + queuedPanels >= MAX_PANELS) return 'panel-limit';
   if (kind === 'antenna') {
     const queuedAntenna = robot.queue.some((t) => t.kind === 'antenna');
-    if (robot.antennaInstalled || queuedAntenna) return 'a antena já está instalada ou na fila';
+    if (robot.antennaInstalled || queuedAntenna) return 'antenna-exists';
   }
   return null;
 }

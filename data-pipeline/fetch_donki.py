@@ -1,7 +1,7 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 """Clima espacial de um dia lunar de cenário, pela API NASA DONKI.
 
-Cenário (decisão D1 em docs/arquitetura.md): a janela de 708 h começa em 2024-10-08 00:00 UTC,
+Cenário (decisão D1 em docs/arquitetura.md): a janela de 708 h começa em 2024-10-09 00:00 UTC,
 com Sol acima do horizonte no polo sul em 706 das 709 horas (ver fetch_sun.py); a tempestade geomagnética G4 de 10 a 11/10/2024 cai dentro da janela (a confirmar na DONKI). A partida é um cenário
 histórico, rotulado como tal na tela. Não é previsão.
 
@@ -37,7 +37,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 API = "https://api.nasa.gov/DONKI"
-START_UTC = datetime(2024, 10, 8, 0, 0, tzinfo=timezone.utc)
+START_UTC = datetime(2024, 10, 9, 9, 0, tzinfo=timezone.utc)  # nascer do Sol no morro
 HOURS = 708
 KP_WINDOW_H = 3
 SEP_DURATION_H = 24
@@ -48,7 +48,7 @@ OUT_PATH = ROOT / "src" / "data" / "space-weather.json"
 
 
 def parse_time(text: str) -> datetime:
-    """Horário da DONKI, por exemplo '2024-10-08T18:00Z'."""
+    """Horário da DONKI, por exemplo '2024-10-09T18:00Z'."""
     return datetime.strptime(text.replace("Z", ""), "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc)
 
 
@@ -118,7 +118,7 @@ def main(argv: list[str] | None = None) -> int:
         "start_utc": START_UTC.strftime("%Y-%m-%d %H:%M"),
         "step_hours": 1,
         "hours": HOURS,
-        "source": "NASA DONKI (GST e SEP), cenário de 08/10/2024; ver data-pipeline/fetch_donki.py",
+        "source": "NASA DONKI (GST e SEP), cenário de 09/10/2024; ver data-pipeline/fetch_donki.py",
         "samples": build_samples(gst, sep),
     }
     OUT_PATH.write_text(json.dumps(table, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

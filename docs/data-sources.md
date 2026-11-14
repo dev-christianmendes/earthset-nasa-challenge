@@ -10,7 +10,7 @@ Cada número científico do jogo tem origem aqui. O que for ilustrativo está ma
 | Alvo | Sol (10), efemérides DE441 |
 | Observador | Superfície da Lua (centro 301), lon 0°, lat −89,5°, altitude 0 km. Local **ilustrativo** perto do polo sul |
 | Grandeza | Azimute e elevação aparentes (`QUANTITIES='4'`) |
-| Período | 08/10/2024 00:00 UT até 06/11/2024 12:00 UT, passo de 1 h (708 h, um dia lunar de jogo). Escolhido porque o polo tem Sol nessa janela (706 de 709 h acima do horizonte plano). Em 10/05/2024 o Sol fica abaixo do horizonte o dia inteiro |
+| Período | 09/10/2024 00:00 UT até 06/11/2024 12:00 UT, passo de 1 h (708 h, um dia lunar de jogo). Escolhido porque o polo tem Sol nessa janela (706 de 709 h acima do horizonte plano). Em 10/05/2024 o Sol fica abaixo do horizonte o dia inteiro |
 | Data da consulta | 14/11/2026 |
 | Texto cru | `data-pipeline/raw/horizons_sun_south_pole.txt` (para auditoria) |
 | Tabela do jogo | `src/data/sun-south-pole.json` |
@@ -72,14 +72,14 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 | Item | Valor |
 |---|---|
 | Fonte | NASA DONKI: `GST` (tempestades geomagnéticas, índice Kp de 3 em 3 h, dado da NOAA) e `SEP` (partículas solares energéticas). O endpoint `FLR` respondeu 404 em 14/11/2026, por isso não é usado |
-| Janela | Cenário histórico: 708 h a partir de 08/10/2024 00:00 UTC (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI) (decisão D1 em `docs/arquitetura.md`). Rotulado como cenário na tela. Não é previsão |
+| Janela | Cenário histórico: 708 h a partir de 09/10/2024 00:00 UTC (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI) (decisão D1 em `docs/arquitetura.md`). Rotulado como cenário na tela. Não é previsão |
 | Script | `data-pipeline/fetch_donki.py` (testes em `data-pipeline/tests/test_fetch_donki.py`) |
 | Saída | `src/data/space-weather.json`, lida por `src/engine/space-weather.ts` |
 | Respostas cruas | `data-pipeline/raw/donki_gst.json`, `donki_sep.json` (pequenas; versionadas para auditoria) |
 | Método | Kp marcado em t vale para as 3 horas anteriores, [t-3h, t) (convenção NOAA). Cada SEP marca radiação por 24 h a partir do evento; a duração não vem da DONKI, então 24 h é ilustrativo |
 | Chave | `NASA_API_KEY` no ambiente; sem ela usa `DEMO_KEY`, que tem limite baixo (10 chamadas por hora) |
 
-**Por que 08/10/2024:** o Sol no polo sul depende da estação lunar. Em 10/05/2024 ele fica abaixo do horizonte o dia inteiro (elevação de −0,7° a −1,9°); em 08/10/2024 fica acima em 706 de 709 horas. O clima e o Sol usam a mesma janela. Não é previsão.
+**Por que 09/10/2024:** o Sol no polo sul depende da estação lunar. Em 10/05/2024 ele fica abaixo do horizonte o dia inteiro (elevação de −0,7° a −1,9°); em 09/10/2024 fica acima em 706 de 709 horas. O clima e o Sol usam a mesma janela. Não é previsão.
 
 ## 4. Malha do relevo na cena (V1)
 

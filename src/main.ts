@@ -10,6 +10,8 @@ import { WEATHER } from './data/space-weather';
 import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
 import { camera, frameForViewport, renderer, scene, updateScene } from './render/scene';
 import { renderHud, ui } from './ui/hud';
+import { t } from './i18n';
+import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
 import { mountHorizonPanel } from './ui/horizon-panel';
 
 /** Configuração inicial da base. Valores de equilíbrio do motor (docs/regras-recursos.md). */
@@ -37,9 +39,16 @@ function act(action: GameAction): void {
     game = result.state;
     setMessage('');
   } else {
-    setMessage(result.reason);
+    setMessage(reasonText(result.reason));
   }
   renderHud(game, currentWeather());
+}
+
+/** Texto do motivo de recusa, no idioma atual (o motor manda só o código). */
+function reasonText(code: string): string {
+  const vars: Record<string, number> =
+    code === 'queue-full' ? { max: MAX_QUEUE } : code === 'panel-limit' ? { max: MAX_PANELS } : {};
+  return t(`reason.${code}`, vars);
 }
 
 function setMessage(text: string): void {
@@ -71,7 +80,7 @@ ui.restart.addEventListener('click', () => {
 
 // ---------- Clima espacial (C2) ----------
 
-/** Clima da hora atual do cenário de 08/10/2024 (NASA DONKI). */
+/** Clima da hora atual do cenário de 09/10/2024 (NASA DONKI). */
 function currentWeather(): SpaceWeatherSample {
   return weatherAt(WEATHER, game.clock.hour);
 }
@@ -95,7 +104,7 @@ function frame(now: number): void {
     game = advance(game, seconds * HOURS_PER_SECOND, sunlit(game.clock.hour), currentWeather());
   }
   last = now;
-  updateScene(game, now, sunlit(game.clock.hour));
+  updateScene(game, now, sunlit(game.clock.hour), currentWeather());
   updateHorizon(game.clock.hour);
   renderHud(game, currentWeather());
   renderer.render(scene, camera);

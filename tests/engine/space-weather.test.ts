@@ -32,7 +32,7 @@ describe('clima espacial (C2 e C3)', () => {
 
   it('weatherAt devolve a hora certa e recusa hora negativa', () => {
     const table: SpaceWeatherTable = {
-      start_utc: '2024-10-08 00:00',
+      start_utc: '2024-10-09 00:00',
       step_hours: 1,
       hours: 2,
       samples: [CALM, { kp: 9, radiation: true }, CALM],

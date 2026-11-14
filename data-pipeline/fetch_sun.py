@@ -31,7 +31,7 @@ HORIZONS_URL = "https://ssd.jpl.nasa.gov/api/horizons.api"
 SITE_LON_DEG = 0.0
 SITE_LAT_DEG = -89.5  # base ilustrativa perto do polo sul; ver docs/data-sources.md
 SITE_ALT_KM = 0.0
-START_UTC = "2024-10-08 00:00"  # cenário de 08/10/2024, igual ao clima (D1)
+START_UTC = "2024-10-09 09:00"  # nascer do Sol no morro (hora 33 de 09/10/2024), início do cenário (D1)
 HOURS = 708  # um dia lunar de jogo
 STEP = "1 h"
 

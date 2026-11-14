@@ -26,19 +26,19 @@ describe('fila do robô', () => {
   it('recusa a quinta tarefa', () => {
     const full = withQueue(['ice', 'ice', 'ice', 'ice']);
     expect(full.queue).toHaveLength(MAX_QUEUE);
-    expect(rejectTask(full, 'ice', 2)).toMatch(/fila cheia/);
+    expect(rejectTask(full, 'ice', 2)).toBe('queue-full');
   });
 
   it('recusa painel além do limite, contando os da fila', () => {
     const r = withQueue(['panel']);
-    expect(rejectTask(r, 'panel', MAX_PANELS - 1)).toMatch(/limite/);
+    expect(rejectTask(r, 'panel', MAX_PANELS - 1)).toBe('panel-limit');
     expect(rejectTask(r, 'panel', MAX_PANELS - 2)).toBeNull();
   });
 
   it('recusa segunda antena, na fila ou já instalada', () => {
-    expect(rejectTask(withQueue(['antenna']), 'antenna', 2)).toMatch(/antena/);
+    expect(rejectTask(withQueue(['antenna']), 'antenna', 2)).toBe('antenna-exists');
     const installed: RobotState = { ...createRobot(), antennaInstalled: true };
-    expect(rejectTask(installed, 'antenna', 2)).toMatch(/antena/);
+    expect(rejectTask(installed, 'antenna', 2)).toBe('antenna-exists');
   });
 
   it('cancela pela posição e ignora posição inválida', () => {

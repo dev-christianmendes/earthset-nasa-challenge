@@ -182,7 +182,7 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - Fonte: `LDEM_80S_20M.IMG` (MIT/PDS), 20 m por pixel, polar estereográfica, centro no polo. Confirmada em `https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL`.
   - `data-pipeline/fetch_lola.py`: baixa a faixa de 40 km por HTTP Range (121.660.800 bytes; 7 min 33 s no total, quase tudo na transferência). Calcula 72 raios por posição, com curvatura lunar.
   - `src/data/terrain-sites.json` gerado. `src/engine/terrain.ts` (`horizonAt`, interpolação e volta de 360°) e `src/engine/sun.ts` (`isSunlit` agora recebe o relevo; `SITE_HORIZON_DEG` removido).
-  - Medido (Sol de 15/11/2026): 448 h (peak), 182 h (slope), 0 h (rim). Depois, com a janela de 08/10/2024: 379, 179 e 0 h. O início (slope) começa na sombra, como a captura mostra.
+  - Medido (Sol de 15/11/2026): 448 h (peak), 182 h (slope), 0 h (rim). Depois, com a janela de 09/10/2024: 379, 179 e 0 h. O início (slope) começa na sombra, como a captura mostra.
 - **Comandos e resultados:**
   - `python3 -m unittest discover -s data-pipeline/tests`: 16 testes, OK.
   - `npx vitest run`: 57 testes, OK (`tests/engine/terrain.test.ts` novo, `sun.test.ts` com contagens fixas, `partida.test.ts` ainda passa).
@@ -209,10 +209,10 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 ## 2026-11-14 · Revisão da data do cenário (validação de R-DATA e R-EVT)
 
 - **Motivo:** a janela de 10/05/2024 tem o Sol abaixo do horizonte no polo sul o dia inteiro (elevação de −0,7° a −1,9°). Com ela, a base não teria luz nenhuma, e a tela diria "10 May 2024" sobre uma base sem Sol.
-- **Verificação:** o Horizons foi consultado para cinco datas. Horas com Sol acima do horizonte plano: 12/03/2012, 0; 15/03/2015, 382; 05/09/2017, 4; 08/10/2024, 706; 15/11/2026, 709.
-- **Decisão:** cenário de 08/10/2024 (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI). Mudou `fetch_sun.py` (START_UTC), `fetch_donki.py` (START_UTC), a tabela `src/data/sun-south-pole.json`, os textos da tela e `docs/data-sources.md`.
+- **Verificação:** o Horizons foi consultado para cinco datas. Horas com Sol acima do horizonte plano: 12/03/2012, 0; 15/03/2015, 382; 05/09/2017, 4; 09/10/2024, 706; 15/11/2026, 709.
+- **Decisão:** cenário de 09/10/2024 (tempestade G4 de 10 a 11/10/2024, a confirmar na DONKI). Mudou `fetch_sun.py` (START_UTC), `fetch_donki.py` (START_UTC), a tabela `src/data/sun-south-pole.json`, os textos da tela e `docs/data-sources.md`.
 - **Comandos e resultados:**
-  - `python3 data-pipeline/fetch_sun.py`: 709 amostras, de 08/10/2024.
+  - `python3 data-pipeline/fetch_sun.py`: 709 amostras, de 09/10/2024.
   - `python3 -m unittest discover -s data-pipeline/tests`: 22 testes, OK. Os testes do Sol que usam a amostra fixa de 2026 foram mantidos, porque a fixture é de 2026.
   - `npx vitest run`: 63 testes, OK, com as contagens atualizadas (pico 379 h, encosta 179 h, borda 0 h).
 - **Pendente:** `src/data/space-weather.json` (DONKI, bloqueado pelo limite do DEMO_KEY). Sem ele, o typecheck segue falhando.
@@ -220,7 +220,7 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 ## 2026-11-14 · Dados na tela: relevo LOLA, painel polar e clima (C2 concluído)
 
 - **Chave NASA:** recebida do autor no meio da tarefa. Usada só como variável de ambiente no comando de `fetch_donki.py`; não está em nenhum arquivo do projeto (verificado com grep).
-- **Data do cenário:** 08/10/2024 (ver a revisão anterior em `docs/execution-log.md`).
+- **Data do cenário:** 09/10/2024 (ver a revisão anterior em `docs/execution-log.md`).
 - **Arquivos:** `src/data/terrain-mesh.json` e `src/data/terrain-mesh.ts` (novos), `data-pipeline/fetch_lola.py` (função `build_mesh`, gera a malha), `src/render/scene.ts` (terreno do LOLA no lugar do relevo ilustrativo; crateras inventadas removidas), `src/ui/horizon-panel.ts` (novo, painel polar), `src/main.ts`, `index.html` (painel e rodapé com exagero de 2×), `docs/backlog.md`, `docs/arquitetura.md`, `docs/data-sources.md` (seção 4).
 - **Clima:** `python3 data-pipeline/fetch_donki.py` com a chave: `src/data/space-weather.json` gerado. Kp máximo 8,67 (G4), primeira hora com Kp ≥ 5 na hora 63, 82 h de radiação.
 - **Comandos e resultados:**
@@ -233,5 +233,23 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
   - A partida começa na hora 0, com o Sol abaixo do horizonte (elevação de −0,01°). A cena começa escura. Falta decidir o horário inicial (ver resposta ao autor).
   - O relevo de 400 m com 30 m de variação mal aparece de longe; a câmera atual enquadra a base, não o relevo.
   - O efeito visual da tempestade (céu, luz, painéis) não existe; só o texto no HUD.
+- **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · Indicações seguidas: início com Sol, tempestade visível e interface em inglês
+
+- **Início com Sol:** o Sol no morro chega primeiro na hora 33 de 08/10/2024. O cenário passou a começar no nascer do Sol: **09/10/2024 às 09:00 UTC**. `fetch_sun.py` e `fetch_donki.py` usam essa data. Resultado: Sol no morro em 412 de 709 h, com o início já iluminado. A tempestade G4 cai na hora 30. Os testes do DONKI deixaram de depender da data fixa.
+- **Tempestade na cena:** os painéis perdem brilho pela fração de geração (`solarFactor`); o farol do robô fica vermelho durante a radiação; o texto do clima fica vermelho com tempestade. Verificado com um teste temporário (início na hora 36, Kp 9, radiação), revertido em seguida.
+- **Interface em inglês:** `src/i18n.ts` com dicionário em inglês e português, chaves iguais nos dois idiomas (`tests/i18n.test.ts`). Padrão: inglês; botão "Português" no HUD; escolha guardada no navegador (com falha silenciosa). O modo escola tem textos nos dois idiomas (`src/school.ts`). Motivos de recusa do motor viraram códigos (`reason.*`), traduzidos na tela.
+- **Chave NASA:** usada só como variável de ambiente no comando de `fetch_donki.py`. Não está em nenhum arquivo (verificado com grep antes do commit).
+- **Comandos e resultados:**
+  - `npm run typecheck`: passou.
+  - `npx vitest run`: 65 testes, OK (inclui os de idioma e de modo escola).
+  - `python3 -m unittest discover -s data-pipeline/tests`: 22 testes, OK.
+  - `npm run build`: passou.
+  - Capturas: `desktop-storm.png` (tempestade), `desktop-en.png` (inglês padrão), `desktop-pt.png` (português, forçado temporariamente e revertido).
+- **Achados:**
+  - Há radiação já na hora 0 (SEP no início do cenário). O HUD mostra "radiation: robot paused" no início. É dado real do cenário, não bug.
+  - O texto em inglês do modo escola e do painel polar foi conferido só por teste, sem captura. Vale uma captura antes do vídeo.
+  - O equilíbrio com o novo início não foi revisto (B2.3). Os testes de partida passam.
 - **Commit:** feito localmente, sem push.
 

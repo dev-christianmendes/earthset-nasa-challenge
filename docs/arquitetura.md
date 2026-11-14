@@ -41,7 +41,7 @@ Prêmios em foco (de `event-rules.md`, seção 4): **Best Use of Data**, **Best 
 | R-ALERT | Alerta de recurso baixo | Feito (B3.1); revisão de copy falta |
 | R-VIS | Cena bonita: relevo real, base com modelos, Terra, estrelas, luz do Sol real, robô animado | Parcial (B3.3); **refazer com o relevo LOLA (V1–V4)** |
 | R-LOG | Diário da base: registro de cada evento e decisão, em texto curto | **Falta (I3)** |
-| R-LANG | Interface em português do Brasil; página de envio e materiais em inglês | Em vigor |
+| R-LANG | Interface abre em inglês, com botão para português do Brasil; página de envio e materiais em inglês | **Feito** (`src/i18n.ts`, chaves iguais nos dois idiomas, testadas) |
 | R-TEST | Motor testado; partidas completas; pipeline de dados testado | Em vigor (52 testes motor/UI, 5 pipeline) |
 | R-LEGAL | Sem marca NASA; sem menor identificável; dado com fonte | Em vigor (`AGENTS.md`, regras 3, 8, 10) |
 | R-DEMO | Demo de 30 s e 7 slides, em inglês | **Falta (B4)** |
@@ -120,7 +120,7 @@ Regras de dado (de `AGENTS.md`):
 
 | # | Decisão | Proposta | Quem decide |
 |---|---|---|---|
-| D1 | Qual período real o DONKI usa, já que a partida se passa no futuro | Cenário histórico: uma janela de 708 h com um evento forte já registrado (decidido: 8 de outubro de 2024, ver docs/data-sources.md, seção 3). Rotular como cenário na tela | Autor |
+| D1 | Qual período real o DONKI usa, já que a partida se passa no futuro | Cenário histórico: uma janela de 708 h com um evento forte já registrado (decidido: 9 de outubro de 2024, ver docs/data-sources.md, seção 3). Rotular como cenário na tela | Autor |
 | D2 | Chave da API NASA | `DEMO_KEY` para teste; chave própria para o envio | Autor |
 | D3 | Tamanho do recorte LOLA | Um recorte de ~20 km no polo sul, reduzido para malha de 256 px | Claude (técnico) |
 

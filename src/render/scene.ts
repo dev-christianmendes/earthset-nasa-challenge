@@ -2,6 +2,7 @@
 // Cena three.js: relevo, céu, base, robô e luz. Só desenha o estado recebido; regra fica no motor.
 import * as THREE from 'three';
 import type { GameState } from '../engine/game';
+import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 import { MAX_PANELS, isWorking } from '../engine/robot';
 import { sampleAt } from '../engine/sun';
 import { SUN } from '../data/sun';
@@ -19,6 +20,7 @@ export const PALETTE = {
   panel: 0x3f7fd0,
   panelGlow: 0x0c2446,
   metal: 0xdfe4ec,
+  beacon: 0x7fd7ff,
   robot: 0xffc857,
   track: 0x2a2c33,
   sunlight: 0xfff1d6,
@@ -268,10 +270,8 @@ const mast = new THREE.Mesh(
 );
 mast.position.set(0.3, 0.8, 0);
 robot.add(mast);
-const beacon = new THREE.Mesh(
-  new THREE.SphereGeometry(0.08, 12, 8),
-  new THREE.MeshStandardMaterial({ color: 0x7fd7ff, emissive: 0x7fd7ff, emissiveIntensity: 1.5 }),
-);
+const beaconMat = new THREE.MeshStandardMaterial({ color: PALETTE.beacon, emissive: PALETTE.beacon, emissiveIntensity: 1.5 });
+const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 8), beaconMat);
 beacon.position.set(0.3, 1.1, 0);
 robot.add(beacon);
 // Escala maior que o modelo original: o robô precisa ser legível na tela de 1280 px.
@@ -280,7 +280,7 @@ scene.add(robot);
 
 // ---------- Atualização por quadro ----------
 
-export function updateScene(state: GameState, now: number, lit: boolean): void {
+export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample): void {
   // Direção do Sol a partir do azimute (norte = -z, leste = +x) e da elevação reais.
   const { az, el } = sampleAt(SUN, state.clock.hour);
   const azRad = (az * Math.PI) / 180;
@@ -318,6 +318,11 @@ export function updateScene(state: GameState, now: number, lit: boolean): void {
     robot.position.set(9, 0, 4);
   }
   robotBodyMat.emissiveIntensity = working ? 1 : 0.2;
+  // Tempestade: os painéis perdem brilho na proporção da geração (ver solarFactor).
+  panelMat.emissiveIntensity = 0.6 * solarFactor(stormLevel(weather.kp));
+  // Radiação de partículas solares: o farol do robô fica vermelho enquanto dura.
+  beaconMat.color.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
+  beaconMat.emissive.setHex(weather.radiation ? 0xff5a5a : PALETTE.beacon);
   beacon.visible = !working || Math.sin(t * 4) > -0.2;
 }
 

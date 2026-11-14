@@ -1,18 +1,18 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// HUD em DOM: lê o estado do motor e mostra; o modo escola e os alertas moram aqui. Sem regra de jogo.
+// HUD em DOM: lê o estado do motor e mostra; modo escola, alertas e idioma moram aqui. Sem regra de jogo.
 import type { GameState } from '../engine/game';
 import { outcomeOf } from '../engine/game';
 import { MAX_PANELS, MAX_QUEUE, type TaskKind } from '../engine/robot';
 import { MATCH_HOURS } from '../engine/clock';
 import type { GreenhouseMode } from '../engine/resources';
-import { EXPLANATIONS, SCHOOL_LABELS, type Explanation } from '../school';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
+import { EXPLANATIONS, HINT_TITLES, SCHOOL_LABELS } from '../school';
+import { applyStatic, getLang, loadLang, setLang, t, type Lang } from '../i18n';
 
-export const TASK_LABEL: Record<TaskKind, string> = { ice: 'Gelo', panel: 'Painel', antenna: 'Antena' };
-export const GREENHOUSE_LABEL: Record<GreenhouseMode, string> = {
-  off: 'Desligada',
-  always: 'Sempre ligada',
-  surplus: 'Só com sobra',
+const GREENHOUSE_KEYS: Record<GreenhouseMode, string> = {
+  off: 'greenhouse.off',
+  always: 'greenhouse.always',
+  surplus: 'greenhouse.surplus',
 };
 
 // ---------- Elementos da tela ----------
@@ -44,28 +44,33 @@ export const ui = {
   overlayText: el('overlay-text'),
   restart: el('restart'),
 };
-
-for (const mode of Object.keys(GREENHOUSE_LABEL) as GreenhouseMode[]) {
-  const opt = document.createElement('option');
-  opt.value = mode;
-  opt.textContent = GREENHOUSE_LABEL[mode];
-  ui.greenhouse.appendChild(opt);
-}
-
-// ---------- Modo escola (B3.4) ----------
-
 const schoolToggle = el<HTMLInputElement>('school-mode');
+const langButton = el<HTMLButtonElement>('lang');
 
-// Guarda o texto normal de cada rótulo, para voltar a ele ao desligar o modo escola.
-for (const node of document.querySelectorAll<HTMLElement>('[data-label]')) {
-  node.dataset.normal = node.textContent ?? '';
+// ---------- Idioma ----------
+
+/** Opções da estufa, no idioma atual (mantém o modo escolhido). */
+function buildGreenhouseOptions(): void {
+  const keep = ui.greenhouse.value;
+  ui.greenhouse.replaceChildren(
+    ...(Object.keys(GREENHOUSE_KEYS) as GreenhouseMode[]).map((mode) => {
+      const opt = document.createElement('option');
+      opt.value = mode;
+      opt.textContent = t(GREENHOUSE_KEYS[mode]);
+      return opt;
+    }),
+  );
+  if (keep) ui.greenhouse.value = keep;
 }
 
-function fillHint(node: HTMLElement, text: Explanation): void {
+function fillHint(node: HTMLElement, lang: Lang): void {
+  const text = EXPLANATIONS[node.dataset.hint ?? '']?.[lang];
+  if (!text) return;
+  const titles = HINT_TITLES[lang];
   const lines: Array<[string, string]> = [
-    ['O que é: ', text.what],
-    ['Por que muda: ', text.why],
-    ['Fonte: ', text.source],
+    [titles.what, text.what],
+    [titles.why, text.why],
+    [titles.source, text.source],
   ];
   node.replaceChildren(
     ...lines.map(([title, body]) => {
@@ -77,21 +82,33 @@ function fillHint(node: HTMLElement, text: Explanation): void {
     }),
   );
 }
-for (const node of document.querySelectorAll<HTMLElement>('[data-hint]')) {
-  const text = EXPLANATIONS[node.dataset.hint ?? ''];
-  if (text) fillHint(node, text);
-}
+
+// ---------- Modo escola (B3.4) ----------
 
 function applySchoolMode(on: boolean): void {
+  const lang = getLang();
   document.body.classList.toggle('school', on);
   for (const node of document.querySelectorAll<HTMLElement>('[data-label]')) {
-    const school = SCHOOL_LABELS[node.dataset.label ?? ''];
-    node.textContent = on && school ? school : (node.dataset.normal ?? '');
+    const school = SCHOOL_LABELS[node.dataset.label ?? '']?.[lang];
+    node.textContent = on && school ? school : t(node.dataset.i18n ?? '');
   }
 }
+
+/** Troca o idioma de tudo que está na tela. A cena não tem texto. */
+export function applyLanguage(lang: Lang): void {
+  setLang(lang);
+  applyStatic();
+  buildGreenhouseOptions();
+  for (const node of document.querySelectorAll<HTMLElement>('[data-hint]')) fillHint(node, lang);
+  applySchoolMode(schoolToggle.checked);
+  langButton.textContent = t('hud.lang');
+}
+
 schoolToggle.addEventListener('change', () => applySchoolMode(schoolToggle.checked));
-// O navegador pode lembrar o estado da caixa ao recarregar a página.
-applySchoolMode(schoolToggle.checked);
+langButton.addEventListener('click', () => applyLanguage(getLang() === 'en' ? 'pt' : 'en'));
+
+// Ao carregar: idioma guardado (padrão inglês) e modo escola (o navegador pode lembrar a caixa).
+applyLanguage(loadLang());
 
 // ---------- HUD ----------
 
@@ -119,29 +136,38 @@ export function renderHud(state: GameState, weather: SpaceWeatherSample): void {
   setBar(ui.waterBar, ui.waterVal, pct(vitals.water, 100), `${Math.round(vitals.water)}`, vitals.water < LOW_ALERT_PERCENT.water);
   setBar(ui.foodBar, ui.foodVal, pct(vitals.food, 100), `${Math.round(vitals.food)}`, vitals.food < LOW_ALERT_PERCENT.food);
 
-  ui.panels.textContent = `${installation.panels} de ${MAX_PANELS}`;
+  ui.panels.textContent = `${installation.panels} / ${MAX_PANELS}`;
 
   const level = stormLevel(weather.kp);
-  const storm = level === 0 ? 'clima calmo' : `tempestade G${level}, painéis a ${Math.round(solarFactor(level) * 100)}%`;
-  ui.space.textContent = weather.radiation ? `${storm} · radiação: robô parado` : storm;
+  const storm =
+    level === 0
+      ? t('space.calm')
+      : t('space.storm', { level, percent: Math.round(solarFactor(level) * 100) });
+  ui.space.textContent = weather.radiation ? t('space.radiation', { storm }) : storm;
+  ui.space.classList.toggle('storm', level > 0 || weather.radiation);
   ui.greenhouse.value = installation.greenhouse;
 
+  const taskLabel = (kind: TaskKind): string => t(`task.${kind}`);
   ui.queue.replaceChildren();
   if (r.queue.length === 0) {
     const li = document.createElement('li');
     li.className = 'empty';
-    li.textContent = 'Robô ocioso';
+    li.textContent = t('hud.idle');
     ui.queue.appendChild(li);
   }
   r.queue.forEach((task, index) => {
     const li = document.createElement('li');
     const label = document.createElement('span');
-    label.textContent = `${index + 1}. ${TASK_LABEL[task.kind]} · ${task.hoursLeft.toFixed(1)} h`;
+    label.textContent = t('hud.queueItem', {
+      n: index + 1,
+      task: taskLabel(task.kind),
+      hours: task.hoursLeft.toFixed(1),
+    });
     const cancel = document.createElement('button');
     cancel.type = 'button';
     cancel.dataset.cancel = String(index);
     cancel.textContent = '×';
-    cancel.setAttribute('aria-label', `Cancelar ${TASK_LABEL[task.kind]}`);
+    cancel.setAttribute('aria-label', t('hud.cancel', { task: taskLabel(task.kind) }));
     li.append(label, cancel);
     ui.queue.appendChild(li);
   });
@@ -154,11 +180,10 @@ export function renderHud(state: GameState, weather: SpaceWeatherSample): void {
   const outcome = outcomeOf(state);
   ui.overlay.hidden = outcome === 'playing';
   if (outcome === 'lost') {
-    ui.overlayTitle.textContent = 'A base foi perdida';
-    ui.overlayText.textContent = `Os corações acabaram na hora ${Math.floor(clock.hour)}. Sem energia, ar, água ou comida por tempo demais.`;
+    ui.overlayTitle.textContent = t('overlay.lost.title');
+    ui.overlayText.textContent = t('overlay.lost.text', { hour: Math.floor(clock.hour) });
   } else if (outcome === 'won') {
-    ui.overlayTitle.textContent = 'Um dia lunar sobrevivido';
-    ui.overlayText.textContent = `A base chegou às ${MATCH_HOURS} horas com ${hearts} de 3 corações.`;
+    ui.overlayTitle.textContent = t('overlay.won.title');
+    ui.overlayText.textContent = t('overlay.won.text', { hours: MATCH_HOURS, hearts });
   }
 }
-

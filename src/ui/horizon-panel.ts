@@ -4,6 +4,7 @@
 import { isSunlit, sampleAt, type SunTable } from '../engine/sun';
 import type { TerrainTable } from '../engine/terrain';
 import type { Site } from '../engine/resources';
+import { getLang, t } from '../i18n';
 
 const SIZE = 240;
 const C = SIZE / 2;
@@ -40,7 +41,7 @@ export function mountHorizonPanel(
   site: Site,
 ): (hour: number) => void {
   const svg = el('svg', { viewBox: `0 0 ${SIZE} ${SIZE}`, width: SIZE, height: SIZE, role: 'img' }) as SVGSVGElement;
-  svg.setAttribute('aria-label', 'Horizonte medido no morro e trajetória do Sol');
+  svg.setAttribute('aria-label', t('horizon.svg'));
 
   svg.append(el('circle', { cx: C, cy: C, r: R, fill: 'rgba(10,14,24,0.6)', stroke: 'rgba(255,255,255,0.18)' }));
   svg.append(el('circle', { cx: C, cy: C, r: radiusFor(30), fill: 'none', stroke: 'rgba(255,255,255,0.10)', 'stroke-dasharray': '2 3' }));
@@ -75,11 +76,18 @@ export function mountHorizonPanel(
 
   const caption = document.createElement('p');
   caption.className = 'cap';
-  caption.textContent = `Sol no morro: ${litHours} de ${sun.samples.length} h acima do horizonte medido. Horizonte: LRO LOLA. Sol: JPL Horizons.`;
+  const captionFor = (): string => t('horizon.caption', { lit: litHours, total: sun.samples.length });
+  caption.textContent = captionFor();
   root.append(caption);
 
+  let shownLang = getLang();
   let lastHour = -1;
   return (hour: number) => {
+    if (getLang() !== shownLang) {
+      shownLang = getLang();
+      caption.textContent = captionFor();
+      svg.setAttribute('aria-label', t('horizon.svg'));
+    }
     const h = Math.floor(hour);
     if (h === lastHour) return;
     lastHour = h;

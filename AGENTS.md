@@ -23,7 +23,7 @@ Este é o ponto de entrada para **qualquer agente de IA** neste repositório (Cl
 4. **Verificação antes de "pronto".** Pronto = `npm run typecheck`, `npm run test`, `npm run build` passando, e a tela vista se o item mexeu em tela (screenshot desktop e celular).
 5. **Cabeçalho de IA** em todo `.ts` criado ou alterado com IA. Primeira linha:
    `// Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.`
-6. **Textos em português do Brasil** na interface e na documentação. A página de envio e os materiais linkados ficam em **inglês** (`docs/event-rules.md`).
+6. **Idioma**: a interface abre em **inglês** (padrão para o vídeo e os jurados) e tem botão para **português do Brasil**. A documentação do repositório fica em português. A página de envio e os materiais linkados ficam em **inglês** (`docs/event-rules.md`). Decisão do autor em 14/11/2026, ver `docs/arquitetura.md`, R-LANG.
 7. **Nada sai da máquina.** Sem `git push`, sem publicação, sem commit sem pedido explícito do autor. Criar arquivos (inclusive workflows de CI) é permitido; enviar, não.
 8. **Sem marca da NASA** (logotipo, insígnia, bandeira ou patch) em assets ou na tela.
 9. **Registro.** Cada etapa técnica entra em `docs/execution-log.md`, com comandos e resultados, inclusive falhas.

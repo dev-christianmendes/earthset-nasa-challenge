@@ -45,9 +45,9 @@ class TableTest(unittest.TestCase):
 
     def test_parametros_cobrem_um_dia_lunar(self):
         p = fetch_sun.build_params()
-        self.assertEqual(p["START_TIME"], "'2024-10-08 00:00'")
+        self.assertEqual(p["START_TIME"], "'2024-10-09 09:00'")
         # 708 h depois de 15/11 00:00 UT é 14/12 12:00 UT
-        self.assertEqual(p["STOP_TIME"], "'2024-11-06 12:00'")
+        self.assertEqual(p["STOP_TIME"], "'2024-11-07 21:00'")
         self.assertEqual(p["QUANTITIES"], "'4'")
 
 

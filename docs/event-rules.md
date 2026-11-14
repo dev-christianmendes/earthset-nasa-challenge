@@ -87,7 +87,7 @@ Fonte: FAQ, "Can participants under the age of 18 participate?".
 ## 7. Regras do projeto (não vêm do evento)
 
 - **Marca da NASA**: nenhum logotipo, insígnia, bandeira ou patch da NASA nos assets nem na tela (`AGENTS.md`).
-- **Textos**: a interface e a documentação ficam em português do Brasil; a página de envio e os materiais linkados ficam em **inglês**.
+- **Textos**: a interface abre em inglês e tem botão para português (decisão do autor, 14/11/2026); a documentação fica em português; a página de envio e os materiais linkados ficam em **inglês**.
 - **Commits**: sem `git push` nem publicação sem pedido explícito do autor (`AGENTS.md`, princípio 9).
 
 ## 8. Pontos em aberto (a confirmar)
