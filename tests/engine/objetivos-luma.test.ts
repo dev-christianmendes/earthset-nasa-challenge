@@ -52,14 +52,30 @@ describe('ordem de abrigo da tripulação', () => {
 });
 
 describe('LUMA (guia por regras)', () => {
-  it('sem perigo, recomenda o próximo objetivo', () => {
+  it('sem perigo, orienta o passo do capítulo atual e aponta o sistema do rover', () => {
     const g = createGame({ installation: INST });
-    expect(lumaAdvice(g, null).key).toBe('luma.next.panels');
+    const a = lumaAdvice(g, null);
+    expect(a.key).toBe('luma.chapter.1');
+    expect(a.action).toBe('rover');
+    expect(a.severity).toBe('info');
+  });
+
+  it('com a primeira missão na fila, acompanha a operação em vez de repetir o pedido', () => {
+    const r = dispatch(createGame({ installation: INST }), { type: 'ENQUEUE_TASK', kind: 'ice' });
+    if (!r.ok) throw new Error('recusado');
+    expect(lumaAdvice(r.state, null).key).toBe('luma.chapter.1.wait');
+  });
+
+  it('no modo Comandante (só alertas), sem perigo fica em silêncio operacional', () => {
+    const g = createGame({ installation: INST });
+    expect(lumaAdvice(g, null, 'critical').key).toBe('luma.quiet');
+    const low = { ...g, vitals: { ...g.vitals, water: 5 } };
+    expect(lumaAdvice(low, null, 'critical')).toMatchObject({ key: 'luma.low.water', action: 'rover' });
   });
 
   it('com tempestade anunciada, avisa com as horas restantes', () => {
     const g = createGame({ installation: INST });
-    expect(lumaAdvice(g, 3)).toEqual({ key: 'luma.storm', vars: { hours: 3 } });
+    expect(lumaAdvice(g, 3)).toEqual({ key: 'luma.storm', vars: { hours: 3 }, severity: 'warning', action: 'crew' });
   });
 
   it('com recurso crítico, pede atenção ao recurso mais baixo', () => {

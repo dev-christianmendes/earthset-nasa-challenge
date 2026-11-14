@@ -45,6 +45,8 @@ export interface GameState {
   readonly greenhouseHours: number;
   /** Ordem do jogador para a tripulação: automática (trabalha) ou abrigar (fica dentro). */
   readonly crewOrder: CrewOrder;
+  /** Missões do robô concluídas, por tipo (capítulos e eventos da LUMA leem daqui). */
+  readonly missionsDone: Readonly<Record<TaskKind, number>>;
 }
 
 export type CrewOrder = 'auto' | 'shelter';
@@ -76,6 +78,7 @@ export function createGame(options: NewGameOptions): GameState {
     crew: createCrew(),
     greenhouseHours: 0,
     crewOrder: 'auto',
+    missionsDone: { ice: 0, panel: 0, antenna: 0 },
   };
 }
 
@@ -154,7 +157,9 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
 
   let installation = state.installation;
   let water = drained.water;
+  let missionsDone = state.missionsDone;
   for (const kind of progress.completed) {
+    missionsDone = { ...missionsDone, [kind]: missionsDone[kind] + 1 };
     if (kind === 'ice') water = Math.min(100, water + ICE_WATER_PER_TRIP);
     if (kind === 'panel') installation = { ...installation, panels: installation.panels + 1 };
   }
@@ -185,5 +190,6 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     crew: crewStep.crew,
     greenhouseHours: harvest.accumulated,
     crewOrder: state.crewOrder,
+    missionsDone,
   };
 }
