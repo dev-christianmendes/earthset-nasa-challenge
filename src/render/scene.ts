@@ -3,12 +3,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GameState } from '../engine/game';
+import { isGreenhouseOn } from '../engine/resources';
 import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
 import { MAX_PANELS, TASK_HOURS, isWorking, type TaskKind } from '../engine/robot';
 import { sampleAt } from '../engine/sun';
 import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
-import { attachModel } from './assets';
+import { attachModel, loadModel } from './assets';
 
 /** Paleta da cena. O azul de destaque é o mesmo --accent do HUD (index.html). */
 export const PALETTE = {
@@ -348,49 +349,139 @@ function surfaceHeight(x: number, z: number): number {
   return (top * (1 - dj) + bottom * dj) * VERTICAL_EXAGGERATION;
 }
 
+/** Posição atual do rover (acompanha a posição de destino; anda devagar ao voltar de uma tarefa cancelada). */
+const roverAt = { x: DOCK.x, z: DOCK.z };
+const ROVER_WALK_SPEED = 4; // m/s, só para voltar à base depois de cancelar
+let lastNow = 0;
+
 /**
  * Posiciona o rover pela tarefa da frente da fila. Progresso p = 1 − horas restantes / horas da tarefa:
  * sai da base (0 a 35%), trabalha no local (35 a 65%), volta (65 a 100%). O motor não modela viagem;
  * o tempo de viagem é a parte visual do tempo de tarefa.
+ * Sem tarefa em andamento (ou depois de cancelar), o rover caminha de volta à base.
  */
-function placeRover(state: GameState, t: number): { working: boolean; moving: boolean } {
+function placeRover(state: GameState, t: number, dt: number): { working: boolean; moving: boolean; workSite: { x: number; z: number } | null } {
   const task = state.robot.queue[0];
   const working = isWorking(state.robot, state.vitals.battery);
   if (!task || !working) {
-    robot.position.set(DOCK.x, surfaceHeight(DOCK.x, DOCK.z), DOCK.z);
-    return { working: false, moving: false };
+    const dx = DOCK.x - roverAt.x;
+    const dz = DOCK.z - roverAt.z;
+    const dist = Math.hypot(dx, dz);
+    const step = Math.min(dist, ROVER_WALK_SPEED * dt);
+    if (dist > 1e-3) {
+      roverAt.x += (dx / dist) * step;
+      roverAt.z += (dz / dist) * step;
+      robot.rotation.y = Math.atan2(-dz, dx);
+    }
+    robot.position.set(roverAt.x, surfaceHeight(roverAt.x, roverAt.z), roverAt.z);
+    return { working: false, moving: step > 0, workSite: null };
   }
   const p = Math.min(1, Math.max(0, 1 - task.hoursLeft / TASK_HOURS[task.kind]));
   const site = SITE[task.kind];
   const OUT = 0.35;
   const BACK = 0.65;
-  // Destino do trecho atual: local da tarefa na ida, base na volta; parado no local durante o trabalho.
   let from = DOCK;
   let to = site;
   let k = 0;
   let moving = true;
+  let workSite: { x: number; z: number } | null = null;
   if (p < OUT) {
     k = p / OUT;
   } else if (p < BACK) {
     from = site;
     to = site;
-    k = 0;
     moving = false;
+    workSite = site;
   } else {
     from = site;
     to = DOCK;
     k = (p - BACK) / (1 - BACK);
   }
-  const x = from.x + (to.x - from.x) * k;
-  const z = from.z + (to.z - from.z) * k;
-  robot.position.set(x, surfaceHeight(x, z) + (moving ? 0.02 * Math.sin(t * 8) : 0), z);
+  roverAt.x = from.x + (to.x - from.x) * k;
+  roverAt.z = from.z + (to.z - from.z) * k;
+  robot.position.set(roverAt.x, surfaceHeight(roverAt.x, roverAt.z) + (moving ? 0.02 * Math.sin(t * 8) : 0), roverAt.z);
   if (moving) {
     // Rumo: +x é a frente do modelo. Aponta para o destino do trecho.
-    const dx = to.x - from.x;
-    const dz = to.z - from.z;
-    robot.rotation.y = Math.atan2(-dz, dx);
+    robot.rotation.y = Math.atan2(-(to.z - from.z), to.x - from.x);
   }
-  return { working: true, moving };
+  return { working: true, moving, workSite };
+}
+
+// ---------- Tripulação: dois astronautas que reagem ao estado do motor ----------
+
+interface Crew {
+  node: THREE.Object3D | null;
+  x: number;
+  z: number;
+  home: { x: number; z: number };
+  moving: boolean;
+  legs: THREE.Object3D[];
+  arms: THREE.Object3D[];
+}
+
+const crew: Crew[] = [
+  { node: null, x: -3.6, z: 4.4, home: { x: -3.6, z: 4.4 }, moving: false, legs: [], arms: [] },
+  { node: null, x: 2.6, z: 4.6, home: { x: 2.6, z: 4.6 }, moving: false, legs: [], arms: [] },
+];
+const CREW_WALK_SPEED = 1.3; // m/s
+
+/** Anda até (tx, tz) e devolve se ainda está andando. */
+function walkCrew(member: Crew, tx: number, tz: number, dt: number): void {
+  const dx = tx - member.x;
+  const dz = tz - member.z;
+  const dist = Math.hypot(dx, dz);
+  member.moving = dist > 0.05;
+  if (member.moving) {
+    const step = Math.min(dist, CREW_WALK_SPEED * dt);
+    member.x += (dx / dist) * step;
+    member.z += (dz / dist) * step;
+  }
+  if (member.node) {
+    member.node.position.set(member.x, surfaceHeight(member.x, member.z), member.z);
+    if (dist > 0.05) member.node.rotation.y = Math.atan2(dx, dz); // a frente do astronauta é +Z
+  }
+}
+
+function animateCrew(member: Crew, t: number): void {
+  const swing = member.moving ? Math.sin(t * 7) * 0.55 : 0;
+  member.legs.forEach((leg, i) => (leg.rotation.x = i === 0 ? swing : -swing));
+  member.arms.forEach((arm, i) => (arm.rotation.x = i === 0 ? -swing : swing));
+}
+
+/** Astronautas: o da estufa cuida dela quando ela está ligada; o outro ajuda o rover no local da tarefa. */
+function updateCrew(state: GameState, t: number, dt: number, workSite: { x: number; z: number } | null): void {
+  const greenhouseRunning = isGreenhouseOn(state.vitals, state.installation);
+  const [keeper, helper] = crew;
+  if (greenhouseRunning) {
+    const phase = Math.floor(t / 4) % 2 === 0;
+    walkCrew(keeper, phase ? -3.9 : -4.8, phase ? 4.7 : 5.6, dt);
+  } else {
+    walkCrew(keeper, keeper.home.x, keeper.home.z, dt);
+  }
+  if (workSite) {
+    walkCrew(helper, workSite.x + 1.1, workSite.z + 0.4, dt);
+  } else {
+    walkCrew(helper, helper.home.x, helper.home.z, dt);
+  }
+  for (const member of crew) animateCrew(member, t);
+}
+
+/** Carrega o modelo do astronauta duas vezes (cada uma é uma cópia independente). */
+export function loadCrewModels(): Promise<unknown> {
+  return Promise.all(
+    crew.map((member) =>
+      loadModel('astronaut').then((source) => {
+        const node = source.clone(true);
+        node.traverse((obj) => {
+          obj.castShadow = true;
+        });
+        scene.add(node);
+        member.node = node;
+        member.legs = ['leg_L', 'leg_R'].map((name) => node.getObjectByName(name)).filter((o): o is THREE.Object3D => o !== undefined);
+        member.arms = ['arm_L', 'arm_R'].map((name) => node.getObjectByName(name)).filter((o): o is THREE.Object3D => o !== undefined);
+      }),
+    ),
+  );
 }
 
 /** Marcador do gelo no local da tarefa de gelo (item de missão). Visível enquanto há tarefa de gelo na fila. */
@@ -429,7 +520,10 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   baseAntenna.visible = state.robot.antennaInstalled;
 
   const t = now / 1000;
-  const { working, moving } = placeRover(state, t);
+  const dt = lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
+  lastNow = now;
+  const { working, moving, workSite } = placeRover(state, t, dt);
+  updateCrew(state, t, dt, workSite);
   robotBodyMat.emissiveIntensity = working ? 1 : 0.2;
   // Tempestade: os painéis perdem brilho na proporção da geração (ver solarFactor).
   panelMat.emissiveIntensity = 0.6 * solarFactor(stormLevel(weather.kp));

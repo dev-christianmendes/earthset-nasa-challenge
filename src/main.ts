@@ -8,7 +8,7 @@ import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
 import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
-import { camera, controls, frameForViewport, loadBaseModels, renderer, resetView, scene, updateScene } from './render/scene';
+import { camera, controls, frameForViewport, loadBaseModels, loadCrewModels, renderer, resetView, scene, updateScene } from './render/scene';
 import { applyLanguage, renderHud, ui } from './ui/hud';
 import { getLang } from './i18n';
 import { t } from './i18n';
@@ -101,13 +101,15 @@ let last: number | null = null;
 let hudDueAt = 0;
 /** A partida só avança depois de "Nova missão" (tela inicial). */
 let started = false;
+/** Pausa: a simulação para; a cena continua desenhando. Esc alterna. */
+let paused = false;
 /** Intervalo de atualização do HUD (ms). Ações do jogador atualizam na hora. */
 const HUD_INTERVAL_MS = 100;
 
 const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, INSTALLATION.site);
 
 function frame(now: number): void {
-  if (started && last !== null && outcomeOf(game) === 'playing') {
+  if (started && !paused && last !== null && outcomeOf(game) === 'playing') {
     const seconds = Math.min(Math.max(0, (now - last) / 1000), MAX_FRAME_SECONDS);
     game = advance(game, seconds * HOURS_PER_SECOND, sunlit(game.clock.hour), currentWeather());
   }
@@ -148,6 +150,40 @@ document.getElementById('hide-credits')?.addEventListener('click', () => {
   document.getElementById('title-menu')?.removeAttribute('hidden');
 });
 
+function setPaused(on: boolean): void {
+  paused = on && started;
+  document.getElementById('pause')?.toggleAttribute('hidden', !paused);
+  if (!paused) document.getElementById('pause-controls')?.setAttribute('hidden', '');
+  if (paused) document.getElementById('pause-menu')?.removeAttribute('hidden');
+}
+document.getElementById('pause-btn')?.addEventListener('click', () => setPaused(!paused));
+document.getElementById('resume')?.addEventListener('click', () => setPaused(false));
+document.getElementById('show-controls')?.addEventListener('click', () => {
+  document.getElementById('pause-menu')?.setAttribute('hidden', '');
+  document.getElementById('pause-controls')?.removeAttribute('hidden');
+});
+document.getElementById('hide-controls')?.addEventListener('click', () => {
+  document.getElementById('pause-controls')?.setAttribute('hidden', '');
+  document.getElementById('pause-menu')?.removeAttribute('hidden');
+});
+document.getElementById('to-menu')?.addEventListener('click', () => {
+  // Volta à tela inicial e começa uma nova partida na próxima "Nova missão".
+  started = false;
+  paused = false;
+  game = createGame({ installation: INSTALLATION });
+  ui.greenhouse.value = INSTALLATION.greenhouse;
+  setMessage('');
+  renderHud(game, currentWeather());
+  document.getElementById('pause')?.setAttribute('hidden', '');
+  document.getElementById('title')?.removeAttribute('hidden');
+  document.getElementById('title-menu')?.removeAttribute('hidden');
+  document.getElementById('title-credits')?.setAttribute('hidden', '');
+});
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && started) setPaused(!paused);
+});
+
 // Modelos GLB: carregam em segundo plano; até lá, as formas provisórias da cena continuam visíveis.
 loadBaseModels().catch((error: unknown) => console.error('modelos 3D não carregaram:', error));
+loadCrewModels().catch((error: unknown) => console.error('astronautas não carregaram:', error));
 requestAnimationFrame(frame);

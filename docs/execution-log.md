@@ -309,3 +309,16 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não verificado:** marcador do gelo na tela; câmera com mouse; animação das rodas em movimento.
 - **Bugs conhecidos:** cancelar tarefa em andamento faz o rover voltar de forma instantânea; a antena ainda não tem efeito no jogo.
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · Pausa, cancelamento corrigido e tripulação
+
+- **Pausa:** botão "Pausar" (topo) e tecla Esc. Sobreposição com continuar, controles e menu principal (volta à tela inicial e reinicia a partida). A simulação para; a cena continua.
+- **Cancelar tarefa:** corrigido. Sem tarefa em andamento, o rover volta à base caminhando a 4 m/s, em vez de ir de imediato.
+- **Astronautas:** `assets-src/blender/build_assets.py` gera `public/models/astronaut.glb` (corpo, capacete com viseira, mochila, braços e pernas com origem na articulação; 250 KB). Dois astronautas na cena. O da estufa cuida dela quando `isGreenhouseOn` (regra exposta pelo motor, sem duplicar a regra na cena). O outro vai ao local da tarefa quando o rover trabalha.
+- **Engine:** `isGreenhouseOn(vitals, inst)` extraída de `deriveFlow`, com dois testes novos. Comportamento inalterado.
+- **Comandos e resultados:**
+  - `npx tsc --noEmit`: passou. `npx vitest run`: 68 testes, OK. `npm run build`: passou.
+  - Captura com ajuste temporário (fila de gelo, tela inicial escondida, desfeito em seguida): `crew-l.png` mostra astronautas, rover no local, botões no topo.
+- **Não verificado:** marcador do gelo (aparece sobreposto ao rover); caminhada dos astronautas em movimento; pausa na tela (não capturada).
+- **Commit:** feito localmente, sem push.
+

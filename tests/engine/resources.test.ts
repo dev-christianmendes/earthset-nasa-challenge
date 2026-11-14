@@ -1,4 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
+import { isGreenhouseOn } from '../../src/engine/resources';
 import { describe, expect, it } from 'vitest';
 import { applyFlow, deriveFlow, startingVitals, type Installation, type Vitals } from '../../src/engine/resources';
 
@@ -82,5 +83,16 @@ describe('limites físicos', () => {
 
   it('partida começa com 80% da bateria e 80/50/40 de ar, água e comida', () => {
     expect(startingVitals(100)).toEqual({ battery: 80, air: 80, water: 50, food: 40 });
+  });
+});
+
+describe('estufa ligada (para a animação da tela)', () => {
+  const inst = { rank: 'explorador', site: 'peak', panels: 2, batteryCapacity: 1000, greenhouse: 'surplus' } as const;
+  it('só com sobra: liga acima de 50% de bateria, desliga na economia', () => {
+    expect(isGreenhouseOn({ battery: 600, air: 80, water: 50, food: 40 }, inst)).toBe(true);
+    expect(isGreenhouseOn({ battery: 400, air: 80, water: 50, food: 40 }, inst)).toBe(false);
+  });
+  it('desligada no modo off, mesmo com bateria cheia', () => {
+    expect(isGreenhouseOn({ battery: 1000, air: 80, water: 50, food: 40 }, { ...inst, greenhouse: 'off' })).toBe(false);
   });
 });

@@ -309,9 +309,68 @@ def build_antenna() -> None:
     export(parts, "antenna.glb")
 
 
+# ---------- Astronauta genérico: corpo, capacete com viseira, mochila e membros articulados ----------
+def limb(name: str, joint: tuple, length: float, radius: float, mat):
+    """Membro com a origem no ponto de articulação (topo); a geometria desce `length` metros."""
+    import mathutils
+
+    o = add("cylinder", name, location=joint, scale=(radius, radius, length))
+    bpy.ops.object.transform_apply(scale=True)
+    o.data.transform(mathutils.Matrix.Translation((0, 0, -length / 2)))
+    o.location = joint
+    bevel(o, radius * 0.4, 2)
+    paint(o, mat)
+    return o
+
+
+def build_astronaut() -> None:
+    clear_scene()
+    suit = material("suit_white", HABITAT_WHITE, metallic=0.05, rough=0.6)
+    accent = material("suit_accent", SOLAR_AMBER, rough=0.5)
+    visor = material("visor_glass", LIFE_TEAL, metallic=0.3, rough=0.08)
+    pack = material("backpack", LUNAR_GRAY, rough=0.7)
+    parts = []
+
+    torso = add("cylinder", "torso", location=(0, 0, 1.12), scale=(0.2, 0.2, 0.55))
+    bpy.ops.object.transform_apply(scale=True)
+    bevel(torso, 0.07, 3)
+    paint(torso, suit)
+    parts.append(torso)
+
+    chest = add("cube", "chest_stripe", location=(0, -0.19, 1.2), scale=(0.2, 0.03, 0.06))
+    bpy.ops.object.transform_apply(scale=True)
+    paint(chest, accent)
+    parts.append(chest)
+
+    helmet = add("sphere", "helmet", location=(0, 0, 1.58), scale=(0.19, 0.19, 0.19))
+    bpy.ops.object.transform_apply(scale=True)
+    paint(helmet, suit)
+    parts.append(helmet)
+
+    vis = add("sphere", "visor", location=(0, -0.13, 1.6), scale=(0.14, 0.09, 0.11))
+    bpy.ops.object.transform_apply(scale=True)
+    paint(vis, visor)
+    parts.append(vis)
+
+    bag = add("cube", "backpack", location=(0, 0.2, 1.15), scale=(0.3, 0.12, 0.42))
+    bpy.ops.object.transform_apply(scale=True)
+    bevel(bag, 0.04, 2)
+    paint(bag, pack)
+    parts.append(bag)
+
+    # Membros: origem na articulação, para o balanço da caminhada girar em torno do ombro/quadril.
+    parts.append(limb("arm_L", (0.25, 0, 1.36), 0.55, 0.06, suit))
+    parts.append(limb("arm_R", (-0.25, 0, 1.36), 0.55, 0.06, suit))
+    parts.append(limb("leg_L", (0.1, 0, 0.8), 0.8, 0.08, suit))
+    parts.append(limb("leg_R", (-0.1, 0, 0.8), 0.8, 0.08, suit))
+
+    export(parts, "astronaut.glb")
+
+
 if __name__ == "__main__":
     build_habitat()
     build_rover()
     build_solar_panel()
     build_greenhouse()
     build_antenna()
+    build_astronaut()

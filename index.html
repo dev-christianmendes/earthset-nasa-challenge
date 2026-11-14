@@ -65,7 +65,11 @@
       .bar.water > i { background: var(--water-blue); }
       .bar.food > i { background: var(--growth-green); }
       /* Botão flutuante no topo central: não empurra o painel do HUD, funciona em qualquer largura. */
-      #reset-view { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; font-size: 12px; min-height: 36px; padding: 6px 14px; background: var(--panel); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+      #top-actions { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 8px; }
+      #top-actions button { font-size: 12px; min-height: 36px; padding: 6px 14px; background: var(--panel); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+      #pause-menu { display: flex; flex-direction: column; gap: 10px; }
+      #pause-menu button, #pause-controls button { width: 100%; }
+      #pause-controls { margin-top: 16px; }
       .meters .meter:first-child .row { margin-top: 0; }
       /* Modo escola (B3.4): explicações ao lado de cada recurso. */
       .school-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 8px 0 8px; cursor: pointer; user-select: none; }
@@ -221,7 +225,25 @@
       </div>
     </section>
 
-    <button type="button" id="reset-view" data-i18n="hud.reset">Base view</button>
+    <div id="top-actions">
+      <button type="button" id="reset-view" data-i18n="hud.reset">Base view</button>
+      <button type="button" id="pause-btn" data-i18n="pause.button">Pause</button>
+    </div>
+
+    <section id="pause" class="title-screen" hidden aria-labelledby="pause-title">
+      <div class="title-card">
+        <h2 id="pause-title" data-i18n="pause.title">Paused</h2>
+        <div id="pause-menu">
+          <button type="button" id="resume" class="primary" data-i18n="pause.resume">Resume</button>
+          <button type="button" id="show-controls" data-i18n="pause.controls">Controls</button>
+          <button type="button" id="to-menu" data-i18n="pause.menu">Main menu</button>
+        </div>
+        <div id="pause-controls" hidden>
+          <p class="credits" data-i18n="pause.controls.text"></p>
+          <button type="button" id="hide-controls" data-i18n="title.back">Back</button>
+        </div>
+      </div>
+    </section>
 
     <aside id="horizon" class="panel" data-i18n-aria="horizon.aria" aria-label="Measured horizon at the peak">
       <h2 data-i18n="horizon.title">Real horizon</h2>

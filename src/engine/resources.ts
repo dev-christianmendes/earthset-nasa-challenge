@@ -59,6 +59,15 @@ export interface HourlyFlow {
   readonly economy: boolean;
 }
 
+/** A estufa está ligada neste momento? Regra dos equipamentos automáticos (docs/regras-recursos.md). */
+export function isGreenhouseOn(vitals: Vitals, inst: Installation): boolean {
+  const batteryFraction = vitals.battery / inst.batteryCapacity;
+  if (batteryFraction < RULES.economyBelowBattery) return false;
+  if (inst.greenhouse === 'always') return batteryFraction > RULES.greenhouseAlwaysAboveBattery;
+  if (inst.greenhouse === 'surplus') return batteryFraction > RULES.greenhouseSurplusAboveBattery;
+  return false;
+}
+
 /** Decide quais equipamentos estão ligados, a partir do estado no início do passo. */
 export function deriveFlow(
   vitals: Vitals,
@@ -70,11 +79,7 @@ export function deriveFlow(
   const batteryFraction = vitals.battery / inst.batteryCapacity;
   const economy = batteryFraction < RULES.economyBelowBattery;
 
-  let greenhouseOn = false;
-  if (!economy) {
-    if (inst.greenhouse === 'always') greenhouseOn = batteryFraction > RULES.greenhouseAlwaysAboveBattery;
-    if (inst.greenhouse === 'surplus') greenhouseOn = batteryFraction > RULES.greenhouseSurplusAboveBattery;
-  }
+  const greenhouseOn = isGreenhouseOn(vitals, inst);
 
   const electrolysisThreshold = economy ? RULES.electrolysisEconomyBelowAir : RULES.electrolysisBelowAir;
   const electrolysisOn =

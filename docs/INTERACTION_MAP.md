@@ -31,8 +31,9 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 | Deslocamento | nada (é automático) | nenhum direto; o motor não modela viagem | **novo:** sai da base até o local da tarefa (0 a 35% da tarefa), trabalha no local (35 a 65%), volta à base (65 a 100%) | o tempo de viagem é a parte visual do tempo da tarefa, não um cálculo de distância |
 | Trabalho no local | nada | consome 1,0 de energia por hora trabalhada; sem bateria, para | farol pisca; rodas param | sem animação de coleta de gelo nem de instalação |
 | Radiação | nada | para o robô enquanto durar | farol vermelho; HUD diz "robô parado" | o rover fica parado no local, sem indicação de abrigo |
-| Cancelar tarefa | × na fila | remove a tarefa | fila atualiza | **bug:** se a tarefa cancelada estava em andamento, o rover volta à base de forma instantânea; deveria voltar caminhando |
+| Cancelar tarefa | × na fila | remove a tarefa | fila atualiza; o rover **volta à base caminhando** a 4 m/s (corrigido) | — |
 | Base sem tarefa | nada | fila vazia | rover parado na base, farol apagado | — |
+| Tripulação (2 astronautas) | nada (são automáticos) | a estufa ligada vem de `isGreenhouseOn` (motor); o astronauta da estufa cuida dela quando ligada; o outro vai ao local da tarefa quando o rover trabalha | caminham, balançam braços e pernas ao andar | sem tarefas próprias (coleta, reparo); sem nome nem função na tela |
 
 ## Itens de missão
 
@@ -58,13 +59,13 @@ Convenção: "motor" = `src/engine/`, "cena" = `src/render/`, "HUD" = `src/ui/`.
 | Câmera | arrasta, roda ou pinça | nada | órbita limitada | **não verificado** com mouse real; sem seguir o rover |
 | Corações | nada | perde 1 a cada 6 h com zero | ♥ no HUD | sem efeito visual |
 | Fim de partida | nada | vitória às 708 h com ≥1 coração; derrota com 0 | sobreposição com resumo | sem animação; sem causa detalhada |
-| Pausa | — | — | — | **não existe** |
+| Pausa | botão Pausar ou Esc | a simulação para (nada muda no motor) | sobreposição: continuar, controles, menu principal | — |
 | Modo escola e idioma | caixa e botão | nada | textos e explicações | captura do modo escola em inglês ainda pendente |
 
 ## Bugs e lacunas que a fidelidade exige (prioridade)
 
-1. Cancelar tarefa em andamento faz o rover voltar de forma instantânea.
-2. Antena instalada não tem efeito no jogo.
-3. Marcador do gelo não verificado na tela.
-4. Sem pausa.
-5. Sem personagens (astronautas) e sem itens coletáveis de verdade.
+1. Antena instalada não tem efeito no jogo.
+2. Marcador do gelo não verificado na tela (fica sobreposto ao rover no local).
+3. Sem itens coletáveis de verdade; o gelo é só uma tarefa.
+4. Astronautas sem tarefas próprias (coleta, reparo) e sem nome.
+5. Sem animação de implantação do painel e da antena.
