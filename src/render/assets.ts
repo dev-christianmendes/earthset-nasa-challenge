@@ -2,10 +2,22 @@
 // Gerenciador de ativos: carrega cada GLB uma vez (public/models, gerado por assets-src/blender)
 // e anexa uma cópia ao grupo que recebe o modelo. Formas provisórias do código são escondidas.
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
 const cache = new Map<string, Promise<THREE.Object3D>>();
+const gltfCache = new Map<string, Promise<GLTF>>();
+
+/** Carrega o GLTF completo (cena e animações), uma vez por nome. */
+export function loadGltf(name: string): Promise<GLTF> {
+  let pending = gltfCache.get(name);
+  if (!pending) {
+    const url = `${import.meta.env.BASE_URL}models/${name}.glb`;
+    pending = loader.loadAsync(url);
+    gltfCache.set(name, pending);
+  }
+  return pending;
+}
 
 /** Carrega um modelo pelo nome (sem extensão). Uma única requisição por nome. */
 export function loadModel(name: string): Promise<THREE.Object3D> {

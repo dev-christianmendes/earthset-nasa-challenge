@@ -1,0 +1,4 @@
+Astronauta de baixo polígono (astronaut.blend), com esqueleto e animação.
+Origem: OpenGameArt, https://opengameart.org/node/44447
+Licença: CC0 (domínio público), conforme a página do asset, verificada em 14/11/2026.
+Uso: convertido para GLB em public/models/astronaut_oga.glb por assets-src/blender/convert_oga_astronaut.py.

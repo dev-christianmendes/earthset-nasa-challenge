@@ -1,0 +1,5 @@
+Textura de superfície lunar (dusted_*.jpg)
+Origem: Poly Haven, "Moon Dusted 01" (moon_dusted_01), resolução 1K. Coleção "moon".
+https://polyhaven.com/a/moon_dusted_01
+Licença: CC0 1.0 Universal (domínio público). Confirmada na página do asset em 14/11/2026.
+Alterações: nenhuma; apenas renomeado. Escolhida sem pegadas (a textura anterior, "moon_footprints_01", foi removida por poluir o visual).

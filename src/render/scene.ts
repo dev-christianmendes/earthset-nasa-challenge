@@ -9,7 +9,8 @@ import { MAX_PANELS, TASK_HOURS, isWorking, type TaskKind } from '../engine/robo
 import { sampleAt } from '../engine/sun';
 import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
-import { attachModel, loadModel } from './assets';
+import { attachModel, loadGltf, loadModel } from './assets';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 /** Paleta da cena. O azul de destaque é o mesmo --accent do HUD (index.html). */
 export const PALETTE = {
@@ -105,6 +106,36 @@ function regolithTexture(): THREE.CanvasTexture {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+/**
+ * Material do chão: superfície lunar real (Poly Haven "Moon Dusted 01", CC0, sem pegadas; ver public/textures/moon/LICENSE.txt).
+ * Começa com a textura procedural e troca pelas imagens quando carregam; se falhar, fica a procedural.
+ */
+function moonGroundMaterial(): THREE.MeshStandardMaterial {
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, map: regolithTexture(), roughness: 1, metalness: 0 });
+  const loader = new THREE.TextureLoader();
+  const base = `${import.meta.env.BASE_URL}textures/moon/`;
+  const tile = (t: THREE.Texture): THREE.Texture => {
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(40, 40);
+    return t;
+  };
+  loader.load(`${base}dusted_diff.jpg`, (t) => {
+    t.colorSpace = THREE.SRGBColorSpace;
+    mat.map = tile(t);
+    mat.needsUpdate = true;
+  });
+  loader.load(`${base}dusted_nor.jpg`, (t) => {
+    mat.normalMap = tile(t);
+    mat.needsUpdate = true;
+  });
+  loader.load(`${base}dusted_rough.jpg`, (t) => {
+    mat.roughnessMap = tile(t);
+    mat.needsUpdate = true;
+  });
+  return mat;
+}
+
 // Relevo real: malha do LOLA (400 m centrados no morro). Norte = -z, como no céu e no Sol.
 const VERTICAL_EXAGGERATION = 2; // exagero vertical; a HUD diz isso
 function buildTerrain(): THREE.BufferGeometry {
@@ -159,7 +190,7 @@ function buildTerrain(): THREE.BufferGeometry {
 }
 const ground = new THREE.Mesh(
   buildTerrain(),
-  new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, map: regolithTexture(), roughness: 1, metalness: 0 }),
+  moonGroundMaterial(),
 );
 ground.receiveShadow = true;
 scene.add(ground);
@@ -410,6 +441,10 @@ function placeRover(state: GameState, t: number, dt: number): { working: boolean
 // ---------- Tripulação: dois astronautas que reagem ao estado do motor ----------
 
 interface Crew {
+  /** Mixer e clipes do modelo com animação (astronaut_oga). Null se o modelo de fallback estiver em uso. */
+  mixer: THREE.AnimationMixer | null;
+  actions: Partial<Record<'idle' | 'run', THREE.AnimationAction>>;
+  current: 'idle' | 'run' | '';
   node: THREE.Object3D | null;
   x: number;
   z: number;
@@ -420,8 +455,8 @@ interface Crew {
 }
 
 const crew: Crew[] = [
-  { node: null, x: -3.0, z: 5.2, home: { x: -3.0, z: 5.2 }, moving: false, legs: [], arms: [] },
-  { node: null, x: 2.6, z: 4.6, home: { x: 2.6, z: 4.6 }, moving: false, legs: [], arms: [] },
+  { mixer: null, actions: {}, current: '', node: null, x: -3.0, z: 5.2, home: { x: -3.0, z: 5.2 }, moving: false, legs: [], arms: [] },
+  { mixer: null, actions: {}, current: '', node: null, x: 2.6, z: 4.6, home: { x: 2.6, z: 4.6 }, moving: false, legs: [], arms: [] },
 ];
 const CREW_WALK_SPEED = 1.3; // m/s
 /** Abrigo: em frente à escotilha do habitat (lado +z, onde fica a porta). */
@@ -444,7 +479,25 @@ function walkCrew(member: Crew, tx: number, tz: number, dt: number): void {
   }
 }
 
-function animateCrew(member: Crew, t: number): void {
+/** Troca o clipe do astronauta com transição curta (idle quando parado, run quando anda). */
+function playCrewClip(member: Crew, name: 'idle' | 'run'): void {
+  if (!member.mixer || member.current === name) return;
+  const next = member.actions[name];
+  if (!next) return;
+  next.reset().fadeIn(0.2).play();
+  if (member.current) member.actions[member.current]?.fadeOut(0.2);
+  member.current = name;
+}
+
+function animateCrew(member: Crew, t: number, dt: number): void {
+  if (member.mixer) {
+    playCrewClip(member, member.moving ? 'run' : 'idle');
+    // O modelo não tem clipe de caminhada: a caminhada usa a corrida em câmera lenta.
+    const run = member.actions.run;
+    if (run) run.timeScale = member.moving ? 0.45 : 1;
+    member.mixer.update(dt);
+    return;
+  }
   const swing = member.moving ? Math.sin(t * 7) * 0.55 : 0;
   member.legs.forEach((leg, i) => (leg.rotation.x = i === 0 ? swing : -swing));
   member.arms.forEach((arm, i) => (arm.rotation.x = i === 0 ? -swing : swing));
@@ -470,14 +523,48 @@ function updateCrew(state: GameState, t: number, dt: number, workSite: { x: numb
   } else {
     walkCrew(helper, helper.home.x, helper.home.z, dt);
   }
-  for (const member of crew) animateCrew(member, t);
+  for (const member of crew) animateCrew(member, t, dt);
 }
 
-/** Carrega o modelo do astronauta duas vezes (cada uma é uma cópia independente). */
+/**
+ * Carrega o astronauta com animação (astronaut_oga, CC0; clipes idle e run). Se falhar, usa o modelo de
+ * fallback astronaut.glb com as animações procedurais antigas. Uma cópia por astronauta.
+ */
 export function loadCrewModels(): Promise<unknown> {
   return Promise.all(
-    crew.map((member) =>
-      loadModel('astronaut').then((source) => {
+    crew.map(async (member) => {
+      try {
+        const gltf = await loadGltf('astronaut_oga');
+        // Clone com esqueleto próprio: Object3D.clone() não copia os ossos de um modelo skinado.
+        const node = cloneSkinned(gltf.scene);
+        node.traverse((obj) => {
+          obj.castShadow = true;
+          if (obj instanceof THREE.Mesh) {
+            // O modelo vem totalmente metálico (metalness 1), que fica preto sem mapa de ambiente.
+            // Traje de tecido/plástico fosco, com a cor original.
+            const mat = (obj.material as THREE.MeshStandardMaterial).clone();
+            mat.metalness = 0.05;
+            mat.roughness = 0.7;
+            obj.material = mat;
+          }
+        });
+        // A origem do modelo fica no centro do corpo (±0,96 m): o grupo sobe o modelo para os pés tocarem o chão.
+        node.position.y = 0.96;
+        const holder = new THREE.Group();
+        holder.add(node);
+        scene.add(holder);
+        member.node = holder;
+        const mixer = new THREE.AnimationMixer(node);
+        const byName: Record<string, 'idle' | 'run'> = { default: 'idle', run: 'run' };
+        for (const clip of gltf.animations) {
+          const key = byName[clip.name];
+          if (key) member.actions[key] = mixer.clipAction(clip);
+        }
+        member.mixer = mixer;
+        playCrewClip(member, 'idle');
+      } catch (error) {
+        console.warn('astronaut_oga não carregou; usando o modelo de fallback:', error);
+        const source = await loadModel('astronaut');
         const node = source.clone(true);
         node.traverse((obj) => {
           obj.castShadow = true;
@@ -486,8 +573,8 @@ export function loadCrewModels(): Promise<unknown> {
         member.node = node;
         member.legs = ['leg_L', 'leg_R'].map((name) => node.getObjectByName(name)).filter((o): o is THREE.Object3D => o !== undefined);
         member.arms = ['arm_L', 'arm_R'].map((name) => node.getObjectByName(name)).filter((o): o is THREE.Object3D => o !== undefined);
-      }),
-    ),
+      }
+    }),
   );
 }
 
