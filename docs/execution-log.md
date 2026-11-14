@@ -370,3 +370,8 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Declaração:** `opencode` foi usado como agente de código e não estava em `AI_DISCLOSURE.md`. Pela regra do projeto, ferramenta nova só entra após declaração. Acrescentado à tabela com modelo e provedor **pendentes** de confirmação do autor.
 - **Ressalva registrada pelo opencode:** a revisão visual do `seq-sheet.png` não foi feita por ele; a confirmação foi numérica (nós e pivôs). Vale uma captura revisada por um humano ou por este agente antes da demo.
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · Modelo do opencode declarado
+
+- Autor informou o modelo: **Big Pickle**. Registrado em `AI_DISCLOSURE.md`. Provedor ainda pendente.
+- **Commit:** feito localmente, sem push.
