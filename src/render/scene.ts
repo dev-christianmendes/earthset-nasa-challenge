@@ -588,6 +588,23 @@ const iceMarker = new THREE.Mesh(
 iceMarker.visible = false;
 scene.add(iceMarker);
 
+/** Transição de instalação (T5): a peça cresce de 0 a 100% em ~0,8 s quando aparece; some de repente. */
+const INSTALL_SECONDS = 0.8;
+function setInstalled(obj: THREE.Object3D, installed: boolean, now: number): void {
+  if (installed && !obj.visible) {
+    obj.visible = true;
+    obj.userData.installedAt = now / 1000;
+  }
+  if (!installed) {
+    obj.visible = false;
+    return;
+  }
+  const age = now / 1000 - (obj.userData.installedAt as number);
+  const k = Math.min(1, Math.max(0, age / INSTALL_SECONDS));
+  const ease = 1 - Math.pow(1 - k, 3); // desaceleração suave
+  obj.scale.setScalar(Math.max(0.001, ease));
+}
+
 export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample): void {
   // Direção do Sol a partir do azimute (norte = -z, leste = +x) e da elevação reais.
   const { az, el } = sampleAt(SUN, state.clock.hour);
@@ -609,11 +626,11 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   sun.target.position.set(0, 0, 0);
 
   for (let i = 0; i < panelMeshes.length; i++) {
-    panelMeshes[i].visible = i < state.installation.panels;
+    setInstalled(panelMeshes[i], i < state.installation.panels, now);
   }
   greenhouse.visible = state.installation.greenhouse !== 'off';
 
-  baseAntenna.visible = state.robot.antennaInstalled;
+  setInstalled(baseAntenna, state.robot.antennaInstalled, now);
 
   const t = now / 1000;
   const dt = lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
