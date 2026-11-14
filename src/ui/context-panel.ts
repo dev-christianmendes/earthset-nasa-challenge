@@ -423,8 +423,8 @@ function panelsView(state: GameState): View {
       list.append(
         row(t('pan.count'), (v, st) => void (v.textContent = t('pan.count.v', { n: st.installation.panels, max: MAX_PANELS }))),
         row(t('pan.output'), (v, st) => {
-          const maxOut = st.installation.panels * PANEL_OUTPUT_PER_HOUR;
-          const now = world.lit ? maxOut * solarFactor(stormLevel(world.kp)) * calibrationFactor(st.calibrationLeft) : 0;
+          const maxOut = st.installation.panels * PANEL_OUTPUT_PER_HOUR * calibrationFactor(st.calibrationLeft);
+          const now = world.lit ? maxOut * solarFactor(stormLevel(world.kp)) : 0;
           v.textContent = world.lit ? t('pan.output.v', { now: num(now, 1), max: num(maxOut, 1) }) : t('pan.dark');
         }),
         row(t('pan.calibration'), (v, st) => {

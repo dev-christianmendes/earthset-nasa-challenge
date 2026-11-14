@@ -76,6 +76,7 @@ AI_DISCLOSURE.md            Declaração de uso de IA (ferramentas, modelos, tex
 .github/workflows/ci.yml    CI: typecheck, testes, build, auditoria, fronteira do motor
 .github/dependabot.yml      Atualizações semanais (npm e ações)
 CLAUDE.md                   Importa este arquivo para o Claude Code
+docs/INTERACOES.md          Arquitetura das interações: astronautas, estufa, rover, instalações, controles, testes e desempenho
 docs/PLANO_V4.md            Plano vigente (Earthset 4.0): P0, P1, P2, modos e capítulos
 src/engine/modes.ts         Modos de experiência → patente do motor (D-17)
 src/engine/chapters.ts      5 capítulos derivados do estado
@@ -187,3 +188,5 @@ Data: 14/11/2026 (noite). **Earthset 4.0 em curso: ver `docs/PLANO_V4.md` e o bl
 - **Bloco 4 (envio):** aberto. O projeto de envio é novo, iniciado do zero em 14/11/2026. Não há bloqueio de elegibilidade pendente.
 
 **Riscos abertos:** A2 (enunciado oficial não lido), A3 (composição da equipe), A5 (Termos e Guia de Envio não lidos).
+
+**Atualização (14/11/2026, noite):** jogabilidade interativa concluída (P0 a P4, D-18 e D-19): astronautas com tarefas, estufa jogável, rover e instalações pelo painel contextual, teclado, 163 testes de motor e 38 verificações de interface. Ver `docs/INTERACOES.md` e o bloco 8 de `docs/backlog.md`.

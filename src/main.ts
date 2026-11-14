@@ -119,6 +119,9 @@ mountContext(document.getElementById('ctx') as HTMLElement, {
   close: () => selectObject(null),
 });
 
+renderer.domElement.setAttribute('role', 'img');
+renderer.domElement.setAttribute('aria-label', t('a11y.scene'));
+
 // Toque curto na cena (sem arrastar) seleciona; arrastar continua girando a câmera.
 let pressAt: { x: number; y: number; time: number } | null = null;
 renderer.domElement.addEventListener('pointerdown', (event) => {
@@ -189,6 +192,7 @@ function renderNow(now: number): void {
 }
 
 onLanguage(() => {
+  renderer.domElement.setAttribute('aria-label', t('a11y.scene'));
   relabelLuma();
   showContext(selectedObject());
   renderChapters(document.getElementById('story-chapters') as HTMLElement, null);
@@ -328,7 +332,19 @@ document.getElementById('resume')?.addEventListener('click', () => setPaused(fal
 document.getElementById('to-menu')?.addEventListener('click', backToMenu);
 document.getElementById('end-menu')?.addEventListener('click', backToMenu);
 document.getElementById('restart')?.addEventListener('click', () => newMission(false));
+/** Teclas 1 a 9 selecionam os mesmos objetos do toque (acessibilidade por teclado). */
+const KEY_OBJECTS: readonly SelectableId[] = ['habitat', 'greenhouse', 'rover', 'crew0', 'crew1', 'panels', 'antenna', 'processor', 'storage'];
+
 window.addEventListener('keydown', (event) => {
+  if (/^[1-9]$/.test(event.key) && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    const target = event.target as HTMLElement | null;
+    if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+    if (!started || ended || paused || currentScreen() !== null || cinematicRunning()) return;
+    selectObject(KEY_OBJECTS[Number(event.key) - 1]);
+    // Foco no painel: quem navega por teclado segue direto para as ações (Tab) e Esc fecha.
+    (document.getElementById('ctx') as HTMLElement).focus({ preventScroll: true });
+    return;
+  }
   if (event.key !== 'Escape') return;
   if (cinematicRunning()) {
     skipCinematic();

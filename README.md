@@ -7,9 +7,20 @@ Jogo 3D no navegador para o **NASA Space Apps Challenge 2026** (desafio *Junior 
 ```bash
 npm install
 npm run dev        # servidor de desenvolvimento
-npm run test       # testes do motor
+npm run test       # testes do motor (Vitest)
 npm run build      # verificação de tipos e build estático em dist/
 ```
+
+Teste de interface (Playwright em Python, contra o servidor de desenvolvimento):
+
+```bash
+npx vite --port 5182 --strictPort &
+python3 scripts/e2e-contexto.py 5182
+```
+
+## Como jogar (controles)
+
+Toque ou clique num objeto da base para selecioná-lo e abrir o painel; as teclas **1 a 9** fazem o mesmo (habitat, estufa, rover, astronautas, painéis, antena, processador, armazenamento). **Esc** fecha o painel e depois pausa. Arrastar gira a câmera. Detalhes, regras e limitações: [`docs/INTERACOES.md`](docs/INTERACOES.md).
 
 ## Estrutura
 
@@ -22,7 +33,7 @@ npm run build      # verificação de tipos e build estático em dist/
 | `data-pipeline/` | Processamento offline de dados científicos |
 | `assets-src/` e `public/` | Fontes Blender, GLBs e texturas |
 | `tests/` | Testes do motor (Vitest) |
-| `docs/` | [Mapa do sistema](docs/MAPA_SISTEMA.md), [plano consolidado](docs/PLANO_CONSOLIDADO.md), backlog, regras e diário |
+| `docs/` | [Interações](docs/INTERACOES.md), [mapa do sistema](docs/MAPA_SISTEMA.md), [plano consolidado](docs/PLANO_CONSOLIDADO.md), backlog, regras e diário |
 
 ## Uso de IA
 

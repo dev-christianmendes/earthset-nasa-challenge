@@ -582,3 +582,13 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Falha encontrada e corrigida:** toda ordem de astronauta enquadrava a câmera na estufa; agora enquadra o destino da tarefa (painéis ou antena).
 - **Limitações:** o astronauta do campo solar e da antena anda fora do enquadramento de câmera padrão do destino (o botão Focar acompanha o astronauta); só o campo solar inteiro é calibrado (sem escolher painel); o brilho dos painéis é a única marca visual da calibração; sem seleção por teclado (P4).
 - **Commit:** não feito.
+
+## 14/11/2026 · P4 do plano de jogabilidade: qualidade, teclado e documentação
+
+- **Acessibilidade:** teclas 1 a 9 selecionam os objetos (o foco vai ao painel, Tab percorre os botões, Esc fecha); canvas com `role="img"` e descrição das teclas (PT e EN); aviso de ordem com `role="status"`; foco visível no painel; "Como jogar" atualizado.
+- **Testes de motor:** `tests/engine/invariantes.test.ts` (12 testes): 5 sementes de ações aleatórias por 708 h com invariantes a cada passo (limites dos recursos, cultura, desgaste, fila, tarefas de astronauta únicas por tipo), determinismo, passos de 2 h, estado de entrada intacto, reinício limpo, passos de 0,25, 1 e 4 h dando o mesmo resultado, pausa e tempo inválido. Total: 163 testes ok.
+- **Teste de interface:** `scripts/e2e-contexto.py` passou de 27 para 38 verificações (teclado, foco, Tab, celular com toque sem clique fantasma e sem rolagem horizontal). Resultado final: 38 ok, 0 falhas, heap 58 MB estável, 60 fps nas repetições, 0 erros de console.
+- **Polimento:** a geração máxima do painel de energia agora inclui a calibração (antes mostrava "2 de 1,8").
+- **Documentação:** `docs/INTERACOES.md` (arquitetura, máquina de estados, fluxo, regras da estufa, controles, testes, desempenho antes e depois, limitações), README (como rodar o teste de interface e controles), `AGENTS.md` (mapa e estado).
+- **Verificação final:** `npm run typecheck` ok, `npm run test` 163 ok, `npm run build` ok, `npm audit --omit=dev` sem vulnerabilidades de produção.
+- **Commit:** não feito.

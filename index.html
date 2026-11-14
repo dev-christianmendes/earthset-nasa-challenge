@@ -316,7 +316,7 @@
         </div>
       </aside>
 
-      <aside id="ctx" class="side ctx" hidden aria-labelledby="ctx-title">
+      <aside id="ctx" class="side ctx" hidden tabindex="-1" aria-labelledby="ctx-title">
         <header class="side-head">
           <h2 id="ctx-title"></h2>
           <span class="ctx-head-actions">
@@ -338,7 +338,7 @@
         <ol id="luma-history" class="luma-history" hidden></ol>
       </aside>
 
-      <div id="toast" class="toast" hidden></div>
+      <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
       <p id="footnote" class="footnote" data-i18n="footnote">Real NASA data: Sun, terrain, space weather. Story, rover and consumption: game.</p>
     </div>
 

@@ -42,4 +42,4 @@ Plano vigente: `docs/PLANO_CONSOLIDADO.md`. Decisões: D-11 a D-15.
 - [x] **G8.5 (P1)** Plantas por estágio de crescimento (`crop.ts`, modelo da estufa sem plantas embutidas).
 - [x] **G8.6 (P2)** Rover: selecionar na cena, lançar missões pelo painel contextual (custos, duração e motivo da recusa vindos do motor), etapas, tempo restante em horas de jogo e segundos reais, fila com cancelamento, câmera que acompanha, partida e parada suaves.
 - [x] **G8.7 (P3)** Painéis (calibrar e instalar), antena (ajustar ou reparar), habitat (ordem de abrigo, consumo e exposição), processador (estado e missão de gelo) e armazenamento (estoques e autonomia), todos pelo painel contextual (D-19).
-- [ ] **G8.8 (P4)** Acessibilidade (teclado), documentação final e polimento.
+- [x] **G8.8 (P4)** Teclado (teclas 1 a 9, foco no painel, Tab, Esc), testes de invariantes com ações aleatórias, teste de celular, `docs/INTERACOES.md` e README.
