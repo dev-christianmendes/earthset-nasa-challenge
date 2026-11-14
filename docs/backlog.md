@@ -40,6 +40,20 @@ Plano do projeto novo, do zero. Prazo de envio: **15/11/2026, 23h59**, horário 
 - [ ] **B4.3** Declaração de IA em inglês com os modelos confirmados (`AI_DISCLOSURE.md`, seção 3).
 - [x] **B4.4** Trabalho antes do evento: resolvido pelo autor em 14/11/2026. Projeto novo, iniciado do zero. Nenhum trabalho do projeto de envio foi feito antes do evento.
 
+## Bloco 5 · Desenho v2 (14/11, noite) — em curso
+
+Plano completo em `docs/arquitetura.md` (requisitos E1–E12 e R-…, camadas, fases F0–F6). Itens abaixo seguem essas fases.
+
+- [x] **F0** Refatoração de `src/main.ts` em `src/render/scene.ts`, `src/ui/hud.ts`, `src/data/sun.ts` e `src/main.ts` (laço e ligação). Sem mudança de comportamento: 52 testes e build iguais; captura desktop conferida.
+- [ ] **C1** LOLA → `src/engine/terrain.ts` → horizonte real por site (`data-pipeline/fetch_lola.py`). Ver D3 em `docs/arquitetura.md`.
+- [ ] **C2** DONKI → `data-pipeline/fetch_donki.py` (CME e FLR; chave `DEMO_KEY` para teste). Ver D1 (cenário histórico).
+- [ ] **C3** `src/engine/space-weather.ts` e efeito da tempestade na partida (abrigo, energia dos painéis).
+- [ ] **V1–V4** Relevo LOLA na cena, base, céu e luz (`src/render/`).
+- [ ] **I2** Patentes mudam a linguagem da tela (`src/engine/narrative.ts`).
+- [ ] **I3** Diário da base na tela (`src/ui/log-panel.ts`).
+- [ ] **F5** Revisão de copy (B3.1) e acessibilidade mínima.
+- [ ] **F6** Demo, References, declaração de IA e envio (B4): só com pedido do autor.
+
 ## Envio ao GitHub
 
 Repositório: `https://github.com/dev-christianmendes/earthset-nasa-challenge` (público). Envio autorizado pelo autor em 14/11/2026, em commits no formato Conventional Commits. O CI (`.github/workflows/ci.yml`) roda a cada push para `main` e a cada pull request. Para enviar mudanças novas, o autor pede; o fluxo é `git add`, `git commit`, `git push`.
