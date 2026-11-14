@@ -36,9 +36,11 @@ Registro das decisões tomadas pelo agente com delegação do autor (14/11/2026:
 
 ## D-05. Abrigo da tripulação na radiação (regra + visual)
 
-- **Decisão:** quando há radiação (SEP), a tripulação deve estar no habitat. Quem está fora sem abrigo acumula exposição: **1 coração a cada 6 horas de exposição** (mesma escala de perda de coração do motor). O abrigo é automático: ao aviso da antena (D-01) ou ao início da radiação, a tripulação vai para a escotilha.
+- **Decisão (penalidade definida pelo autor delegando, 14/11/2026):** durante a radiação, cada hora que um astronauta passa fora do habitat conta como exposição. A cada **12 horas** de exposição acumulada, perde **1 coração**. O abrigo é automático: ao início da radiação (ou ao aviso da antena, D-01), o astronauta corre para a escotilha. Se estava no local de uma tarefa, a exposição começa quando ele sai e termina quando entra.
+- **Por que 12 horas e não 6:** a regra de 6 horas do motor é para recursos zerados (falta contínua). A radiação é um evento pontual. Com 6 horas, um evento poderia custar um coração inteiro; o cenário tem 82 horas de radiação.
+- **Custo esperado:** com abrigo automático, cada evento custa ~1 h de exposição por astronauta (baixo). Ficar fora o tempo todo durante a radiação custa muito: é a escolha que o jogador deve evitar.
+- **Validação:** o plano de referência (`tests/engine/partida.test.ts`) não deixa a tripulação exposta e tem de continuar vencendo com 2 corações. Se a penalidade mudar esse resultado, o valor é revisto antes do commit.
 - **Por quê:** dá sentido ao aviso da antena e à radiação, que hoje só para o robô.
-- **Proposta a validar:** a penalidade é ilustrativa. Ajustar só com o teste de partida (`tests/engine/partida.test.ts`) passando.
 - **Motor:** estado de posição da tripulação (dentro/fora) e exposição acumulada; regra de coração nova, com testes.
 
 ## D-06. Astronauta ajuda o gelo
