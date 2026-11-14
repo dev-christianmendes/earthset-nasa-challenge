@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createGame, advance } from '../../src/engine/game';
 import { deriveFlow, PANEL_OUTPUT_PER_HOUR, type Installation } from '../../src/engine/resources';
 import { dispatch } from '../../src/engine/game';
-import { CALM, solarFactor, stormLevel, weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
+import { CALM, hoursUntilStorm, solarFactor, stormLevel, weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
 
 const INSTALLATION: Installation = {
   rank: 'explorador',
@@ -59,5 +59,22 @@ describe('clima espacial (C2 e C3)', () => {
     expect(afterRadiation.robot.queue[0].hoursLeft).toBe(hours0);
     const afterCalm = advance(game, 2, true, CALM);
     expect(afterCalm.robot.queue[0].hoursLeft).toBeLessThan(hours0);
+  });
+});
+
+describe('aviso antecipado da antena (D-01)', () => {
+  const table: SpaceWeatherTable = {
+    start_utc: '2024-10-09 09:00',
+    step_hours: 1,
+    hours: 10,
+    samples: [CALM, CALM, CALM, { kp: 8, radiation: false }, CALM, CALM, CALM, CALM, CALM, CALM, CALM],
+  };
+  it('acha a tempestade que começa dentro de 6 horas e diz quantas faltam', () => {
+    expect(hoursUntilStorm(table, 0)).toBe(3);
+    expect(hoursUntilStorm(table, 1)).toBe(2);
+  });
+  it('não avisa quando a tempestade começa depois da janela de 6 horas', () => {
+    expect(hoursUntilStorm(table, 0, 2)).toBeNull();
+    expect(hoursUntilStorm(table, 4)).toBeNull();
   });
 });

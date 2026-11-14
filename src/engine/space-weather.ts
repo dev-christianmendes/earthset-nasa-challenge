@@ -45,3 +45,14 @@ export function weatherAt(table: SpaceWeatherTable, hour: number): SpaceWeatherS
   const index = Math.min(Math.floor(hour / table.step_hours), table.samples.length - 1);
   return table.samples[index];
 }
+
+/**
+ * Horas até a próxima tempestade (nível G 1 ou mais), se ela começar em até `ahead` horas
+ * depois de `hour`. Null se não houver. Base do aviso da antena (D-01, docs/DECISOES.md).
+ */
+export function hoursUntilStorm(table: SpaceWeatherTable, hour: number, ahead = 6): number | null {
+  for (let k = 1; k <= ahead; k++) {
+    if (stormLevel(weatherAt(table, hour + k).kp) >= 1) return k;
+  }
+  return null;
+}

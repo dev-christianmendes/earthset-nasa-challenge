@@ -7,7 +7,7 @@ import { isSunlit } from './engine/sun';
 import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
-import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
+import { hoursUntilStorm, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
 import { camera, controls, frameForViewport, loadBaseModels, loadCrewModels, renderer, resetView, scene, updateScene } from './render/scene';
 import { applyLanguage, renderHud, ui } from './ui/hud';
 import { getLang } from './i18n';
@@ -42,7 +42,7 @@ function act(action: GameAction): void {
   } else {
     setMessage(reasonText(result.reason));
   }
-  renderHud(game, currentWeather());
+  renderNow();
 }
 
 /** Texto do motivo de recusa, no idioma atual (o motor manda só o código). */
@@ -78,7 +78,7 @@ ui.restart.addEventListener('click', () => {
   game = createGame({ installation: INSTALLATION });
   ui.greenhouse.value = INSTALLATION.greenhouse;
   setMessage('');
-  renderHud(game, currentWeather());
+  renderNow();
 });
 
 // ---------- Clima espacial (C2) ----------
@@ -86,6 +86,16 @@ ui.restart.addEventListener('click', () => {
 /** Clima da hora atual do cenário de 09/10/2024 (NASA DONKI). */
 function currentWeather(): SpaceWeatherSample {
   return weatherAt(WEATHER, game.clock.hour);
+}
+
+/** Aviso antecipado de tempestade: só com a antena instalada (D-01). */
+function warningNow(): number | null {
+  return game.robot.antennaInstalled ? hoursUntilStorm(WEATHER, game.clock.hour) : null;
+}
+
+/** Atualiza o HUD com o estado atual, o clima e o aviso da antena. */
+function renderNow(): void {
+  renderHud(game, currentWeather(), warningNow());
 }
 
 // ---------- Sol (ilustrativo) ----------
@@ -119,7 +129,7 @@ function frame(now: number): void {
   controls.update();
   // O HUD é atualizado a cada HUD_INTERVAL_MS, não a cada quadro: a cena continua na taxa do navegador.
   if (now >= hudDueAt) {
-    renderHud(game, currentWeather());
+    renderNow();
     hudDueAt = now + HUD_INTERVAL_MS;
   }
   renderer.render(scene, camera);
@@ -134,7 +144,7 @@ window.addEventListener('resize', () => {
 });
 
 ui.greenhouse.value = INSTALLATION.greenhouse;
-renderHud(game, currentWeather());
+renderNow();
 // Tela inicial: começar a missão, idioma e créditos. A cena fica visível de fundo.
 document.getElementById('start')?.addEventListener('click', () => {
   started = true;
@@ -173,7 +183,7 @@ document.getElementById('to-menu')?.addEventListener('click', () => {
   game = createGame({ installation: INSTALLATION });
   ui.greenhouse.value = INSTALLATION.greenhouse;
   setMessage('');
-  renderHud(game, currentWeather());
+  renderNow();
   document.getElementById('pause')?.setAttribute('hidden', '');
   document.getElementById('title')?.removeAttribute('hidden');
   document.getElementById('title-menu')?.removeAttribute('hidden');

@@ -65,6 +65,7 @@ const DICT: Record<string, Record<Lang, string>> = {
   'overlay.restart': { en: 'Play again', pt: 'Jogar de novo' },
   'space.calm': { en: 'calm space weather', pt: 'clima calmo' },
   'space.storm': { en: 'G{level} storm, panels at {percent}%', pt: 'tempestade G{level}, painéis a {percent}%' },
+  'space.warning': { en: 'storm in {hours} h (antenna warning)', pt: 'tempestade em {hours} h (aviso da antena)' },
   'space.radiation': { en: '{storm} · radiation: robot paused', pt: '{storm} · radiação: robô parado' },
   'horizon.title': { en: 'Real horizon', pt: 'Horizonte real' },
   'horizon.aria': { en: 'Measured horizon at the peak', pt: 'Horizonte medido no morro' },

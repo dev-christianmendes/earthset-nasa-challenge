@@ -375,3 +375,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 
 - Autor informou o modelo: **Big Pickle**. Registrado em `AI_DISCLOSURE.md`. Provedor ainda pendente.
 - **Commit:** feito localmente, sem push.
+
+## 2026-11-14 · D-01: aviso antecipado de tempestade pela antena
+
+- **Motor:** `hoursUntilStorm(table, hour, ahead=6)` em `src/engine/space-weather.ts`; 2 testes novos (acha tempestade em até 6 h; não avisa fora da janela).
+- **HUD:** aviso só com antena instalada e sem tempestade agora; texto "storm in N h (antenna warning)" / "tempestade em N h (aviso da antena)". Chave `space.warning` nos dois idiomas.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run`: 70 testes, OK; `npm run build` passou.
+- **Captura:** `antenna-warning.png` (ajuste temporário: antena instalada, hora 26; main.ts restaurado e conferido com diff). Aviso aparece no HUD e a antena aparece no teto do habitat.
+- **Pendente:** a decisão D-02 (astronautas sem tarefas) foi tomada pelo agente; o autor questionou. Aguardando definição do autor sobre tarefas dos astronautas.
+- **Commit:** feito localmente, sem push.

@@ -128,7 +128,7 @@ function setBar(bar: HTMLElement, value: HTMLElement, percent: number, text: str
   bar.closest('.meter')?.classList.toggle('low', low);
 }
 
-export function renderHud(state: GameState, weather: SpaceWeatherSample): void {
+export function renderHud(state: GameState, weather: SpaceWeatherSample, warningHours: number | null = null): void {
   const { vitals, installation, hearts, clock, robot: r } = state;
   ui.hour.textContent = String(Math.floor(clock.hour));
   ui.hearts.textContent = '♥'.repeat(hearts) + '♡'.repeat(Math.max(0, 3 - hearts));
@@ -146,7 +146,11 @@ export function renderHud(state: GameState, weather: SpaceWeatherSample): void {
     level === 0
       ? t('space.calm')
       : t('space.storm', { level, percent: Math.round(solarFactor(level) * 100) });
-  ui.space.textContent = weather.radiation ? t('space.radiation', { storm }) : storm;
+  const base = weather.radiation ? t('space.radiation', { storm }) : storm;
+  // Aviso da antena (D-01): só quando não há tempestade agora e a antena está instalada.
+  ui.space.textContent = warningHours !== null && level === 0 && !weather.radiation
+    ? `${base} · ${t('space.warning', { hours: warningHours })}`
+    : base;
   ui.space.classList.toggle('storm', level > 0 || weather.radiation);
   ui.greenhouse.value = installation.greenhouse;
 
