@@ -52,6 +52,7 @@ A tabela de desempenho e as capturas de 15/11 estão em `docs/PERFORMANCE_VALIDA
 - LUMA: guia por regras, sem IA generativa (`src/engine/guide.ts`); objetivos (`src/engine/objectives.ts`).
 - Interação: seleção por toque e teclado, painel contextual com ações validadas pelo motor (`src/render/picking.ts`, `src/ui/context-panel.ts`).
 - Idiomas: inglês por padrão e português do Brasil (`src/i18n.ts`). Modo escola (`src/school.ts`).
+- **Vitória:** alcançável jogando. Com o plano de referência (gelo, painéis e antena) pela interface, a partida chega a 708 h com 3 de 3 vidas e mostra a tela "Mission accomplished". Derrota: "A base foi perdida" (`src/main.ts`, `outcomeOf` em `src/engine/game.ts`).
 
 ### 4.2 Constantes de equilíbrio (valores atuais)
 

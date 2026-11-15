@@ -827,3 +827,21 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Estado de U-06:** aceno verificado (commit `13f7767`). Colheita usa o clipe `work`, com aparência equivalente à do clipe `harvest` nos quadros comparados.
 - **Git:** nenhum commit.
 
+## 15/11/2026 · U-01, revisão de textos (parcial)
+
+- **Dicionário:** 521 chaves em `src/i18n.ts`, todas com EN e PT, sem duplicadas. Os 6 textos iguais nas duas línguas são nomes próprios ou formatos (ex.: "Habitat", "Software", "JPL Horizons · LRO LOLA · NASA DONKI").
+- **Uso:** 313 chaves usadas em `t(...)` e `data-i18n` existem no dicionário. Nenhuma chave ausente.
+- **Capturas:** base e painel de ciência em EN e PT, em 1366×768 e 390×844 (`.scratch-agent/u01/`). Nenhum texto cortado nas telas vistas.
+- **Pendente:** menu, modos, créditos, fim de partida, modo escola e painéis de contexto.
+- **Git:** sem commit.
+
+## 15/11/2026 · Pendências de U-01: vitória, modo escola, contexto e telas em EN
+
+- **Vitória (U-07):** alcançável jogando. Jogador automático pela interface (rover → gelo, painel e antena; 4× de velocidade): 708 h em ~180 s reais, com 152 pedidos de gelo, 7 painéis (9 de 12 instalados) e 3 de 3 vidas. Tela "MISSION ACCOMPLISHED / One lunar day survived". Captura em `.scratch-agent/vitoria/fim_jogador.png`.
+- **Atalho `hour=708`:** não é vitória. Roda o motor sem ações do jogador e termina em derrota. O script `scripts/capturas-readme.py` (fim de partida) usa esse atalho e precisa ser revisado.
+- **Modo escola:** com "Mostrar explicações junto aos recursos" ligado, o painel de energia mostra "O que é", "Por que muda" e "Fonte" (`.scratch-agent/vitoria/escola_on.png`).
+- **Painel de contexto no celular (390×844):** legível. A seção "Estado" fica abaixo da dobra e é alcançada por rolagem interna de `#ctx-body`. Alteração de CSS testada e desfeita por não ser necessária.
+- **Telas em EN:** menu, modos, história, como jogar, créditos e configurações, em 1366×768, sem texto cortado (`.scratch-agent/u01/folha_desk_en.png`).
+- **Pendente:** captura da vitória em PT; telas de EN no celular.
+- **Git:** sem commit.
+
