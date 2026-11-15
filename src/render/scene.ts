@@ -18,11 +18,12 @@ import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
 import { attachModel, loadGltf, loadModel } from './assets';
 import { VERTICAL_EXAGGERATION, surfaceHeight } from './terrain-height';
-import { ANTENNA_WORK, AIRLOCK, DOCK, ICE_PROCESSOR, ICE_ROUTE, ICE_SITE, PANEL_SLOTS, type Spot } from './layout';
+import { AIRLOCK, DOCK, ICE_PROCESSOR, ICE_SITE, type Spot } from './layout';
 import { base, loadBaseLayoutModels, updateBase } from './base-layout';
 import { updateCrop } from './crop';
 import { astronomicalSky, updateSky } from './sky';
-import { CREW_HOMES, ICE_HELPER, PANEL_FIELD_WORK, pathBetween, siteFocus, workSpot } from './crew-nav';
+import { CREW_HOMES, ICE_HELPER, PANEL_FIELD_WORK, pathBetween, sampleInto, siteFocus, workSpot } from './crew-nav';
+import { distanceAt, roverReturn, roverRoute, roverTrack } from './rover-routes';
 import { createWalker, LOPE_SPEED, remaining, setPath, stepGait, stepWalker, type Drive, type Walker } from './crew-gait';
 import { CrewRig, type PoseClip } from './crew-rig';
 
@@ -339,46 +340,24 @@ function updateDust(dt: number): void {
 
 type Path = readonly Spot[];
 
-/** Ponto e rumo ao longo da linha, por fração do comprimento (0..1). */
-function along(path: Path, k: number): { x: number; z: number; heading: number } {
-  const seg: number[] = [];
-  let total = 0;
-  for (let i = 0; i < path.length - 1; i++) {
-    const d = Math.hypot(path[i + 1].x - path[i].x, path[i + 1].z - path[i].z);
-    seg.push(d);
-    total += d;
-  }
-  let dist = Math.min(1, Math.max(0, k)) * total;
-  for (let i = 0; i < seg.length; i++) {
-    if (dist <= seg[i] || i === seg.length - 1) {
-      const f = seg[i] > 0 ? Math.min(1, dist / seg[i]) : 1;
-      const a = path[i];
-      const b = path[i + 1];
-      return { x: a.x + (b.x - a.x) * f, z: a.z + (b.z - a.z) * f, heading: Math.atan2(-(b.z - a.z), b.x - a.x) };
-    }
-    dist -= seg[i];
-  }
-  const last = path[path.length - 1];
-  return { x: last.x, z: last.z, heading: 0 };
+const roverProbe = { x: 0, z: 0, heading: 0 };
+/**
+ * Ponto e rumo do rover na trajetória (rover-routes.ts): `k` é o progresso do trecho no motor; o perfil de
+ * velocidade decide a distância (freia nas curvas). `geometric` usa a fração da distância (modo seguro). O modelo olha para +x.
+ */
+function along(route: Path, k: number, geometric = false): { x: number; z: number; heading: number } {
+  const track = roverTrack(route);
+  const s = geometric ? Math.min(1, Math.max(0, k)) * track.path.length : distanceAt(track, k);
+  sampleInto(track.path, s, roverProbe);
+  return { x: roverProbe.x, z: roverProbe.z, heading: roverProbe.heading - Math.PI / 2 };
 }
 
 /** Velocidade visual máxima do rover nos trechos de missão (unidades por segundo real). */
 const VISUAL_TRIP_SPEED = 40;
 
-const PROCESSOR_FRONT: Spot ={ x: ICE_PROCESSOR.x, z: ICE_PROCESSOR.z - 2.6 };
-
-/** Rotas de ida (garagem → local) por tipo de missão. A volta é a mesma linha ao contrário. */
-function routeFor(kind: TaskKind, panelSlot: number): Path {
-  if (kind === 'ice') return ICE_ROUTE;
-  if (kind === 'antenna') return [DOCK, { x: 7, z: -9 }, ANTENNA_WORK];
-  const slot = PANEL_SLOTS[Math.min(panelSlot, PANEL_SLOTS.length - 1)];
-  // Contorna o habitat pelo norte e entra no campo solar pelo corredor entre as colunas.
-  return [DOCK, { x: 6, z: -11 }, { x: -6, z: -11 }, { x: slot.x + 1.8, z: -11 }, { x: slot.x + 1.8, z: slot.z }];
-}
-
 /** Posição atual do rover (para voltar caminhando depois de cancelar). */
 const roverAt = { x: DOCK.x, z: DOCK.z, heading: Math.PI / 2 };
-const ROVER_RETURN_SPEED = 9; // m/s, só para voltar à garagem fora de uma missão (mesma escala dos astronautas)
+const ROVER_RETURN_SPEED = 3.5; // m/s, só para voltar à garagem fora de uma missão (mesma escala das missões, D-22)
 
 export interface RoverView {
   readonly working: boolean;
@@ -406,12 +385,32 @@ function followRover(tx: number, tz: number, th: number, dt: number, bob = 0): v
   setRover(roverAt.x, roverAt.z, roverAt.heading, bob);
 }
 
+/** Meio comprimento e meia bitola do rover (m), onde o relevo é amostrado sob as rodas. */
+const ROVER_HALF_LENGTH = 1.2;
+const ROVER_HALF_TRACK = 0.8;
+robot.rotation.order = 'YZX';
+let roverPitch = 0;
+let roverRoll = 0;
+
+/** Pousa o rover no relevo: altura média sob as rodas e chassi inclinado (frente/trás e lateral), suavizado. */
 function setRover(x: number, z: number, heading: number, bob = 0): void {
   roverAt.x = x;
   roverAt.z = z;
   roverAt.heading = heading;
-  robot.position.set(x, surfaceHeight(x, z) + bob, z);
-  robot.rotation.y = heading;
+  // Frente do modelo em +x: depois do giro `heading`, a frente aponta para (cos h, −sin h) no plano x–z.
+  const fx = Math.cos(heading);
+  const fz = -Math.sin(heading);
+  const front = surfaceHeight(x + fx * ROVER_HALF_LENGTH, z + fz * ROVER_HALF_LENGTH);
+  const back = surfaceHeight(x - fx * ROVER_HALF_LENGTH, z - fz * ROVER_HALF_LENGTH);
+  // Lados: +z do modelo (direita) e −z (esquerda). Giro positivo em x baixa o lado +z.
+  const sidePlus = surfaceHeight(x - fz * ROVER_HALF_TRACK, z + fx * ROVER_HALF_TRACK);
+  const sideMinus = surfaceHeight(x + fz * ROVER_HALF_TRACK, z - fx * ROVER_HALF_TRACK);
+  const pitch = Math.atan2(front - back, 2 * ROVER_HALF_LENGTH);
+  const roll = Math.atan2(sideMinus - sidePlus, 2 * ROVER_HALF_TRACK);
+  roverPitch += (pitch - roverPitch) * 0.25;
+  roverRoll += (roll - roverRoll) * 0.25;
+  robot.position.set(x, (front + back + sidePlus + sideMinus) / 4 + bob, z);
+  robot.rotation.set(roverRoll, heading, roverPitch);
 }
 
 /**
@@ -419,19 +418,13 @@ function setRover(x: number, z: number, heading: number, bob = 0): void {
  * deslocamento pela rota, operação no local, volta e entrega. Tarefa suspensa (radiação ou sem bateria):
  * o rover fica parado onde estava, como o motor.
  */
-/** Aceleração e frenagem suaves nos trechos de ida e volta: o rover não parte nem para de uma vez. */
-function smoothstep(k: number): number {
-  return k * k * (3 - 2 * k);
-}
-
 function placeRover(state: GameState, t: number, dt: number, radiation: boolean): RoverView {
   const task = state.robot.queue[0];
   const safe = state.robot.safe;
   if (task && safe) {
     // Modo seguro: volta pela rota da missão, na posição dada pela distância restante (motor).
     const d = safeDistance(safe);
-    const route = routeFor(task.kind, state.installation.panels);
-    const p = along([...route].reverse(), 1 - d);
+    const p = along([...roverRoute(task.kind, state.installation.panels)].reverse(), 1 - d, true);
     const moving = safe.returnLeft > 0 && state.vitals.battery > 0;
     setRover(p.x, p.z, moving ? p.heading : roverAt.heading, moving ? 0.015 * Math.sin(t * 22) : 0);
     return { working: false, moving, phase: null, kind: null, k: 0 };
@@ -456,16 +449,17 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
   }
   const phase = missionPhase(task);
   const k = phaseProgress(task);
-  const route = routeFor(task.kind, state.installation.panels);
-  const back: Path = task.kind === 'ice' ? [...route].reverse().slice(0, -1).concat([PROCESSOR_FRONT]) : [...route].reverse();
+  const route = roverRoute(task.kind, state.installation.panels);
+  const back = roverReturn(task.kind, state.installation.panels);
   let moving = false;
   if (phase === 'prep') {
     // Preparação: na garagem, girando para a rota.
-    const first = along(route, 0.02);
-    const h = roverAt.heading + (first.heading - roverAt.heading) * Math.min(1, dt * 3);
+    const first = along(route, 0.02, true);
+    const turn = Math.atan2(Math.sin(first.heading - roverAt.heading), Math.cos(first.heading - roverAt.heading));
+    const h = roverAt.heading + turn * Math.min(1, dt * 3);
     setRover(DOCK.x, DOCK.z, h);
   } else if (phase === 'travel') {
-    const p = along(route, smoothstep(k));
+    const p = along(route, k);
     followRover(p.x, p.z, p.heading, dt, 0.015 * Math.sin(t * 22));
     moving = true;
   } else if (phase === 'operate') {
@@ -473,7 +467,7 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
     const p = along(route, 1);
     followRover(p.x, p.z, roverAt.heading, dt);
   } else if (phase === 'return') {
-    const p = along(back, smoothstep(k));
+    const p = along(back, k);
     followRover(p.x, p.z, p.heading, dt, 0.015 * Math.sin(t * 22));
     moving = true;
   } else {

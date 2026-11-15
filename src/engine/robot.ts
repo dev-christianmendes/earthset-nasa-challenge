@@ -23,13 +23,31 @@ export const MAX_QUEUE = 4;
 export const MAX_PANELS = 12;
 /** Consumo extra da base enquanto o robô trabalha, por hora. */
 export const ROBOT_LOAD_PER_HOUR = 1.0;
-/** Duração de cada tipo de tarefa, em horas de jogo. */
-export const TASK_HOURS: Record<TaskKind, number> = { ice: 6, panel: 4, antenna: 8 };
-/** Água de uma viagem de gelo, em unidades de 0 a 100. */
-export const ICE_WATER_PER_TRIP = 12;
-/** Duração da viagem de gelo com a ajuda do astronauta livre (D-06). */
-export const ICE_HELP_HOURS = 4;
-/** Velocidade da viagem de gelo com ajuda: 6 h de trabalho em 4 h de jogo. */
+/**
+ * Horas de jogo de cada fase da missão: [preparo, ida, operação, volta, entrega] (1 h = 1 s em 1×).
+ * Ida e volta saem da rota real do rover na cena (`src/render/rover-routes.ts`) a ~3,3 m/s de média (~12 km/h),
+ * na faixa do rover das Apollo (13 km/h de projeto, 18 km/h de recorde; D-22). Antes eram 13–20 m/s em 1×.
+ * Preparo, operação e entrega mantêm as horas anteriores. Ilustrativo: equilíbrio e apresentação.
+ */
+export const TASK_PHASE_HOURS: Record<TaskKind, readonly [number, number, number, number, number]> = {
+  ice: [0.36, 6.5, 1.8, 6.5, 0.36],
+  panel: [0.24, 13, 1.2, 13, 0.24],
+  antenna: [0.48, 4, 2.4, 4, 0.48],
+};
+/** Duração de cada tipo de tarefa, em horas de jogo (soma das fases). */
+export const TASK_HOURS: Record<TaskKind, number> = {
+  ice: TASK_PHASE_HOURS.ice.reduce((a, b) => a + b, 0),
+  panel: TASK_PHASE_HOURS.panel.reduce((a, b) => a + b, 0),
+  antenna: TASK_PHASE_HOURS.antenna.reduce((a, b) => a + b, 0),
+};
+/**
+ * Água de uma viagem de gelo, em unidades de 0 a 100. Proporcional à duração da missão para manter a água por hora
+ * de antes (12 em 6 h → 31 em 15,52 h; D-22). Regra de jogo.
+ */
+export const ICE_WATER_PER_TRIP = 31;
+/** Duração da viagem de gelo com a ajuda do astronauta livre (D-06): mesma proporção de antes (6 h → 4 h, ×1,5). */
+export const ICE_HELP_HOURS = TASK_HOURS.ice / 1.5;
+/** Velocidade da viagem de gelo com ajuda (×1,5). */
 export const ICE_HELP_SPEED = TASK_HOURS.ice / ICE_HELP_HOURS;
 
 export function createRobot(): RobotState {

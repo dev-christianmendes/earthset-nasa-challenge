@@ -31,7 +31,7 @@ import { EXPOSURE_HOURS_PER_HEART } from '../engine/crew';
 import { GREENHOUSE, PANEL_OUTPUT_PER_HOUR, deriveFlow, type GreenhouseMode } from '../engine/resources';
 import { isWorking } from '../engine/robot';
 import { PHASES, missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
-import { ICE_WATER_PER_TRIP, MAX_PANELS, type TaskKind } from '../engine/robot';
+import { ICE_HELP_HOURS, ICE_WATER_PER_TRIP, MAX_PANELS, TASK_HOURS, type TaskKind } from '../engine/robot';
 import type { AlertView } from '../engine/alert';
 import { safeStatus } from '../engine/safe-mode';
 import { t } from '../i18n';
@@ -325,8 +325,10 @@ function phaseLabel(phase: MissionPhase, kind: TaskKind): string {
 }
 
 function missionDetail(kind: TaskKind, state: GameState): string {
-  if (kind === 'panel') return t('mission.panel.count', { n: state.installation.panels, max: MAX_PANELS });
-  return t(`mission.${kind}.time`);
+  // Horas e água vêm do motor (TASK_HOURS, ICE_HELP_HOURS): o texto não fica para trás quando a regra muda.
+  const h = Math.round(TASK_HOURS[kind]);
+  if (kind === 'panel') return t('mission.panel.count', { h, n: state.installation.panels, max: MAX_PANELS });
+  return t(`mission.${kind}.time`, { h, help: Math.round(ICE_HELP_HOURS) });
 }
 
 /** Etapas da missão em andamento: cinco barras (preparo, ida, operação, volta, entrega) e o texto da etapa. */
@@ -390,7 +392,7 @@ function roverView(state: GameState): View {
         const why = whyNot(s, action);
         const button = make('button', 'ctx-task');
         button.type = 'button';
-        button.append(make('b', undefined, t(`mission.${kind}`)), make('small', undefined, `${t(`mission.${kind}.p`)} ${missionDetail(kind, s)}`));
+        button.append(make('b', undefined, t(`mission.${kind}`)), make('small', undefined, `${t(`mission.${kind}.p`, { w: ICE_WATER_PER_TRIP })} ${missionDetail(kind, s)}`));
         if (why) {
           button.disabled = true;
           button.title = why;
@@ -443,7 +445,7 @@ function missionButton(state: GameState, kind: TaskKind): HTMLElement {
   const why = whyNot(state, action);
   const button = make('button', 'ctx-task');
   button.type = 'button';
-  button.append(make('b', undefined, t(`mission.${kind}`)), make('small', undefined, `${t(`mission.${kind}.p`)} ${missionDetail(kind, state)}`));
+  button.append(make('b', undefined, t(`mission.${kind}`)), make('small', undefined, `${t(`mission.${kind}.p`, { w: ICE_WATER_PER_TRIP })} ${missionDetail(kind, state)}`));
   if (why) {
     button.disabled = true;
     button.title = why;

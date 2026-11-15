@@ -159,3 +159,11 @@ Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'`
 - **Som:** sintetizado com Web Audio, sem arquivos (nada a licenciar). Estilizado e declarado como rádio, traje e estrutura, não som do ambiente lunar.
 - **Celular deitado:** a LUMA cobria Base, Rover e Tripulação; a barra passa a coluna à esquerda.
 
+## D-22. Rover em velocidade de veículo lunar e trajetória planejada (15/11/2026, noite)
+
+- **Pedido do autor:** fazer com o rover o mesmo que com os astronautas (D-20) e uma trajetória mais sofisticada.
+- **Problema:** com as frações fixas de 6, 4 e 8 h, cada trecho de 20 a 46 m durava ~1,2 a 2,3 s em 1×: 13 a 20 m/s. As rotas eram cantos retos desenhados à mão; a da antena passava rente à torre de luz e o corredor da primeira coluna do campo solar, a 0,3 m da unidade de energia.
+- **Tempos:** cada missão passa a ter horas por fase (`TASK_PHASE_HOURS`): preparo, operação e entrega mantêm as horas de antes; ida e volta saem da rota real a ~3,3 m/s de média (gelo 6,5 h, painel 13 h, antena 4 h por trecho), dentro do rover das Apollo (13 km/h de projeto, 18 km/h de recorde). Pico verificado por teste abaixo de 5 m/s em 1×.
+- **Equilíbrio:** a primeira tentativa (~2,4 m/s) derrubou a partida de referência (falta de água e de energia na noite longa). A versão adotada mantém a água por hora: `ICE_WATER_PER_TRIP` 12 → 31 (proporcional a 6 → 15,52 h) e a ajuda do astronauta continua ×1,5. Com isso, os três modos vencem com 3 corações e todas as partidas dos testes passam (259 de 259). Os testes com horas fixas passaram a usar as constantes.
+- **Trajetória** (`src/render/rover-routes.ts`): rota pelo planejador de navegação com a folga do veículo (1,3 m), corredores entre as colunas do campo solar, cantos trocados por arcos de raio mínimo (2,6 m), perfil de velocidade que freia antes das curvas (aceleração lateral limitada) e é esticado para caber exatamente no trecho do motor, chassi inclinado pelo relevo amostrado sob as rodas.
+

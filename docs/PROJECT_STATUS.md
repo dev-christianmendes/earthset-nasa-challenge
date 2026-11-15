@@ -52,6 +52,7 @@ A tabela de desempenho e as capturas de 15/11 estão em `docs/PERFORMANCE_VALIDA
 - LUMA: guia por regras, sem IA generativa (`src/engine/guide.ts`); objetivos (`src/engine/objectives.ts`).
 - Interação: seleção por toque e teclado, painel contextual com ações validadas pelo motor (`src/render/picking.ts`, `src/ui/context-panel.ts`).
 - Tripulação na cena (D-20): navegação contornando as estruturas, locomoção com inércia e passo lunar, animação por clipes do GLB (`src/render/crew-nav.ts`, `src/render/crew-gait.ts`, `src/render/crew-rig.ts`).
+- Rover (D-22): trajetória planejada contornando estruturas, curvas em arco de raio mínimo, velocidade que freia nas curvas dentro do horário do motor e chassi inclinado pelo relevo (`src/render/rover-routes.ts`). ~3,3 m/s de média em 1×.
 - Câmera (D-21): planos de visão geral, astronauta, rover e equipamentos; acompanhamento que desvia de estruturas e do chão (`src/render/director.ts`). Com acompanhamento ligado, as ordens não trocam a câmera.
 - Ordem em espera (D-21): o aviso de ordem e o painel dizem por que a tarefa espera (radiação, ordem de abrigo, bateria) e quanto falta (`radiationHoursLeft` em `src/engine/space-weather.ts`).
 - Som (D-21): sinais estilizados sintetizados no navegador, sem arquivos de áudio, com botão de silenciar salvo no navegador (`src/ui/audio.ts`).
@@ -67,8 +68,8 @@ A tabela de desempenho e as capturas de 15/11 estão em `docs/PERFORMANCE_VALIDA
 | `MAX_HEARTS` / `HOURS_PER_HEART_LOSS` | 3 / 6 | `src/engine/game.ts` |
 | `PANEL_OUTPUT_PER_HOUR` / `BASE_LOAD_PER_HOUR` | 0,9 / 0,8 | `src/engine/resources.ts` |
 | `MAX_QUEUE` / `MAX_PANELS` | 4 / 12 | `src/engine/robot.ts` |
-| `TASK_HOURS` | gelo 6, painel 4, antena 8 | `src/engine/robot.ts` |
-| `ICE_WATER_PER_TRIP` | 12 | `src/engine/robot.ts` |
+| `TASK_HOURS` | gelo 15,52, painel 27,68, antena 11,36 (fases em `TASK_PHASE_HOURS`, D-22) | `src/engine/robot.ts` |
+| `ICE_WATER_PER_TRIP` | 31 | `src/engine/robot.ts` |
 | Partida inicial | site `peak`, 2 painéis, capacidade de bateria **1000**, estufa `surplus` | `src/main.ts` (`BASE`) |
 
 O plano de referência nos testes (`tests/engine/partida.test.ts`), com o Sol e o horizonte medidos, vence com 3 corações. Com o cenário regional histórico, rendia 2. A capacidade de 1000 foi escolhida por simulação e é ajustável (`docs/regras-recursos.md`).
@@ -114,7 +115,6 @@ O plano de referência nos testes (`tests/engine/partida.test.ts`), com o Sol e 
 - **Desempenho móvel:** não medido em aparelho físico. Emulação com CPU limitada mostrou carga fria de até 1870 ms de long task e quadro de 2816,6 ms (`docs/PERFORMANCE_VALIDATION.md`). Ainda aberto (AST-PERF-01 e 02).
 - **Auditoria de 15/11:** os achados foram registrados a partir de uma versão auditada. Reproduzir no código atual antes de corrigir ou encerrar (`docs/PLANO_AJUSTES_AUDITORIA.md`). Houve edições externas e HMR durante a auditoria, e nem tudo foi reverificado.
 - **Dependências:** `npm audit` aponta 3 problemas em `vitest` 3.2.7 e `tinypool`, só de desenvolvimento, fora do build. A correção indicada é vitest 5, uma mudança maior. Não reverificado nesta data.
-- **Velocidade do rover:** a missão de gelo (6 h) dá ~1,7 s de jogo em 1× para cada trecho de ~22 m; o rover anda a 13–20 m/s. Mudar exige decisão do autor (backlog, D-F).
 - **Ilustrativo marcado:** horizonte, relevo e algumas partes da luz da cena são medidos; o que é regra de jogo ou arte está marcado no código e na tela, conforme `docs/data-sources.md`, seção 5.
 
 

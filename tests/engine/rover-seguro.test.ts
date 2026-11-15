@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch, type GameState } from '../../src/engine/game';
 import { CALM } from '../../src/engine/space-weather';
-import { TASK_HOURS, type TaskKind } from '../../src/engine/robot';
+import { TASK_HOURS, TASK_PHASE_HOURS, type TaskKind } from '../../src/engine/robot';
 import { distanceFromBase, endSafeMode, isAway, safeStatus, startSafeMode } from '../../src/engine/safe-mode';
-import { missionPhase } from '../../src/engine/mission';
+import { PHASE_BOUNDS_BY_KIND, missionPhase } from '../../src/engine/mission';
 import type { Installation } from '../../src/engine/resources';
 
 const INST: Installation = { rank: 'explorador', site: 'peak', panels: 6, batteryCapacity: 1200, greenhouse: 'off' };
@@ -41,7 +41,7 @@ describe('rover em modo seguro', () => {
   });
 
   it('chega à base, fica esperando e o progresso da tarefa não anda durante o evento', () => {
-    const g = run(withTask('ice', 0.5), 4, RAD);
+    const g = run(withTask('ice', 0.5), Math.ceil(TASK_PHASE_HOURS.ice[1]) + 1, RAD);
     expect(safeStatus(g.robot, g.vitals.battery)).toBe('docked');
     const parado = progress(g);
     const g2 = run(g, 3, RAD);
@@ -50,11 +50,12 @@ describe('rover em modo seguro', () => {
 
   it('ao fim do evento, recomeça a ida da base e perde o que já tinha andado', () => {
     const antes = withTask('ice', 0.5);
-    let g = run(antes, 4, RAD);
+    let g = run(antes, Math.ceil(TASK_PHASE_HOURS.ice[1]) + 1, RAD);
     g = run(g, 0.25, CALM);
     expect(g.robot.safe).toBeNull();
     expect(missionPhase(g.robot.queue[0]!)).toBe('travel');
-    expect(progress(g)).toBeLessThan(0.15);
+    // Recomeçou da base: o progresso está logo no início da ida, longe dos 50% de antes.
+    expect(progress(g)).toBeLessThan(PHASE_BOUNDS_BY_KIND.ice.travel[0] + 0.05);
     // E a missão ainda se conclui depois.
     g = run(g, TASK_HOURS.ice + 1, CALM);
     expect(g.robot.queue).toHaveLength(0);

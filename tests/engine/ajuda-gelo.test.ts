@@ -1,5 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// D-06: com a tripulação livre, a tarefa de gelo dura 4 h em vez de 6 h.
+// D-06: com a tripulação livre, a tarefa de gelo anda 1,5× mais depressa (antes 6 h → 4 h; D-22 mantém a proporção).
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch } from '../../src/engine/game';
 import { advanceCrew, createCrew, crewAvailableForHelp } from '../../src/engine/crew';
@@ -16,17 +16,17 @@ function iceQueued() {
 }
 
 describe('ajuda ao gelo (D-06)', () => {
-  it('a ajuda acelera o gelo: 6 h de trabalho em 4 h de jogo', () => {
-    expect(ICE_HELP_HOURS).toBe(4);
+  it('a ajuda acelera o gelo 1,5×: a missão inteira cabe em ICE_HELP_HOURS', () => {
+    expect(ICE_HELP_SPEED).toBeCloseTo(1.5);
     expect(ICE_HELP_SPEED).toBeCloseTo(TASK_HOURS.ice / ICE_HELP_HOURS);
-    const r = progressRobot({ ...createRobot(), queue: [{ kind: 'ice', hoursLeft: TASK_HOURS.ice }] }, 4, ICE_HELP_SPEED);
+    const r = progressRobot({ ...createRobot(), queue: [{ kind: 'ice', hoursLeft: TASK_HOURS.ice }] }, ICE_HELP_HOURS, ICE_HELP_SPEED);
     expect(r.completed).toEqual(['ice']);
   });
 
-  it('sem ajuda (velocidade 1), o gelo ainda leva 6 h', () => {
-    const r = progressRobot({ ...createRobot(), queue: [{ kind: 'ice', hoursLeft: TASK_HOURS.ice }] }, 4, 1);
+  it('sem ajuda (velocidade 1), o gelo leva o tempo cheio', () => {
+    const r = progressRobot({ ...createRobot(), queue: [{ kind: 'ice', hoursLeft: TASK_HOURS.ice }] }, ICE_HELP_HOURS, 1);
     expect(r.completed).toEqual([]);
-    expect(r.robot.queue[0].hoursLeft).toBeCloseTo(2);
+    expect(r.robot.queue[0].hoursLeft).toBeCloseTo(TASK_HOURS.ice - ICE_HELP_HOURS);
   });
 
   it('a ajuda não está disponível na radiação nem enquanto alguém ainda caminha até o abrigo', () => {
@@ -36,10 +36,10 @@ describe('ajuda ao gelo (D-06)', () => {
     expect(crewAvailableForHelp(walking, false)).toBe(false);
   });
 
-  it('na partida, o gelo termina em 4 h com a tripulação livre', () => {
+  it('na partida, o gelo termina em ICE_HELP_HOURS com a tripulação livre', () => {
     let g = iceQueued();
-    for (let i = 0; i < 4; i++) g = advance(g, 1, true, CALM);
+    for (let i = 0; i < Math.ceil(ICE_HELP_HOURS); i++) g = advance(g, 1, true, CALM);
     expect(g.robot.queue.length).toBe(0);
-    expect(g.vitals.water).toBeGreaterThan(50 - 4 * 2);
+    expect(g.vitals.water).toBeGreaterThan(50 - Math.ceil(ICE_HELP_HOURS) * 2);
   });
 });

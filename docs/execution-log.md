@@ -927,3 +927,13 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Comandos:** `npm run typecheck` passou; `npx vitest run` 254 de 254; `npm run build` passou; `npm audit --omit=dev` 0 vulnerabilidades.
 - **Não feito:** passos e sons por equipamento (UX-01), câmera por teclado (UX-02), painel recolhível no celular em pé (UX-03), velocidade do rover (decisão D-F), medição em aparelho físico.
 - **Git:** sem commit.
+
+## 15/11/2026 · Rover: tempos pela rota e trajetória planejada (D-22) e backlog da auditoria
+
+- **Backlog:** pendências do pedido de auditoria integrada registradas na seção 6a (INS-01, UX-03 a UX-09, CAM-01 a 03, PER-01 a 04, ICE-01, UX-01, SND-02, VAL-01), sem repetir o que D-20 e D-21 entregaram.
+- **Motor:** `TASK_PHASE_HOURS` por missão; `PHASE_BOUNDS_BY_KIND` em `mission.ts`; modo seguro usa o trecho de cada tipo. Primeira tentativa a ~2,4 m/s: 19 testes falharam, incluindo derrotas na partida de referência (Explorador sem água na hora 456; Comandante sem energia na hora 639). Medido um meio-termo (~3,3 m/s, água 30 a 31): os três modos vencem com 3 corações. Adotado.
+- **Cena:** `src/render/rover-routes.ts` (rota planejada, arcos, perfil, `distanceAt`); `crew-nav.planRoute` aceita folga; `setRover` inclina o chassi pelo relevo; volta à garagem a 3,5 m/s (antes 9). Textos de horas e água ligados às constantes (`mission.*.time`, `mission.panel.count`, `mission.ice.p`).
+- **Testes:** `tests/render/rover-routes.test.ts` (5) pegou dois problemas reais: corredor da primeira coluna a 0,3 m da unidade de energia e pico de 6,4 m/s na antena; corrigidos (corredores entre colunas; trecho da antena 4 h). Resultado: `npm run typecheck` passou; `npx vitest run` 259 de 259; `npm run build` passou.
+- **Navegador:** missão de gelo gravada em 1× (ida em curva, escavação, volta, descarga com aquecimento, água 14 → 44); missão de painel acompanhada por posições (contorna o habitat pelo norte, corredor x = −14,2). Achado: sem gelo na fila, a água zera por volta da hora 100 durante a missão de painel (ROV-04).
+- **Git:** sem commit.
+

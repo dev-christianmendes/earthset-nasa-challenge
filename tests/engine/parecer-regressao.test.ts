@@ -1,5 +1,6 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Regressão dos defeitos E01 a E05 do parecer de julgamento (revisão 2ebfee6, 15/11/2026).
+import { TASK_HOURS } from '../../src/engine/robot';
 // Cada teste reproduz o cenário do parecer e falha se o defeito voltar.
 // E06 (teste Python de metadado angular) é coberto em data-pipeline/tests.
 import { describe, expect, it } from 'vitest';
@@ -92,7 +93,7 @@ describe('E04 · estufa não cresce sem água', () => {
 });
 
 describe('E05 · ajuda de astronauta só com tripulação livre', () => {
-  it('com os dois astronautas ocupados, o gelo leva as 6 h completas', () => {
+  it('com os dois astronautas ocupados, o gelo leva o tempo cheio', () => {
     let g = withVitals(base(), { battery: 900 });
     g = { ...g, crop: { ...g.crop, wear: 40 } };
     const first = dispatch(g, { type: 'ASSIGN_AGENT_TASK', kind: 'inspect', agent: 0 });
@@ -102,10 +103,10 @@ describe('E05 · ajuda de astronauta só com tripulação livre', () => {
     const queued = queueIce(second.state);
     let s = queued;
     let hours = 0;
-    while (s.robot.queue.length > 0 && hours < 12) {
+    while (s.robot.queue.length > 0 && hours < 2 * TASK_HOURS.ice) {
       s = advance(s, 1, LIT);
       hours++;
     }
-    expect(hours).toBe(6);
+    expect(hours).toBe(Math.ceil(TASK_HOURS.ice));
   });
 });

@@ -5,7 +5,7 @@ import { MODES, installationFor, isModeId, MODE_IDS, type ModeId } from '../../s
 import { chaptersOf, currentChapter, CHAPTER_ICE_TRIPS } from '../../src/engine/chapters';
 import { missionPhase, phaseProgress, taskProgress } from '../../src/engine/mission';
 import { lumaEvents } from '../../src/engine/guide';
-import { MAX_PANELS, TASK_HOURS, type TaskKind } from '../../src/engine/robot';
+import { MAX_PANELS, TASK_HOURS, TASK_PHASE_HOURS, type TaskKind } from '../../src/engine/robot';
 import { isSunlit, type SunTable } from '../../src/engine/sun';
 import { weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
 import type { TerrainTable } from '../../src/engine/terrain';
@@ -97,14 +97,17 @@ describe('capítulos da Operação Último Horizonte', () => {
 
 describe('fases da missão (apresentação derivada do motor)', () => {
   it('as fases seguem o progresso real da tarefa', () => {
-    const at = (left: number) => ({ kind: 'ice' as const, hoursLeft: left });
-    expect(missionPhase(at(6))).toBe('prep');
-    expect(missionPhase(at(5))).toBe('travel');
-    expect(missionPhase(at(3))).toBe('operate');
-    expect(missionPhase(at(1))).toBe('return');
-    expect(missionPhase(at(0.1))).toBe('deliver');
-    expect(taskProgress(at(3))).toBeCloseTo(0.5);
-    expect(phaseProgress(at(3))).toBeCloseTo(0.5);
+    // Fases em horas (TASK_PHASE_HOURS, D-22): preparo, ida, operação, volta, entrega.
+    const [prep, travel, operate, ret] = TASK_PHASE_HOURS.ice;
+    const total = TASK_HOURS.ice;
+    const at = (elapsed: number) => ({ kind: 'ice' as const, hoursLeft: total - elapsed });
+    expect(missionPhase(at(0))).toBe('prep');
+    expect(missionPhase(at(prep + travel / 2))).toBe('travel');
+    expect(missionPhase(at(prep + travel + operate / 2))).toBe('operate');
+    expect(missionPhase(at(prep + travel + operate + ret / 2))).toBe('return');
+    expect(missionPhase(at(total - 0.1))).toBe('deliver');
+    expect(taskProgress(at(total / 2))).toBeCloseTo(0.5);
+    expect(phaseProgress(at(prep + travel + operate / 2))).toBeCloseTo(0.5);
   });
 });
 

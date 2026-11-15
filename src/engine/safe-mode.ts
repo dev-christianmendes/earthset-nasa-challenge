@@ -1,11 +1,11 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Modo seguro do rover (V5.P3, seção 3.7): com radiação, o rover que está longe da base volta para ela,
 // espera o fim do evento e recomeça a ida. Regras de jogo (não vêm da DONKI). Motor puro.
-import { PHASE_BOUNDS, missionPhase, taskProgress } from './mission';
-import { TASK_HOURS, type RobotState, type RobotTask } from './robot';
+import { PHASE_BOUNDS_BY_KIND, missionPhase, taskProgress } from './mission';
+import { TASK_HOURS, type RobotState, type RobotTask, type TaskKind } from './robot';
 
-/** Fração do tempo da tarefa gasta em cada trecho de ida (e de volta): ver PHASE_BOUNDS. */
-const LEG = PHASE_BOUNDS.travel[1] - PHASE_BOUNDS.travel[0];
+/** Fração do tempo da tarefa gasta em cada trecho de ida (e de volta), por tipo: ver PHASE_BOUNDS_BY_KIND. */
+const legOf = (kind: TaskKind): number => PHASE_BOUNDS_BY_KIND[kind].travel[1] - PHASE_BOUNDS_BY_KIND[kind].travel[0];
 
 export interface SafeMode {
   /** Distância da base quando o modo seguro começou (0 = na base, 1 = no local da tarefa). */
@@ -21,11 +21,11 @@ export function distanceFromBase(task: RobotTask): number {
   const p = taskProgress(task);
   switch (missionPhase(task)) {
     case 'travel':
-      return Math.min(1, Math.max(0, (p - PHASE_BOUNDS.travel[0]) / LEG));
+      return Math.min(1, Math.max(0, (p - PHASE_BOUNDS_BY_KIND[task.kind].travel[0]) / legOf(task.kind)));
     case 'operate':
       return 1;
     case 'return':
-      return Math.min(1, Math.max(0, 1 - (p - PHASE_BOUNDS.return[0]) / LEG));
+      return Math.min(1, Math.max(0, 1 - (p - PHASE_BOUNDS_BY_KIND[task.kind].return[0]) / legOf(task.kind)));
     default:
       return 0;
   }
@@ -47,7 +47,7 @@ export function startSafeMode(robot: RobotState): RobotState {
   const head = robot.queue[0];
   if (!head || robot.safe) return robot;
   const from = distanceFromBase(head);
-  const total = from * LEG * TASK_HOURS[head.kind];
+  const total = from * legOf(head.kind) * TASK_HOURS[head.kind];
   return { ...robot, safe: { from, total, returnLeft: total } };
 }
 
@@ -74,7 +74,7 @@ export function endSafeMode(robot: RobotState): RobotState {
   if (!head) return { ...robot, safe: null };
   const d = safeDistance(safe);
   // Um pouco além do limite da fase de preparação, para a missão voltar a ser vista como "ida".
-  const progress = PHASE_BOUNDS.travel[0] + 0.0001 + d * LEG;
+  const progress = PHASE_BOUNDS_BY_KIND[head.kind].travel[0] + 0.0001 + d * legOf(head.kind);
   const hoursLeft = TASK_HOURS[head.kind] * (1 - progress);
   return { ...robot, queue: [{ ...head, hoursLeft }, ...robot.queue.slice(1)], safe: null };
 }

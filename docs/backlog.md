@@ -73,14 +73,50 @@ Concluídos e fora desta lista: DT-01 (teste do rover verificado: `npm run typec
 - [?] **D-B** Dependabot: há branch remota `dependabot/npm_and_yarn/vitest-5.1.0`. `npm audit` aponta 3 problemas em vitest 3.2.7 e tinypool, só de desenvolvimento. A troca para vitest 5 é maior. **Sugestão:** revisar depois do evento.
 - [?] **D-C** O README aponta para `docs/ESTADO_PROJETO_2026-11-15.pdf` como "status atual". Manter, ou apontar para `docs/PROJECT_STATUS.md`? O PDF não foi revisado nesta higienização.
 - [?] **D-D** Caminhos da tabela P0 de `docs/PLANO_V4.md` (`src/ui/menu.ts` e `src/ui/intro.ts`) não existem. Corrigir a tabela ou mantê-la como registro da proposta.
-- [?] **D-F** Velocidade do rover. Com `TASK_HOURS` (gelo 6, painel 4, antena 8) e as fases de `src/engine/mission.ts`, cada trecho de ~22 m dura ~1,7 s em 1×: o rover anda a 13–20 m/s. Aumentar os tempos muda o equilíbrio (147 entregas de gelo na partida de vitória). Decidir se muda e quanto, como foi feito com os astronautas (D-20).
 - [?] **D-E** `docs/arquitetura.md` ainda traz o desenho planejado (fases F0 a F6, seção 9). Decidir se é reescrito como documento de arquitetura implementada depois do envio.
 
-## 6a. Pendências de interface, câmera e som (auditoria integrada de 15/11, D-21)
+## 6a. Auditoria integrada de gameplay, câmera, interface e som (pedido do autor, 15/11)
 
-- [ ] **UX-01 · Medium** Passos do astronauta e sons de instalação e de conclusão por equipamento (hoje: seleção, ordem, recusa, alarme, conclusão genérica, motor e broca). **Aceite:** sons ligados aos eventos, sem arquivos sem licença.
-- [ ] **UX-02 · Medium** Controle de câmera por teclado (setas para orbitar, +/− para zoom) e indicação de gestos na primeira partida. Hoje: mouse e toque pelo OrbitControls, seleção de objetos por teclado.
-- [ ] **UX-03 · Low** Celular em pé: funciona, mas o painel cobre metade da cena. Avaliar painel recolhível por arraste.
+Já entregue (D-20, D-21; não repetir): locomoção e navegação da tripulação, espera explicada na ordem, câmera de acompanhamento sem obstrução, painel persistente e cabos por painel (DT-11), carga de regolito e aquecimento no processador, celular deitado, som sintetizado com silenciar. Abaixo, só o que falta. Ordem: P0 → P1 → P2.
+
+**Medição e latência**
+- [ ] **INS-01 · P1** Instrumentação de latência no repositório (hoje as sondas Playwright ficaram fora dele): marcas de comando, resposta visual, início do movimento e execução no gancho de desenvolvimento, e um script de medição versionado. **Aceite:** relatório reproduzível em 1×, 2× e 4×, para astronauta e rover.
+
+**Interface e controles (passo 2)**
+- [ ] **UX-04 · P1 · High** Seletor sempre visível de Astronauta 1, Astronauta 2 e Rover, com o estado de cada um ("trabalhando", "aguardando radiação · 12 s"). **Aceite:** trocar de entidade com um toque, em desktop e celular.
+- [ ] **UX-05 · P1 · High** Indicador de tarefa ativa na cena, sobre o astronauta e o rover (ícone e progresso), acompanhando a entidade. **Aceite:** legível a 1280×800 e 915×412, sem cobrir o personagem.
+- [ ] **UX-06 · P1 · High** Painel contextual enxuto: ações possíveis em destaque, com o resultado esperado; bloqueadas agrupadas com o motivo. **Aceite:** menos itens à vista sem perder ação; teste com toque.
+- [ ] **UX-07 · P1 · Medium** Orientação curta na primeira partida (selecionar, dar ordem, acompanhar, câmera), compreensível por estudantes. **Aceite:** pode ser pulada e não volta depois de concluída.
+- [ ] **UX-08 · P2 · Low** Princípios de UX de jogos de exploração e construção de base, como inspiração e sem copiar interfaces, registrados em `docs/UI_UX_SPECIFICATION.md`.
+- [ ] **UX-09 · P1 · Medium** Contraste, legibilidade, estados de carregamento e mensagens de erro (verificação WCAG AA dos textos do HUD e dos painéis). **Aceite:** medição registrada; correções nos casos abaixo de 4,5:1.
+- [ ] **UX-03 · P1 · Medium** Celular em pé: o painel cobre metade da cena. Painéis recolhíveis por arraste ou aviso claro para girar o aparelho. **Aceite:** teste com toque em 412×915.
+
+**Câmera**
+- [ ] **CAM-01 · P1 · Medium** Controle por teclado (setas para orbitar, +/− para zoom, tecla para voltar à visão geral) e dica de gestos na primeira partida.
+- [ ] **CAM-02 · P1 · Medium** Limites de zoom e inclinação por plano, câmera livre explícita e recuperação automática de enquadramento inválido (alvo fora da tela ou atrás do painel lateral). **Aceite:** testado em 1280×800, 915×412 e 412×915.
+- [ ] **CAM-03 · P2 · Low** Medir a transição astronauta ↔ rover (duração, interrupção pelo jogador) e ajustar se passar de ~1 s.
+
+**Interações persistentes**
+- [ ] **PER-01 · P1 · Medium** Antena com estado visível: quebrada → em reparo → operando, sincronizado com o motor.
+- [ ] **PER-02 · P1 · Medium** Estufa: desgaste, manutenção e colheita com consequência visível e persistente (plantas, luzes, peças).
+- [ ] **PER-03 · P1 · Medium** Armazenamento de água: nível dos tanques visível e ligado a `vitals.water`, subindo ao fim do processamento (etapa ARMAZENAR).
+- [ ] **PER-04 · P2 · Low** Etapas explícitas por missão no painel (transportar, posicionar, instalar, conectar, operando), ligadas às fases de `src/engine/mission.ts`.
+
+**Extração de água**
+- [ ] **ICE-01 · P2 · Medium** Indicador de progresso na cena, armadilha fria visível no processador e limites de energia da missão comunicados na tela. Sem números novos sem fonte.
+
+**Som**
+- [ ] **UX-01 · P2 · Medium** Passos do astronauta, sons de instalação, de cada equipamento e de alerta de energia e recursos. **Aceite:** ligados aos eventos, sem arquivo sem licença registrada.
+- [ ] **SND-02 · P2 · Low** Controle de volume (hoje só silenciar), salvo no navegador.
+
+**Rover (trajetória, D-22; feito: rota planejada, arcos de raio mínimo, perfil de velocidade, inclinação no relevo)**
+- [ ] **ROV-01 · P2 · Medium** Manobra de chegada: alinhar a caçamba ao processador (ré curta) e parar de lado para o painel; hoje chega de frente pelo fim da rota.
+- [ ] **ROV-02 · P2 · Medium** Rover como obstáculo dinâmico para a tripulação (hoje só a garagem é obstáculo) e a tripulação como obstáculo para o rover.
+- [ ] **ROV-03 · P2 · Low** Rodas com esterçamento visível nas curvas e giro proporcional à velocidade real (hoje giram a ritmo fixo enquanto o rover anda); volta à garagem fora de missão também pela trajetória planejada.
+- [ ] **ROV-04 · P1 · Medium** Equilíbrio percebido: a missão de painel dura ~28 h de jogo e, sem gelo na fila, a água zera por volta da hora 100. Avaliar na interface um aviso de fila (ex.: "a água acaba antes do painel voltar") sem mudar regras.
+
+**Validação**
+- [ ] **VAL-01 · P1** Matriz final integrada (seção 7 do pedido) em desktop e celular depois de UX-04 a UX-07, com evidências. Aparelho físico: ver AST-PERF-02.
 
 ## 7. Achados de código fora do escopo documental
 

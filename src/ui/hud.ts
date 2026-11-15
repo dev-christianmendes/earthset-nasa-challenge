@@ -3,7 +3,7 @@
 // Só lê o estado do motor e mostra; ações vão para main.ts por eventos. Sem regra de jogo aqui.
 import type { GameState } from '../engine/game';
 import { outcomeOf } from '../engine/game';
-import { MAX_PANELS, MAX_QUEUE, isWorking, type TaskKind } from '../engine/robot';
+import { MAX_PANELS, MAX_QUEUE, TASK_HOURS, isWorking, type TaskKind } from '../engine/robot';
 import { MATCH_HOURS } from '../engine/clock';
 import { deriveFlow, isGreenhouseOn, type GreenhouseMode } from '../engine/resources';
 import type { SpaceWeatherSample } from '../engine/space-weather';
@@ -261,7 +261,7 @@ function renderRover(state: GameState, ctx: HudContext): void {
       || (kind === 'antenna' && (r.antennaInstalled || r.queue.some((q) => q.kind === 'antenna')));
     button.disabled = !playing || full || blocked;
   }
-  ui.panelNote.textContent = t('mission.panel.count', { n: state.installation.panels, max: MAX_PANELS });
+  ui.panelNote.textContent = t('mission.panel.count', { h: Math.round(TASK_HOURS.panel), n: state.installation.panels, max: MAX_PANELS });
   const waiting = r.queue.length > 0 && (ctx.weather.radiation || state.vitals.battery <= 0 || r.safe !== null);
   const key = `${getLang()}|${waiting}|${safeStatus(r, state.vitals.battery)}|${r.queue.map((q) => `${q.kind}:${q.hoursLeft.toFixed(2)}`).join(',')}`;
   if (key === lastQueue) return;

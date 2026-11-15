@@ -117,11 +117,11 @@ function segmentHitsRect(o: Extract<Obstacle, { kind: 'rect' }>, a: Point, b: Po
 }
 
 /** Folga exigida de cada obstáculo para uma rota entre `from` e `to`. Quem contém a ponta é ignorado. */
-function clearances(from: Point, to: Point, obstacles: readonly Obstacle[]): number[] {
+function clearances(from: Point, to: Point, obstacles: readonly Obstacle[], clearance: number): number[] {
   return obstacles.map((o) => {
     if (isInside(o, from) || isInside(o, to)) return -1;
-    const near = distanceTo(o, from) < CLEARANCE + 0.05 || distanceTo(o, to) < CLEARANCE + 0.05;
-    return near ? NEAR_CLEARANCE : CLEARANCE;
+    const near = distanceTo(o, from) < clearance + 0.05 || distanceTo(o, to) < clearance + 0.05;
+    return near ? NEAR_CLEARANCE : clearance;
   });
 }
 
@@ -134,9 +134,9 @@ function segmentClear(a: Point, b: Point, obstacles: readonly Obstacle[], need: 
 }
 
 /** Vértices candidatos em volta de cada pegada (cantos afastados e octógono em volta dos círculos). */
-function graphNodes(obstacles: readonly Obstacle[]): Point[] {
+function graphNodes(obstacles: readonly Obstacle[], clearance: number): Point[] {
   const out: Point[] = [];
-  const d = CLEARANCE + NODE_MARGIN;
+  const d = clearance + NODE_MARGIN;
   for (const o of obstacles) {
     if (o.kind === 'rect') {
       const k = d / Math.SQRT2 + 0.15;
@@ -149,37 +149,41 @@ function graphNodes(obstacles: readonly Obstacle[]): Point[] {
       }
     }
   }
-  return out.filter((p) => obstacles.every((o) => distanceTo(o, p) >= CLEARANCE + 0.1));
+  return out.filter((p) => obstacles.every((o) => distanceTo(o, p) >= clearance + 0.1));
 }
 
 interface NodeGraph {
   readonly obstacles: readonly Obstacle[];
+  readonly clearance: number;
   readonly nodes: Point[];
   /** Visibilidade entre vértices fixos (folga cheia), calculada uma vez. */
   readonly vis: Uint8Array;
 }
-let cachedGraph: NodeGraph | null = null;
+/** Um grafo por conjunto de obstáculos e folga (astronauta e rover usam folgas diferentes). */
+const graphs: NodeGraph[] = [];
 
-function nodeGraph(obstacles: readonly Obstacle[]): NodeGraph {
-  if (cachedGraph && cachedGraph.obstacles === obstacles) return cachedGraph;
-  const nodes = graphNodes(obstacles);
-  const full = obstacles.map(() => CLEARANCE);
+function nodeGraph(obstacles: readonly Obstacle[], clearance: number): NodeGraph {
+  const hit = graphs.find((g) => g.obstacles === obstacles && g.clearance === clearance);
+  if (hit) return hit;
+  const nodes = graphNodes(obstacles, clearance);
+  const full = obstacles.map(() => clearance);
   const m = nodes.length;
   const vis = new Uint8Array(m * m);
   for (let i = 0; i < m; i++)
     for (let j = i + 1; j < m; j++) if (segmentClear(nodes[i], nodes[j], obstacles, full)) vis[i * m + j] = vis[j * m + i] = 1;
-  cachedGraph = { obstacles, nodes, vis };
-  return cachedGraph;
+  const graph = { obstacles, clearance, nodes, vis };
+  graphs.push(graph);
+  return graph;
 }
 
 /**
  * Rota mais curta de `from` a `to` que mantém a folga de todas as pegadas (grafo de visibilidade + Dijkstra).
  * Calculada só quando o destino muda, nunca por quadro. Sem rota possível, devolve a reta.
  */
-export function planRoute(from: Point, to: Point, obstacles: readonly Obstacle[] = OBSTACLES): Point[] {
-  const need = clearances(from, to, obstacles);
+export function planRoute(from: Point, to: Point, obstacles: readonly Obstacle[] = OBSTACLES, clearance = CLEARANCE): Point[] {
+  const need = clearances(from, to, obstacles, clearance);
   if (segmentClear(from, to, obstacles, need)) return [from, to];
-  const graph = nodeGraph(obstacles);
+  const graph = nodeGraph(obstacles, clearance);
   const m = graph.nodes.length;
   const pts = [from, to, ...graph.nodes];
   const n = pts.length;

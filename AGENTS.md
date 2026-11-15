@@ -116,8 +116,8 @@ Valores verificados no código em 15/11/2026.
 | `RANK_FACTOR` | `src/engine/resources.ts` | 0,75 / 1 / 1,15 | Patentes do motor (`cadete`, `explorador`, `comandante`) |
 | `RULES` | `src/engine/resources.ts` | limites | Estufa, eletrólise, economia |
 | `MAX_QUEUE` / `MAX_PANELS` / `ROBOT_LOAD_PER_HOUR` | `src/engine/robot.ts` | 4 / 12 / 1,0 | Fila, painéis e consumo do robô |
-| `TASK_HOURS` | `src/engine/robot.ts` | gelo 6, painel 4, antena 8 | Duração das tarefas |
-| `ICE_WATER_PER_TRIP` | `src/engine/robot.ts` | 12 | Água por viagem de gelo |
+| `TASK_PHASE_HOURS` / `TASK_HOURS` | `src/engine/robot.ts` | gelo 15,52, painel 27,68, antena 11,36 | Fases por missão; trechos pela rota real do rover (D-22) |
+| `ICE_WATER_PER_TRIP` | `src/engine/robot.ts` | 31 | Água por viagem de gelo (proporcional à duração, D-22) |
 | `INSTALLATION` (partida inicial) | `src/main.ts` | site `peak`, 2 painéis, capacidade 1000, estufa `surplus` | **Equilíbrio de jogo**, não dado científico |
 
 **Equilíbrio.** A referência é a partida do plano de referência em `tests/engine/partida.test.ts`, com Sol e horizonte medidos (observador LOLA): vence com 3 corações; a base passiva, sem robô, perde. O cenário regional histórico rendia 2 corações e é mantido só como comparação. Qualquer mudança em número de fluxo precisa de `npm run test`; o teste de partida mede o equilíbrio. Justificativa de cada número: `docs/regras-recursos.md`.
