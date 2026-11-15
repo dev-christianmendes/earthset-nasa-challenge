@@ -878,3 +878,13 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Comandos:** `npm run typecheck` (0); `npx vitest run` (26 arquivos, 239 testes); `npm run build` (0); fronteira do motor limpa.
 - **Git:** sem commit.
 
+## 15/11/2026 · DT-02 (ações nas fronteiras de 0,25 h) e atraso do astronauta
+
+- **Ações do jogador:** validadas na hora (mensagem de recusa imediata) e aplicadas na próxima fronteira de 0,25 h de jogo (`scheduled`, `advanceGame` em `src/main.ts`). Antes, aplicavam no quadro, e o resultado dependia do momento do quadro.
+- **Atraso do astronauta, medido antes:** em 1× o trabalho começava 5,6 s após a ordem; em 4×, 1,5 s. Causas: (1) o trecho de ida durava 5 h de jogo (`TRAVEL_HOURS_BY_KIND`); (2) a posição visual seguia o alvo do motor com velocidade máxima de 9 unidades/s, e ficava para trás quando o motor andava mais rápido (4×). 
+- **Correção:** (1) trechos de ida e volta para 1 h (2 h no campo solar; 1,5 h na antena de ajuste) em `src/engine/astronaut.ts`, com `docs/INTERACOES.md` e `docs/regras-recursos.md` atualizados; (2) a posição visual das fases de ida e volta segue o alvo do motor com suavização exponencial (`smoothCrewTrip` em `src/render/scene.ts`).
+- **Depois:** em 1×, a caminhada começa em 0,3 s e o trabalho em 1,7 s após a ordem; em 4×, a caminhada começa em 0,11 s e o astronauta chega ao local em cerca de 0,4 s.
+- **Visível ainda:** a volta até a base, no fim da tarefa, anda mais devagar que a ida (velocidade de descanso). Não alterado.
+- **Testes:** `npm run typecheck` (0); `npx vitest run` (26 arquivos, 239 testes). Teclado (14 etapas) passa. Vitória pelo jogador automático: ver entrada seguinte.
+- **Git:** sem commit.
+

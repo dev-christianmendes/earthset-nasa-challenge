@@ -3,7 +3,7 @@
 // Liga motor (src/engine), cena (src/render) e interface (src/ui). Regra de jogo só no motor.
 import './ui/styles.css';
 import * as THREE from 'three';
-import { advance, createGame, dispatch, outcomeOf, type GameAction, type GameState } from './engine/game';
+import { advance, createGame, dispatch, outcomeOf, SUBSTEP_HOURS, type GameAction, type GameState } from './engine/game';
 import type { GreenhouseMode, Installation } from './engine/resources';
 import type { TaskKind } from './engine/robot';
 import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
@@ -79,19 +79,56 @@ const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, lit
 
 // ---------- Ações ----------
 
+/** Ações do jogador validadas na hora e aplicadas na próxima fronteira de 0,25 h de jogo (decisão de 15/11, DT-02). */
+const scheduled: { at: number; action: GameAction }[] = [];
+
+/** Horas de jogo já recebidas (integradas ou ainda pendentes no motor). */
+const grantedHours = (): number => game.clock.hour + game.pendingHours;
+
+function reasonText(reason: string): string {
+  const vars: Record<string, number> = reason === 'queue-full' ? { max: MAX_QUEUE } : reason === 'panel-limit' ? { max: MAX_PANELS } : {};
+  return t(`reason.${reason}`, vars);
+}
+
 function act(action: GameAction): string | null {
-  const result = dispatch(game, action);
-  let failure: string | null = null;
-  if (result.ok) {
-    game = result.state;
-    ui.message.textContent = '';
-  } else {
-    const vars: Record<string, number> = result.reason === 'queue-full' ? { max: MAX_QUEUE } : result.reason === 'panel-limit' ? { max: MAX_PANELS } : {};
-    failure = t(`reason.${result.reason}`, vars);
+  // Validação imediata: a mensagem de recusa aparece na hora, como antes.
+  const check = dispatch(game, action);
+  if (!check.ok) {
+    const failure = reasonText(check.reason);
     ui.message.textContent = failure;
+    renderNow(performance.now());
+    return failure;
+  }
+  ui.message.textContent = '';
+  if (isRunning()) {
+    // Com o tempo correndo, a ação vale na próxima fronteira de 0,25 h; o resultado não depende do quadro.
+    const at = (Math.floor(grantedHours() / SUBSTEP_HOURS + 1e-9) + 1) * SUBSTEP_HOURS;
+    scheduled.push({ at, action });
+  } else {
+    game = check.state;
   }
   renderNow(performance.now());
-  return failure;
+  return null;
+}
+
+function isRunning(): boolean {
+  return started && !paused && !ended && currentScreen() === null && outcomeOf(game) === 'playing';
+}
+
+/** Avança o tempo de jogo `hours`, aplicando as ações agendadas nas fronteiras de 0,25 h. */
+function advanceGame(hours: number): void {
+  const target = grantedHours() + hours;
+  scheduled.sort((a, b) => a.at - b.at);
+  while (scheduled.length && scheduled[0].at <= target + 1e-9) {
+    const job = scheduled.shift()!;
+    const need = job.at - grantedHours();
+    if (need > 1e-9) game = advance(game, need, sunlit, weatherAtHour);
+    const result = dispatch(game, job.action);
+    if (result.ok) game = result.state;
+    else ui.message.textContent = reasonText(result.reason);
+  }
+  const rest = target - grantedHours();
+  if (rest > 1e-9) game = advance(game, rest, sunlit, weatherAtHour);
 }
 
 // ---------- Seleção na cena e painel contextual (D-18) ----------
@@ -318,6 +355,7 @@ const cineLuma = document.getElementById('cine-luma') as HTMLElement;
 const cineLumaText = document.getElementById('cine-luma-text') as HTMLElement;
 
 function resetGame(): void {
+  scheduled.length = 0;
   game = createGame({ installation: installationFor(mode, BASE) });
   visualTime = 0;
   ended = false;
@@ -439,7 +477,7 @@ function frame(now: number): void {
   if (active && last !== null) {
     const seconds = Math.min(Math.max(0, (now - last) / 1000), MAX_FRAME_SECONDS);
     const prev = game;
-    game = advance(game, seconds * SPEEDS[speedIndex], sunlit, weatherAtHour);
+    advanceGame(seconds * SPEEDS[speedIndex]);
     const radiationNow = weatherNow().radiation;
     const events = lumaEvents(prev, game, radiationBefore, radiationNow);
     radiationBefore = radiationNow;

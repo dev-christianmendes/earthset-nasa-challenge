@@ -30,10 +30,10 @@ export interface AgentState {
 
 /** Horas de jogo (ilustrativas; equilíbrio, não dado científico). */
 export const PREP_HOURS = 0.25;
-/** Cada trecho de ida ou volta até a estufa: ~10 m a ~2 m/s de jogo a 1× (a 4× vira corrida). */
-export const TRAVEL_HOURS = 5;
+/** Cada trecho de ida ou volta até a estufa: 1 h de jogo (1 s a 1×), para a tarefa começar de imediato (pedido do autor, 15/11). */
+export const TRAVEL_HOURS = 1;
 /** Trecho de ida ou volta por tarefa: proporcional ao caminho até o destino (campo solar é o mais longe). */
-export const TRAVEL_HOURS_BY_KIND: Record<AgentTaskKind, number> = { inspect: 5, harvest: 5, maintain: 5, calibrate: 10, tune: 6 };
+export const TRAVEL_HOURS_BY_KIND: Record<AgentTaskKind, number> = { inspect: 1, harvest: 1, maintain: 1, calibrate: 2, tune: 1.5 };
 export const REST_HOURS = 1;
 export const WORK_HOURS: Record<AgentTaskKind, number> = { inspect: 2, harvest: 3, maintain: 5, calibrate: 4, tune: 3 };
 /** Custo imediato de energia (unidades da bateria) ao ordenar a tarefa. */

@@ -445,6 +445,20 @@ const SHELTER = { x: AIRLOCK.x - 1.2, z: AIRLOCK.z };
  * Leva o astronauta até o destino sem teletransporte: o destino deriva do estado do motor (acompanha pausa
  * e velocidade do jogo) e a velocidade máxima só evita saltos (abrigo, retomada de tarefa).
  */
+/** Ida e volta (D-18): segue o alvo do motor com suavização exponencial; anda enquanto o trecho dura. */
+function smoothCrewTrip(member: Crew, tx: number, tz: number, dt: number): void {
+  const k = Math.min(1, dt * 14);
+  const dx = tx - member.x;
+  const dz = tz - member.z;
+  const dist = Math.hypot(dx, dz);
+  member.x += dx * k;
+  member.z += dz * k;
+  if (dist > 1e-3 && member.node) member.node.rotation.y = Math.atan2(dx, dz);
+  member.moving = true;
+  member.moveTimer = 0.3;
+  member.speed = dt > 0 ? (dist * k) / dt : 0;
+}
+
 function followCrew(member: Crew, tx: number, tz: number, dt: number, maxSpeed: number): void {
   const dx = tx - member.x;
   const dz = tz - member.z;
@@ -482,9 +496,11 @@ function playCrewClip(member: Crew, name: Clip): void {
 }
 
 /** Estado da animação de cada astronauta (só para verificação em desenvolvimento). */
-export function crewAnimationState(): { current: string; moving: boolean; hasWave: boolean; waveOpen: boolean; sceneSec: number; waveUntilSec: number }[] {
+export function crewAnimationState(): { current: string; x: number; z: number; moving: boolean; hasWave: boolean; waveOpen: boolean; sceneSec: number; waveUntilSec: number }[] {
   return crew.map((m) => ({
     current: m.current,
+    x: Math.round(m.x * 100) / 100,
+    z: Math.round(m.z * 100) / 100,
     moving: m.moving,
     hasWave: !!m.actions.wave,
     waveOpen: lastSceneSec < crewWaveUntil,
@@ -571,8 +587,9 @@ function updateCrew(state: GameState, t: number, dt: number, view: RoverView, ra
         const focus = siteFocus(task.kind);
         faceTowards(member, focus.x, focus.z);
       } else {
+        // Ida e volta: o motor avança em passos de 0,25 h; a posição suaviza entre eles, sem atraso (1× ou 4×).
         const p = along(task.phase === 'out' ? out : [...out].reverse(), phaseFraction(task));
-        followCrew(member, p.x, p.z, dt, CREW_FOLLOW_SPEED);
+        smoothCrewTrip(member, p.x, p.z, dt);
         member.working = false;
       }
       return;

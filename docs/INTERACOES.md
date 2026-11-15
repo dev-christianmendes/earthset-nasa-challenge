@@ -37,7 +37,7 @@ qualquer estado com tarefa ─radiação ou ordem de abrigo→ sheltering (taref
 
 - Dois astronautas. Uma tarefa de cada tipo por vez. O efeito vale **uma vez**, ao fim do trabalho (antes da volta).
 - Quem está fora do habitat (da saída até a volta) conta como exposto à radiação (`crew.ts`).
-- Durações em horas de jogo: preparo 0,25; trecho 5 (estufa), 6 (antena) ou 10 (campo solar); descanso 1; trabalho de 2 a 5.
+- Durações em horas de jogo: preparo 0,25; trecho 1 (estufa e antena, 1,5 na antena de ajuste, 2 no campo solar); descanso 1; trabalho de 2 a 5. Trechos reduzidos em 15/11 para a tarefa começar de imediato.
 
 | Tarefa | Onde | Custo | Efeito |
 |---|---|---|---|
