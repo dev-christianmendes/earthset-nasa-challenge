@@ -97,7 +97,8 @@ export function progressRobot(robot: RobotState, hours: number, iceSpeed = 1): R
     const needed = head.hoursLeft / rate;
     const used = Math.min(needed, left);
     left -= used;
-    const rest = head.hoursLeft - used * rate;
+    // Resto abaixo de 1e-9 h é erro de ponto flutuante: a tarefa conclui (passos de 0,05 h).
+    const rest = Math.round((head.hoursLeft - used * rate) * 1e9) / 1e9;
     if (rest > 0) {
       queue[0] = { ...head, hoursLeft: rest };
       break;

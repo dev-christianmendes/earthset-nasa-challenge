@@ -325,7 +325,7 @@ function routeFor(kind: TaskKind, panelSlot: number): Path {
 
 /** Posição atual do rover (para voltar caminhando depois de cancelar). */
 const roverAt = { x: DOCK.x, z: DOCK.z, heading: Math.PI / 2 };
-const ROVER_RETURN_SPEED = 6; // m/s, só para voltar à garagem fora de uma missão
+const ROVER_RETURN_SPEED = 9; // m/s, só para voltar à garagem fora de uma missão (mesma escala dos astronautas)
 
 export interface RoverView {
   readonly working: boolean;
@@ -333,6 +333,24 @@ export interface RoverView {
   readonly phase: MissionPhase | null;
   readonly kind: TaskKind | null;
   readonly k: number;
+}
+
+/** Rover em trecho de missão: segue o alvo do motor com suavização (o motor avança em passos de 0,25 h). */
+function followRover(tx: number, tz: number, th: number, dt: number, bob = 0): void {
+  const k = Math.min(1, dt * 14);
+  const dx = tx - roverAt.x;
+  const dz = tz - roverAt.z;
+  const dist = Math.hypot(dx, dz);
+  // Passo limitado: se o quadro atrasa, o rover não salta de uma vez (ritmo constante).
+  const step = Math.min(dist * k, VISUAL_TRIP_SPEED * dt);
+  if (dist > 1e-9) {
+    roverAt.x += (dx / dist) * step;
+    roverAt.z += (dz / dist) * step;
+  }
+  let dh = th - roverAt.heading;
+  dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+  roverAt.heading += dh * k;
+  setRover(roverAt.x, roverAt.z, roverAt.heading, bob);
 }
 
 function setRover(x: number, z: number, heading: number, bob = 0): void {
@@ -395,18 +413,19 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
     setRover(DOCK.x, DOCK.z, h);
   } else if (phase === 'travel') {
     const p = along(route, smoothstep(k));
-    setRover(p.x, p.z, p.heading, 0.015 * Math.sin(t * 22));
+    followRover(p.x, p.z, p.heading, dt, 0.015 * Math.sin(t * 22));
     moving = true;
   } else if (phase === 'operate') {
+    // Chega ao local com o mesmo ritmo da viagem (sem teleporte se o quadro atrasou).
     const p = along(route, 1);
-    setRover(p.x, p.z, roverAt.heading);
+    followRover(p.x, p.z, roverAt.heading, dt);
   } else if (phase === 'return') {
     const p = along(back, smoothstep(k));
-    setRover(p.x, p.z, p.heading, 0.015 * Math.sin(t * 22));
+    followRover(p.x, p.z, p.heading, dt, 0.015 * Math.sin(t * 22));
     moving = true;
   } else {
     const p = along(back, 1);
-    setRover(p.x, p.z, task.kind === 'ice' ? Math.PI / 2 : roverAt.heading);
+    followRover(p.x, p.z, task.kind === 'ice' ? Math.PI / 2 : roverAt.heading, dt);
   }
   return { working: true, moving, phase, kind: task.kind, k };
 }
@@ -438,6 +457,8 @@ const crew: Crew[] = [
   { mixer: null, actions: {}, current: '', node: null, x: 6.2, z: -1.2, home: { x: 6.2, z: -1.2 }, moving: false, working: false, moveTimer: 0, speed: 0, legs: [], arms: [] },
 ];
 const CREW_WALK_SPEED = 1.4;
+/** Velocidade visual máxima nos trechos de ida, volta e rover (unidades por segundo real). */
+const VISUAL_TRIP_SPEED = 40;
 /** Abrigo: dentro do habitat, pela câmara de descompressão. */
 const SHELTER = { x: AIRLOCK.x - 1.2, z: AIRLOCK.z };
 
@@ -451,8 +472,12 @@ function smoothCrewTrip(member: Crew, tx: number, tz: number, dt: number): void 
   const dx = tx - member.x;
   const dz = tz - member.z;
   const dist = Math.hypot(dx, dz);
-  member.x += dx * k;
-  member.z += dz * k;
+  // Passo limitado (ritmo constante, sem saltos quando o quadro atrasa).
+  const step = Math.min(dist * k, VISUAL_TRIP_SPEED * dt);
+  if (dist > 1e-9) {
+    member.x += (dx / dist) * step;
+    member.z += (dz / dist) * step;
+  }
   if (dist > 1e-3 && member.node) member.node.rotation.y = Math.atan2(dx, dz);
   member.moving = true;
   member.moveTimer = 0.3;
@@ -493,6 +518,12 @@ function playCrewClip(member: Crew, name: Clip): void {
   next.reset().fadeIn(0.25).play();
   if (member.current) member.actions[member.current]?.fadeOut(0.25);
   member.current = name;
+}
+
+/** Posição do rover no mundo (só para verificação em desenvolvimento). */
+let lastRoverView: RoverView | null = null;
+export function roverWorldState(): { x: number; z: number; heading: number; phase: string | null } {
+  return { x: roverAt.x, z: roverAt.z, heading: roverAt.heading, phase: lastRoverView?.phase ?? null };
 }
 
 /** Estado da animação de cada astronauta (só para verificação em desenvolvimento). */
@@ -596,11 +627,11 @@ function updateCrew(state: GameState, t: number, dt: number, view: RoverView, ra
     }
     const iceWork = i === 1 && view.kind === 'ice' && view.working && (view.phase === 'return' || view.phase === 'deliver' || view.phase === 'operate');
     if (iceWork) {
-      followCrew(member, ICE_PROCESSOR.x - 2.2, ICE_PROCESSOR.z - 1, dt, CREW_WALK_SPEED);
+      followCrew(member, ICE_PROCESSOR.x - 2.2, ICE_PROCESSOR.z - 1, dt, CREW_FOLLOW_SPEED);
       member.working = !member.moving;
       faceTowards(member, ICE_PROCESSOR.x, ICE_PROCESSOR.z);
     } else {
-      followCrew(member, member.home.x, member.home.z, dt, CREW_WALK_SPEED);
+      followCrew(member, member.home.x, member.home.z, dt, CREW_FOLLOW_SPEED);
       member.working = false;
       faceTowards(member, robot.position.x, robot.position.z);
     }
@@ -704,6 +735,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   lastNow = now;
 
   const view = placeRover(state, t, dt, weather.radiation);
+  lastRoverView = view;
   updateCrew(state, t, dt, view, weather.radiation);
 
   // Rover: rodas giram só ao se deslocar; broca desce e gira na operação de gelo; poeira das rodas e da broca.

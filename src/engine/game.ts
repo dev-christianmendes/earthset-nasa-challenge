@@ -215,7 +215,9 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
  * Passo interno da simulação, em horas de jogo. Fixo: o resultado não depende de como o tempo
  * é repartido entre chamadas (6 h de uma vez = seis de 1 h = 24 de 0,25 h).
  */
-export const SUBSTEP_HOURS = 0.25;
+export const SUBSTEP_HOURS = 0.05;
+/** Fronteira em que as ações do jogador entram em vigor (decisão de 15/11, DT-02). Múltipla de SUBSTEP_HOURS. */
+export const ACTION_HOURS = 0.25;
 /** Tolerância para fechar a partida na hora 708 (erro de ponto flutuante). */
 const END_SNAP_HOURS = 1e-6;
 
@@ -311,7 +313,8 @@ function advanceStep(state: GameState, step: number, sunlit: boolean, weather: S
   const vitals: Vitals = { ...drained, water, food: Math.min(100, drained.food + foodGain) };
 
   const anyVitalZero = vitals.battery <= 0 || vitals.air <= 0 || vitals.water <= 0 || vitals.food <= 0;
-  let vitalZeroHours = anyVitalZero ? state.vitalZeroHours + step : 0;
+  // Arredondado a 1e-9 h: somas de passos de 0,05 h não podem deixar o limite de 6 h um passo atrasado.
+  let vitalZeroHours = anyVitalZero ? Math.round((state.vitalZeroHours + step) * 1e9) / 1e9 : 0;
   let hearts = state.hearts;
   while (vitalZeroHours >= HOURS_PER_HEART_LOSS && hearts > 0) {
     hearts -= 1;

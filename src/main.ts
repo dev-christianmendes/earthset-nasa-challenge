@@ -3,7 +3,7 @@
 // Liga motor (src/engine), cena (src/render) e interface (src/ui). Regra de jogo só no motor.
 import './ui/styles.css';
 import * as THREE from 'three';
-import { advance, createGame, dispatch, outcomeOf, SUBSTEP_HOURS, type GameAction, type GameState } from './engine/game';
+import { ACTION_HOURS, advance, createGame, dispatch, outcomeOf, type GameAction, type GameState } from './engine/game';
 import type { GreenhouseMode, Installation } from './engine/resources';
 import type { TaskKind } from './engine/robot';
 import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
@@ -18,7 +18,7 @@ import { lumaAdvice, lumaEvents, type LumaAction } from './engine/guide';
 import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
-import { camera, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, requestCrewWave, crewAnimationState, updateScene } from './render/scene';
+import { camera, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, requestCrewWave, crewAnimationState, roverWorldState, updateScene } from './render/scene';
 import { antenna, greenhouse, habitat, powerUnit, processor, storage } from './render/base-layout';
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
 import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
@@ -102,7 +102,7 @@ function act(action: GameAction): string | null {
   ui.message.textContent = '';
   if (isRunning()) {
     // Com o tempo correndo, a ação vale na próxima fronteira de 0,25 h; o resultado não depende do quadro.
-    const at = (Math.floor(grantedHours() / SUBSTEP_HOURS + 1e-9) + 1) * SUBSTEP_HOURS;
+    const at = (Math.floor(grantedHours() / ACTION_HOURS + 1e-9) + 1) * ACTION_HOURS;
     scheduled.push({ at, action });
   } else {
     game = check.state;
@@ -591,6 +591,7 @@ function maybeAutostart(): void {
   (window as unknown as { __earthset: unknown }).__earthset = {
     sunDirection: apparentSunDirection,
     crewState: crewAnimationState,
+    roverState: roverWorldState,
     screenOf(id: SelectableId): [number, number] | null {
       const fixed: Partial<Record<SelectableId, THREE.Object3D>> = { rover: robot, greenhouse, habitat, antenna, processor, storage, panels: powerUnit };
       const object = fixed[id] ?? crewObject(id === 'crew0' ? 0 : 1);

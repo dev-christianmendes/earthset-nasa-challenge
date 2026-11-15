@@ -19,7 +19,8 @@ export function advanceClock(clock: Clock, hours: number): Clock {
   if (!Number.isFinite(hours) || hours < 0) {
     throw new RangeError(`horas inválidas: ${hours}`);
   }
-  return createClock(clock.hour + hours);
+  // Arredonda para 1e-9 h: somas de passos de 0,05 h não acumulam erro de ponto flutuante no relógio.
+  return createClock(Math.round((clock.hour + hours) * 1e9) / 1e9);
 }
 
 function clampHour(hour: number): number {
