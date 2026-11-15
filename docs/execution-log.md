@@ -845,3 +845,11 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Pendente:** captura da vitória em PT; telas de EN no celular.
 - **Git:** sem commit.
 
+## 15/11/2026 · U-02, navegação por teclado (parcial)
+
+- **Teste:** `.scratch-agent/u02/teclado.py`, só teclado, do menu à partida, em 1366×768. 14 etapas passando.
+- **Ajustes do próprio teste:** (1) esperar 5 s após o carregamento antes de mexer no menu, porque antes do carregamento Enter não responde; (2) o critério de foco aceitava o texto do `BODY`, e foi trocado por botão ou link; (3) esperar 18 s pela introdução, em que teclas do jogo são ignoradas (`cinematicRunning`).
+- **Observação fora do escopo:** logo após o início, o status do astronauta mostra "In the shelter (task paused)". Não investigado.
+- **Pendente:** cancelar ordem pelo teclado, barra inferior e câmera, botões da tela final, telas secundárias.
+- **Git:** sem commit.
+
