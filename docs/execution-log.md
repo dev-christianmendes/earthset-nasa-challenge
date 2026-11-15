@@ -723,3 +723,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 
 - **E2E final com código fixo:** `python3 -B -u scripts/e2e-astronomy.py 5188 .scratch-agent/astronomy-followup/visual-final-isolated` passou **36 verificações**, zero erros JS/GLSL; azimute geográfico conferido contra brutos h0/180/360 e painel433/708. Capturas desktop/celular revisadas. Três amostras31,45/28,81/26,89FPS, P9583,3/83,4/50,1ms; maior frame1033,3ms na terceira. São resultados adversos válidos, não removidos da documentação. Descoberta já passou20 verificações nesta integração.
 - **QA documental:** links locais, cabeçalhos IA, fronteira pura do motor e `git diff --check` aprovados. Nenhum asset, layout, rota ou malha do terreno foi deslocado. Não houve commit/push/deploy por este agente.
+
+
+## 15/11/2026 — commit e push solicitados pelo autor
+
+- Autor autorizou explicitamente `commit e push` após o relatório desta rodada. Escopo: DT-16, dados compactos/observadores/estrelas, testes, medições e documentação associada.
+- O preparo inicial separou alterações paralelas em README.md, docs/img/ e scripts/capturas-readme.py. Durante a preparação, outra atividade criou `c22e875`, incluindo esses arquivos e os ajustes desta rodada; main/origin-main locais passaram a apontar para esse commit. O histórico existente foi preservado.
+- Revalidação pré-commit: `npm run typecheck`, `npm run test -- --no-cache` (213/23 arquivos), `python3 -B -m unittest discover -s data-pipeline/tests` (51) e `npm run build` aprovados; JS final D0O8Hid3, 403,54 kB gzip. `git diff --check` aprovado.
+- `git add` inicial falhou porque `.git/index.lock` estava protegido como somente leitura pelo sandbox. Repetição com escalada autorizada concluiu o preparo dos arquivos desta etapa.
+- Destino solicitado: branch main em origin (dev-christianmendes/earthset-nasa-challenge). Este registro complementa a validação do commit `c22e875`; não reescreve o commit externo. O resultado final do envio fica verificável no histórico Git/remoto e na resposta desta execução. Não há pedido de deploy.
