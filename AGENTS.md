@@ -67,6 +67,7 @@ src/engine/game.ts          Partida: estado, dispatch (ações do jogador), adva
 tests/engine/*.test.ts      Testes do motor (Vitest). partida.test.ts roda partidas completas
 docs/backlog.md             Plano em blocos e estado de cada item (ler antes de escolher trabalho)
 docs/PLANO_AJUSTES_AUDITORIA.md Dívida técnica de 15/11: DT-01–17, evidências, ordem e critérios de aceite
+docs/EARTHSET_VALIDATION_ROADMAP.md Iluminação/céu: implementação, fontes, capturas, FPS e limites científicos
 docs/CONTEXTO_CODEX.md       Memória de retomada; ler a atualização de dívida técnica de 15/11
 docs/regras-recursos.md     Regras e números de recursos, equipamentos, corações e robô
 docs/event-rules.md         Regras do evento (datas, elegibilidade, IA, critérios, pontos em aberto)

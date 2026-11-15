@@ -23,13 +23,17 @@ import { antenna, greenhouse, habitat, powerUnit, processor, storage } from './r
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
 import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
 import { warningAhead } from './engine/facilities';
-import { goTo, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
+import { goTo, lookAtSky, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
 import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updateCinematic } from './render/cinematic';
 import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
 import { initLuma, pushLumaEvents, relabelLuma, resetLuma, updateLuma } from './ui/luma';
 import { currentScreen, loadSettings, popScreen, pushScreen, saveSettings, showScreen, type ScreenId } from './ui/screens';
 import { mountHorizonPanel } from './ui/horizon-panel';
 import { mountSpacePanel } from './ui/space-panel';
+import { mountSkyPanel, skyLongExposure } from './ui/sky-panel';
+import { bodyAt, type BodyId } from './astronomy/sky';
+import { SKY } from './data/sky';
+import { sampleAt } from './engine/sun';
 import { getLang, t } from './i18n';
 
 /** Base inicial (equilíbrio do motor, docs/regras-recursos.md). A patente vem do modo (D-17). */
@@ -39,6 +43,8 @@ const SPEEDS = [1, 2, 4] as const;
 /** Maior passo de tempo real por quadro: a aba em segundo plano não pula a partida. */
 const MAX_FRAME_SECONDS = 0.1;
 const HUD_INTERVAL_MS = 100;
+/** Captura determinística só em desenvolvimento: relógio parado sem overlay de pausa. */
+const captureFrozen = import.meta.env.DEV && new URLSearchParams(window.location.search).has('freeze');
 
 let mode: ModeId = 'cadet';
 let game: GameState = createGame({ installation: installationFor(mode, BASE) });
@@ -224,7 +230,10 @@ function renderNow(now: number): void {
   renderHud(game, { weather, alert, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
   if (started && selectedObject()) renderContext(game, contextInfo());
   if (started) updateLuma(lumaAdvice(game, alert, MODES[mode].luma), game.clock.hour, now);
-  if (started && currentTool() === 'science') updateSpacePanel(game.clock.hour, alert, getLang());
+  if (started && currentTool() === 'science') {
+    updateSpacePanel(game.clock.hour, alert, getLang());
+    updateSkyPanel(game.clock.hour, game.installation.site);
+  }
 }
 
 onLanguage(() => {
@@ -240,6 +249,12 @@ onLanguage(() => {
 const updateSpacePanel = mountSpacePanel(document.getElementById('space-panel') as HTMLElement, SPACE_EVENTS);
 const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, BASE.site);
 const updateScienceHorizon = mountHorizonPanel(document.getElementById('science-horizon') as HTMLElement, SUN, TERRAIN, BASE.site);
+function inspectSky(id: BodyId): void {
+  const sample = id === 'sun' ? sampleAt(SUN, game.clock.hour) : bodyAt(SKY, id, game.clock.hour);
+  lookAtSky(sample.az, sample.el);
+}
+const updateSkyPanel = mountSkyPanel(document.getElementById('sky-panel') as HTMLElement, inspectSky);
+const updateMenuSky = mountSkyPanel(document.getElementById('science-sky') as HTMLElement, inspectSky);
 
 // ---------- Telas ----------
 
@@ -411,7 +426,7 @@ let lastFrameAt = 0;
 function frame(now: number): void {
   perfTick(now);
   const screen = currentScreen();
-  const active = started && !paused && !ended && screen === null && outcomeOf(game) === 'playing';
+  const active = !captureFrozen && started && !paused && !ended && screen === null && outcomeOf(game) === 'playing';
   if (active && last !== null) {
     const seconds = Math.min(Math.max(0, (now - last) / 1000), MAX_FRAME_SECONDS);
     const weather = weatherNow();
@@ -431,7 +446,7 @@ function frame(now: number): void {
   last = now;
   // A cena anda no relógio visual (parado na pausa); no menu e na introdução, no relógio real.
   const sceneTime = started ? visualTime : now;
-  updateScene(game, sceneTime, sunlit(game.clock.hour), weatherForView(), started ? active : true);
+  updateScene(game, sceneTime, sunlit(game.clock.hour), weatherForView(), started ? active : true, skyLongExposure());
   updateHighlight(now / 1000);
   if (cinematicRunning()) updateCinematic(now);
   else updateDirector(now);
@@ -439,7 +454,10 @@ function frame(now: number): void {
     if (currentTool() !== null && selectedObject()) selectObject(null);
     if (started) renderNow(now);
     updateHorizon(game.clock.hour);
-    if (screen === 'science') updateScienceHorizon(game.clock.hour);
+    if (screen === 'science') {
+      updateScienceHorizon(game.clock.hour);
+      updateMenuSky(game.clock.hour, game.installation.site);
+    }
     hudDueAt = now + HUD_INTERVAL_MS;
   }
   if (started && !ended && outcomeOf(game) !== 'playing') {
@@ -449,7 +467,7 @@ function frame(now: number): void {
     showScreen('end');
   }
   // Sombras em quadros alternados; a cada quadro quando o jogo já está lento (abaixo de ~30 fps).
-  renderer.shadowMap.needsUpdate = (shadowTick++ & 1) === 0 || now - lastFrameAt > -1;
+  renderer.shadowMap.needsUpdate = renderer.shadowMap.needsUpdate || (shadowTick++ & 1) === 0 || now - lastFrameAt > 1000 / 30;
   lastFrameAt = now;
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
@@ -581,6 +599,8 @@ function maybeAutostart(): void {
   if (tool) openPanel(tool as Tool);
   const shot = q.get('shot');
   if (shot) goTo(shot as Shot, performance.now(), 0);
+  const sky = q.get('sky');
+  if (sky && ['sun', 'earth', 'mercury', 'venus', 'mars', 'jupiter', 'saturn'].includes(sky)) inspectSky(sky as BodyId);
   if (q.has('pause')) setPaused(true);
   renderNow(performance.now());
   void getLang;

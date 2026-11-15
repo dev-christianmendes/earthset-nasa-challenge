@@ -256,6 +256,17 @@ button.ghost { background: transparent; }
 .big-readout small { color: var(--muted); }
 .horizon-wrap svg { width: 100%; height: auto; display: block; }
 .horizon-wrap .cap { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.sky-details { margin: 16px 0; border-top: 1px solid var(--line); padding-top: 12px; }
+.sky-details summary { cursor: pointer; color: var(--solar-amber); font-weight: 600; }
+.sky-time { font-size: 12px; font-variant-numeric: tabular-nums; }
+.sky-table-wrap { max-width: 100%; overflow-x: auto; }
+.sky-table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+.sky-table th, .sky-table td { text-align: left; padding: 7px 4px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.sky-table th { font-weight: 600; }
+.sky-table button { padding: 5px; font-size: 10px; }
+.sky-table button:disabled { opacity: 0.45; cursor: default; }
+.sky-exposure { display: flex; align-items: center; gap: 7px; margin: 12px 0; font-size: 12px; }
+.sky-sources { font-size: 12px; }
 
 /* ---------- LUMA ---------- */
 .luma { position: absolute; left: 12px; bottom: 14px; width: min(360px, calc(100vw - 24px)); background: var(--glass-strong); border: 1px solid rgba(86, 185, 164, 0.35); border-radius: 18px; padding: 12px 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); transition: border-color 0.3s; }

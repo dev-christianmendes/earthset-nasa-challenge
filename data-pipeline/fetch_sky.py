@@ -13,6 +13,7 @@ import argparse
 import csv
 import gzip
 import hashlib
+import html
 import json
 import math
 import re
@@ -30,6 +31,7 @@ BODIES = {'sun': '10', 'earth': '399', 'mercury': '199', 'venus': '299',
           'mars': '499', 'jupiter': '599', 'saturn': '699'}
 CATALOG_URL = 'https://cdsarc.cds.unistra.fr/ftp/V/50/catalog.gz'
 README_URL = 'https://cdsarc.cds.unistra.fr/ftp/V/50/ReadMe'
+CATALOG_MIRROR = 'https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/catalog5.html'
 
 
 def params(target: str) -> dict[str, str]:
@@ -58,11 +60,13 @@ def parse_rows(text: str) -> list[dict]:
     if header is None:
         raise ValueError('Cabeçalho CSV ausente')
     names = [re.sub(r'[^a-z0-9]', '', s.lower()) for s in next(csv.reader([header]))]
-    aliases = {'az': 'aziaapp', 'el': 'elevaapp', 'diameter_arcsec': 'angdiam',
+    aliases = {'az': 'azimuthaapp', 'el': 'elevationaapp', 'diameter_arcsec': 'angdiam',
                'illumination_pct': 'illu', 'magnitude': 'apmag', 'distance_au': 'delta',
                'phase_deg': 'sto', 'observer_lon': 'obssublon', 'observer_lat': 'obssublat',
                'solar_lon': 'sunsublon', 'solar_lat': 'sunsublat', 'pole_ra': 'npolera',
                'pole_dec': 'npoledc', 'ra': 'raicrfaapp', 'dec': 'decicrfaapp'}
+    # EXTRA_PREC expande Azi/Elev para Azimuth/Elevation; aceitar ambos os cabeçalhos oficiais.
+    names = [{'aziaapp': 'azimuthaapp', 'elevaapp': 'elevationaapp'}.get(n, n) for n in names]
     indices = {key: names.index(label) for key, label in aliases.items() if label in names}
     for key in ['az', 'el', 'diameter_arcsec', 'ra', 'dec']:
         if key not in indices:
@@ -146,6 +150,22 @@ def parse_catalog(text: str, max_magnitude=4.5) -> list[dict]:
     return stars
 
 
+def parse_catalog_mirror(text: str, max_magnitude=4.5) -> list[dict]:
+    """Listagem BSC5 usada nos telescópios Kitt Peak (NOIRLab), época/equinócio J2000."""
+    plain = html.unescape(re.sub(r'<[^>]+>', '', text))
+    pattern = r'^\s*(\d+)\s+(\d+):(\d+):([\d.]+)\s+([+-])(\d+):(\d+):([\d.]+)\s+2000\.00\s+[+-][\d.]+\s+[+-][\d.]+\s+(-?[\d.]+)'
+    stars = []
+    for match in re.finditer(pattern, plain, re.M):
+        hr, rh, rm, rs, sign, dd, dm, ds, mag = match.groups()
+        if float(mag) <= max_magnitude:
+            stars.append({'hr': int(hr), 'ra': round(15*(int(rh)+int(rm)/60+float(rs)/3600), 6),
+                          'dec': round((int(dd)+int(dm)/60+float(ds)/3600)*(-1 if sign=='-' else 1), 6),
+                          'magnitude': float(mag)})
+    if not stars:
+        raise ValueError('Listagem NOIRLab vazia/inválida')
+    return stars
+
+
 def build(raw: Path) -> dict:
     bodies = {name: parse_rows((raw/f'{name}.txt').read_text()) for name in BODIES}
     start = datetime.strptime(START_UTC, '%Y-%m-%d %H:%M')
@@ -167,6 +187,10 @@ def build(raw: Path) -> dict:
         raise ValueError(f'Sol novo diverge da tabela energética preservada: {delta}°')
     catalog_path = raw/'catalog.gz'
     stars = parse_catalog(gzip.decompress(catalog_path.read_bytes()).decode('ascii')) if catalog_path.exists() else []
+    catalog_source = CATALOG_URL
+    if not stars and (raw/'bsc5-noirlab.html').exists():
+        stars = parse_catalog_mirror((raw/'bsc5-noirlab.html').read_text())
+        catalog_source = CATALOG_MIRROR
     files = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(raw.iterdir()) if p.is_file()}
     for rows in bodies.values():
         for row in rows:
@@ -181,7 +205,7 @@ def build(raw: Path) -> dict:
             'queries': {name: params(target) for name, target in BODIES.items()},
             'raw_sha256': files, 'bodies': bodies,
             'icrf_to_local': [[round(x, 12) for x in r] for r in frames],
-            'stars': {'source': CATALOG_URL, 'catalog': 'BSC5, CDS V/50', 'epoch': 'J2000.0',
+            'stars': {'source': catalog_source, 'catalog': 'BSC5, CDS V/50 (NOIRLab mirror)', 'epoch': 'J2000.0',
                       'max_magnitude': 4.5, 'status': 'available' if stars else 'unavailable',
                       'limitation': 'Sem movimento próprio, paralaxe ou aberração individual; orientação lunar derivada de Horizons 45/4.',
                       'samples': stars},
@@ -199,13 +223,16 @@ def main():
             if not dest.exists():
                 print(f'Consultando {name}...', flush=True)
                 download(HORIZONS_URL+'?'+urllib.parse.urlencode(params(target)), dest)
-        try:
-            if not (raw/'ReadMe').exists():
+        if not (raw/'catalog.gz').exists() and not (raw/'bsc5-noirlab.html').exists():
+            try:
                 download(README_URL, raw/'ReadMe')
-            if not (raw/'catalog.gz').exists():
                 download(CATALOG_URL, raw/'catalog.gz')
-        except Exception as exc:
-            print(f'Catálogo indisponível; sem estrelas inventadas: {exc}', file=__import__('sys').stderr)
+            except Exception as exc:
+                print(f'CDS indisponível, tentando listagem NOIRLab: {exc}', flush=True)
+                try:
+                    download(CATALOG_MIRROR, raw/'bsc5-noirlab.html')
+                except Exception as fallback:
+                    print(f'Catálogo indisponível; sem estrelas inventadas: {fallback}', flush=True)
     table = build(raw)
     OUT.write_text(json.dumps(table, ensure_ascii=False, separators=(',', ':'))+'\n')
     print(json.dumps({'bodies': len(table['bodies']), 'stars': len(table['stars']['samples']),

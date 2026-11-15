@@ -8,6 +8,8 @@ Prazo de envio do desafio: **15/11/2026, 23h59** (meta interna 12h).
 
 ## Memória persistente · dívida técnica (15/11/2026)
 
+- **Iluminação/astronomia implementadas em 15/11:** ver `EARTHSET_VALIDATION_ROADMAP.md` e bloco 11 do backlog. Sol/luz usam a tabela energética preservada; sombras ativas; Terra/5 planetas Horizons e 904 estrelas BSC5/NOIRLab; Ciência EN/PT. 208 testes TS, 43 Python, build e 33 E2E aprovados. SHA-256 confirma preservação de terreno/implantação. Esta etapa não encerra DT-16 (observador regional/azimute) nem DT-13–15/17. A precisão da rotação conferida não equivale à astrometria completa das estrelas. Detalhes de FPS, pacote e limites no roadmap.
+
 - O autor pediu registrar o plano e as tarefas para verificação posterior, sem implementar correções nesta etapa. A fonte da dívida é [PLANO_AJUSTES_AUDITORIA.md](PLANO_AJUSTES_AUDITORIA.md), com 17 IDs; a fila rastreável está no bloco 10 de [backlog.md](backlog.md).
 - Prioridades: DT-01–04 (contratos, integração temporal e cronologia científica), DT-05–06 (água e ocupação), DT-07–09/13 (abrigo, fluxos, produção e resposta), DT-10–12 (transições/regressões); DT-14–16 são hipóteses, DT-17 fecha a validação.
 - Estado importante: DT-01 já foi corrigida externamente para `hoursLeft`; typecheck e 9 testes direcionados passaram nesta etapa. DT-12 teve comparação reduzida para 1×, mas continua sem cobertura de cruzamento 12/24 h. Reproduzir antes de tratar achado histórico como defeito atual.

@@ -99,3 +99,27 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 - Exagero vertical de 2× na cena (`VERTICAL_EXAGGERATION` em `src/render/scene.ts`). A tela diz isso no rodapé.
 - A malha tem a resolução do dado (20 m por pixel, reamostrado): não mostra detalhe menor que isso.
 
+
+## 6. Céu astronômico e iluminação lunar (15/11/2026)
+
+**Fontes e reprodução:** [API JPL Horizons](https://ssd-api.jpl.nasa.gov/doc/horizons.html), [manual de grandezas](https://ssd.jpl.nasa.gov/horizons/manual.html), [BSC5 mantido pelo NOIRLab](https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/bsc5.html) e sua [listagem completa](https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/catalog5.html). Pipeline `python3 -B data-pipeline/fetch_sky.py`; offline: `python3 -B data-pipeline/fetch_sky.py --from-raw data-pipeline/raw/sky`. Saída: `src/data/sky.json`, com consultas e SHA-256 dos brutos.
+
+| Conteúdo | Proveniência / transformação |
+|---|---|
+| Sol, Terra, Mercúrio, Vênus, Marte, Júpiter e Saturno | Horizons DE441; mesmo observador e janela da seção 1; 709 amostras por corpo |
+| Direção, diâmetro, iluminação, geometria terrestre e magnitude | Grandezas 4, 9, 10, 13, 14, 15, 20, 24, 32 e 45; refração desligada |
+| Rotação do céu | Inferida de Sol/Júpiter em ICRF aparente e horizonte local, conferida nos sete corpos; erro máximo 0,0000012074° |
+| Estrelas | 904 entradas BSC5, V ≤ 4,5, identificador HR e RA/Dec J2000; CDS V/50 não respondeu, utilizada a cópia NOIRLab |
+| Diâmetro desenhado | Raio de esfera = distância visual × seno do semidiâmetro angular; não usar raio arbitrário |
+| Fase da Terra | Ponto subsolar e subobservador tabulados; esfera orientada pelo eixo terrestre; conferência com fração iluminada do Horizons |
+| Ocultação | Perfil LOLA existente, interpolado por azimute no fragmento; sem refração atmosférica |
+| Exposição, preenchimento e pontos não resolvidos | Escolhas de câmera/apresentação; não são fluxo radiométrico medido nem regra energética |
+
+**Sol único:** luz e disco usam a amostra de `sun-south-pole.json` já consumida pela energia. Diferença máxima para a nova consulta de conferência: 0,000050303°. Não houve regeneração da tabela energética, do relevo ou da implantação da base. A energia continua usando centro solar e visibilidade binária por site; a exibição de um limbo parcial não muda essa regra.
+
+**SPICE:** investigados [NAIF Frames](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html) e o [frame lunar DE421](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_080317.tf). Optou-se pelo referencial recuperado das saídas do próprio Horizons; não se substituiu MEAN_ME por IAU_MOON. Nenhuma dependência SPICE é necessária no navegador.
+
+**Limites:** observador regional fixo e grade horária; outras datas/locais exigem nova geração e validação. Estrelas preservam posições de catálogo J2000, sem movimento próprio/paralaxe/aberração individual; o erro de conferência do referencial não é precisão estelar global. A textura terrestre Blue Marble já existente é estática; não representa nuvens ou clima da data. Preenchimento neutro é artístico, sem energia; não há halo atmosférico ou bloom global. Sombras do relevo preservam o exagero visual 2×. Não se prometem detecção a olho nu ou fotometria instrumental apenas por um corpo estar geometricamente acima do horizonte.
+
+Resultados, limites e hashes de preservação: [EARTHSET_VALIDATION_ROADMAP.md](EARTHSET_VALIDATION_ROADMAP.md).
+

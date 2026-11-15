@@ -75,6 +75,7 @@ function shotFor(name: Shot): { pos: THREE.Vector3; target: THREE.Vector3; follo
 
 /** Vai para o plano: voo suave (ou corte, com movimento reduzido). */
 export function goTo(name: Shot, nowMs: number, seconds = 1.4): void {
+  controls.maxPolarAngle = THREE.MathUtils.degToRad(84);
   const s = shotFor(name);
   follow = s.follow;
   if (follow) lastFollow.copy(follow.position);
@@ -123,4 +124,16 @@ export function updateDirector(nowMs: number): void {
 /** Para de seguir (por exemplo, ao abrir a visão geral). */
 export function stopFollow(): void {
   follow = null;
+}
+
+/** Inspeção astronômica opcional pela Ciência. Não desloca a base nem os equipamentos. */
+export function lookAtSky(az: number, el: number): void {
+  tween = null;
+  follow = null;
+  controls.autoRotate = false;
+  controls.maxPolarAngle = Math.PI - 0.01;
+  const a = THREE.MathUtils.degToRad(az);
+  const e = THREE.MathUtils.degToRad(el);
+  controls.target.copy(camera.position).add(new THREE.Vector3(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)).multiplyScalar(30));
+  controls.update();
 }

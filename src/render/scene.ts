@@ -13,6 +13,8 @@ import { isWorking, type TaskKind } from '../engine/robot';
 import { safeDistance } from '../engine/safe-mode';
 import { missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
 import { sampleAt } from '../engine/sun';
+import { bodyAt, direction } from '../astronomy/sky';
+import { SKY } from '../data/sky';
 import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
 import { attachModel, loadGltf, loadModel } from './assets';
@@ -20,13 +22,14 @@ import { VERTICAL_EXAGGERATION, surfaceHeight } from './terrain-height';
 import { ANTENNA, ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, ICE_PROCESSOR, ICE_ROUTE, PANEL_SLOTS, type Spot } from './layout';
 import { base, loadBaseLayoutModels, updateBase } from './base-layout';
 import { updateCrop } from './crop';
+import { astronomicalSky, updateSky } from './sky';
 
 /** Paleta da cena (tokens de docs/VISUAL_DIRECTION.md). */
 export const PALETTE = {
   space: 0x03050a,
-  sunlight: 0xfff1d6,
-  skyFill: 0x8fa6c8,
-  groundFill: 0x1a1c24,
+  sunlight: 0xfffaf3,
+  skyFill: 0x969696,
+  groundFill: 0x282828,
   robot: 0xffc857,
   beacon: 0x7fd7ff,
   panelGlow: 0x0c2446,
@@ -37,12 +40,12 @@ export const PALETTE = {
 export const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = false;
+renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 // O mapa de sombra é redesenhado em quadros alternados (ver main.ts): metade do custo, diferença invisível a 60 fps.
 renderer.shadowMap.autoUpdate = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 0.95;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.insertBefore(renderer.domElement, document.body.firstChild);
 
@@ -69,9 +72,12 @@ controls.update();
 /** Qualidade: sombras em 2048 (alta) ou 1024 e densidade de pixels menor (baixa). */
 export function setQuality(high: boolean): void {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, high ? 1.5 : 1));
-  sun.shadow.mapSize.set(high ? 2048 : 1024, high ? 2048 : 1024);
-  sun.shadow.map?.dispose();
-  sun.shadow.map = null;
+  const size = high ? 2048 : 1024;
+  if (sun.shadow.mapSize.x !== size) {
+    sun.shadow.map?.dispose();
+    sun.shadow.map = null;
+    sun.shadow.mapSize.set(size, size);
+  }
   renderer.shadowMap.needsUpdate = true;
 }
 
@@ -174,80 +180,29 @@ function buildTerrain(): THREE.BufferGeometry {
 }
 const ground = new THREE.Mesh(buildTerrain(), moonGroundMaterial());
 ground.receiveShadow = true;
+ground.castShadow = true;
 scene.add(ground);
 
 // ---------- Luz ----------
 
 /** Sol: luz direcional com sombras, na direção da tabela do JPL Horizons. */
-const sun = new THREE.DirectionalLight(PALETTE.sunlight, 3.2);
+export const sun = new THREE.DirectionalLight(PALETTE.sunlight, 3.2);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.bias = -0.0004;
-sun.shadow.normalBias = 0.04;
-const SHADOW_HALF = 48;
-Object.assign(sun.shadow.camera, { left: -SHADOW_HALF, right: SHADOW_HALF, top: SHADOW_HALF, bottom: -SHADOW_HALF, near: 1, far: 220 });
+sun.shadow.bias = -0.000015;
+sun.shadow.normalBias = 0.025;
+// Volume longo na direção solar: casters do relevo inteiro e sombras rasantes não são cortados a 220 m.
+const SHADOW_HALF = 72;
+Object.assign(sun.shadow.camera, { left: -SHADOW_HALF, right: SHADOW_HALF, top: SHADOW_HALF, bottom: -SHADOW_HALF, near: 700, far: 1700 });
 scene.add(sun, sun.target);
 /** Preenchimento artístico (legibilidade): não faz parte da simulação de luz. */
-const ambient = new THREE.HemisphereLight(PALETTE.skyFill, PALETTE.groundFill, 0.5);
+const ambient = new THREE.HemisphereLight(PALETTE.skyFill, PALETTE.groundFill, 0.3);
 scene.add(ambient);
 /** Luz de recorte fria, oposta ao Sol: separa as peças do fundo escuro (escolha visual). */
-const rim = new THREE.DirectionalLight(0x9fb8ff, 0.35);
+const rim = new THREE.DirectionalLight(0xffffff, 0.12);
 scene.add(rim, rim.target);
-
-const SKY_SUN_DISTANCE = 380;
-const sunDisk = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 16), new THREE.MeshBasicMaterial({ color: PALETTE.sunlight, fog: false, toneMapped: false }));
-const sunGlow = new THREE.Mesh(
-  new THREE.SphereGeometry(16, 32, 16),
-  new THREE.MeshBasicMaterial({ color: 0xffd28a, transparent: true, opacity: 0.2, depthWrite: false, fog: false, toneMapped: false }),
-);
-scene.add(sunDisk, sunGlow);
-
-// ---------- Céu: estrelas e Terra ----------
-
-const starsGeo = new THREE.BufferGeometry();
-const starPositions: number[] = [];
-const starColors: number[] = [];
-let seed = 7;
-const rnd = (): number => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-for (let i = 0; i < 2200; i++) {
-  const theta = rnd() * Math.PI * 2;
-  const phi = Math.acos(2 * rnd() - 1);
-  const r = 600;
-  starPositions.push(r * Math.sin(phi) * Math.cos(theta), Math.abs(r * Math.cos(phi)) - 20, r * Math.sin(phi) * Math.sin(theta));
-  const b = 0.45 + rnd() * 0.55;
-  const warm = rnd();
-  starColors.push(b * (warm > 0.8 ? 1 : 0.85), b * 0.9, b * (warm < 0.2 ? 1 : 0.88));
-}
-starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-starsGeo.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
-scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({ size: 1.4, sizeAttenuation: false, vertexColors: true, fog: false })));
-
-/** Terra (NASA Blue Marble, domínio público). Posição ilustrativa: baixa no céu, perto do horizonte, como se vê do polo sul. */
-export const EARTH_AZ = -18;
-export const EARTH_EL = 7;
-const EARTH_DISTANCE = 520;
-function earthMaterial(): THREE.MeshStandardMaterial {
-  // Brilho próprio fraco (escolha visual): a Terra continua legível mesmo com o lado do dia de costas.
-  const m = new THREE.MeshStandardMaterial({ color: 0x2f6fb0, roughness: 0.75, fog: false, emissive: 0xffffff, emissiveIntensity: 0 });
-  new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}textures/earth/earth_land_shallow_topo_2048.jpg`, (t) => {
-    t.colorSpace = THREE.SRGBColorSpace;
-    m.map = t;
-    m.emissiveMap = t;
-    m.emissiveIntensity = 0.55;
-    m.color.set(0xffffff);
-    m.needsUpdate = true;
-  });
-  return m;
-}
-const earth = new THREE.Mesh(new THREE.SphereGeometry(16, 48, 32), earthMaterial());
-{
-  const az = THREE.MathUtils.degToRad(EARTH_AZ);
-  const el = THREE.MathUtils.degToRad(EARTH_EL);
-  earth.position.set(Math.sin(az) * Math.cos(el) * EARTH_DISTANCE, Math.sin(el) * EARTH_DISTANCE, -Math.cos(az) * Math.cos(el) * EARTH_DISTANCE);
-  earth.rotation.set(0.4, 2.2, 0);
-}
-// A Terra recebe a mesma luz do Sol da cena: a fase iluminada muda com o azimute real do Sol.
-scene.add(earth);
+// Corpos e catálogo no mesmo referencial do Sol; sem halo atmosférico e sem emissivo no lado noturno terrestre.
+scene.add(astronomicalSky);
 
 // ---------- Base ----------
 
@@ -628,6 +583,7 @@ export function loadCrewModels(): Promise<unknown> {
           const node = cloneSkinned(gltf.scene);
           node.traverse((obj) => {
             obj.castShadow = true;
+            obj.receiveShadow = true;
             if (c.fix && obj instanceof THREE.Mesh) {
               const m = (obj.material as THREE.MeshStandardMaterial).clone();
               m.metalness = 0.05;
@@ -657,7 +613,7 @@ export function loadCrewModels(): Promise<unknown> {
       }
       const source = await loadModel('astronaut');
       const node = source.clone(true);
-      node.traverse((obj) => (obj.castShadow = true));
+      node.traverse((obj) => { obj.castShadow = true; obj.receiveShadow = true; });
       scene.add(node);
       member.node = node;
       member.legs = ['leg_L', 'leg_R'].map((n) => node.getObjectByName(n)).filter((o): o is THREE.Object3D => o !== undefined);
@@ -686,20 +642,17 @@ const sunDir = new THREE.Vector3();
 const dustOffset = new THREE.Vector3();
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
 
-export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true): RoverView {
+export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true, longExposure = false): RoverView {
   // Sol na direção real (azimute a partir do norte = −z, leste = +x).
   const { az, el } = sampleAt(SUN, state.clock.hour);
-  const azRad = THREE.MathUtils.degToRad(az);
-  const elRad = THREE.MathUtils.degToRad(el);
-  const dir = sunDir.set(Math.sin(azRad) * Math.cos(elRad), Math.sin(elRad), -Math.cos(azRad) * Math.cos(elRad));
-  sun.position.copy(dir).multiplyScalar(120);
+  const dir = sunDir.fromArray(direction(az, el));
+  sun.position.copy(dir).multiplyScalar(1200);
   sun.target.position.set(0, 0, 0);
   sun.intensity = lit ? 3.4 : 0;
-  ambient.intensity = lit ? 0.55 : 0.42;
+  ambient.intensity = lit ? 0.3 : 0.18;
   rim.position.set(-dir.x * 100, 60, -dir.z * 100);
-  sunDisk.position.copy(dir).multiplyScalar(SKY_SUN_DISTANCE);
-  sunGlow.position.copy(sunDisk.position);
-  sunDisk.visible = sunGlow.visible = lit;
+  updateSky(state.clock.hour, lit, state.installation.site, longExposure);
+  const earthView = bodyAt(SKY, 'earth', state.clock.hour);
 
   const t = now / 1000;
   const dt = !animate || lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
@@ -749,8 +702,8 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     processing: view.working && view.kind === 'ice' && view.phase === 'deliver',
     iceActive: state.robot.queue.some((q) => q.kind === 'ice'),
     panelGlow: 0.6 * calibrationFactor(state.calibrationLeft) * (lit ? 1 : 0.25),
-    earthAz: EARTH_AZ,
-    earthEl: EARTH_EL,
+    earthAz: earthView.az,
+    earthEl: earthView.el,
   });
   return view;
 }

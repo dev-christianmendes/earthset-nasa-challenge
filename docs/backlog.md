@@ -80,3 +80,17 @@ Ordem: P0 (DT-01–04) → P1 (DT-05–06) → P2 (DT-07–09 e DT-13) → P3 (D
 - [ ] **DT-17 · fechamento · Medium** Executar matriz completa na mesma revisão, incorporar regressões à automação e atualizar plano/memória/diário com evidências.
 
 Nenhum item é encerrado por mera edição de código. Validação: typecheck + testes + build; Python quando houver dados; E2E e screenshots desktop/celular revisados quando houver tela. Nada de commit, push ou deploy sem pedido explícito.
+
+
+## Bloco 11 · Iluminação lunar e céu astronômico (15/11/2026)
+
+Escopo e evidências em [EARTHSET_VALIDATION_ROADMAP.md](EARTHSET_VALIDATION_ROADMAP.md), criado para esta etapa porque o arquivo citado não existia nesta árvore.
+
+- [x] **AST-01–02** Auditar luz/céu; Sol sem halo esférico, escala angular tabulada e mesma posição da energia.
+- [x] **AST-03** Sombras PCF de astronautas, rover, habitat, estufa, painéis e terreno, em 2048/1024; correção da atualização alternada.
+- [x] **AST-04–07** Terra com posição/fase/escala reais, cinco planetas e 904 estrelas BSC5/NOIRLab; ocultação pelo horizonte e atualização na grade do cenário.
+- [x] **AST-08** Ciência EN/PT com UTC, observador, direção, diâmetro, fração iluminada, fontes e exposição longa opcional.
+- [x] **AST-09–10** Typecheck, 208 testes TS, 43 Python, build e 33 verificações E2E; capturas em cinco horas e desktop/celular emulado; três amostras finais a 60 FPS na Intel Xe/Vulkan.
+- [ ] **AST-P1** Validar ponto exato do site/azimute independentemente (DT-16), astrometria estelar completa, outras janelas/observadores, desempenho em GPU móvel real e carregamento frio. Limites atuais declarados; não encerrar a dívida DT-13–17 com esta etapa.
+
+Terreno, layout, implantação, horizonte e tabela solar energética preservados por SHA-256. Nenhuma regra do motor alterada. Há custo de pacote (JS gzip ~645 kB) e variação de FPS registrados no roadmap.
