@@ -4,6 +4,33 @@ Data: 15/11/2026. Escopo: solicitação do autor «EARTHSET — ILUMINAÇÃO LUN
 
 **Origem deste arquivo:** `docs/EARTHSET_VALIDATION_ROADMAP.md` não existia na árvore no início desta etapa e não foi encontrado na busca local. Este documento registra a etapa descrita na mensagem do autor; não inventa o conteúdo de um roadmap anterior.
 
+## Atualização — quatro ajustes solicitados em 15/11/2026
+
+| Item | Estado atual |
+|---|---|
+| DT-16: observador e azimute | **Validado e corrigido.** Três pontos derivados de LOLA, conferência PROJ, mesmo frame ME DE421. Peak: 411 → 433 intervalos iluminados; referência 2 → 3 corações sem rebalancear regras. Painel polar orientado ao norte geográfico e contagem de 708 intervalos |
+| Móvel, carga e sessão longa | **Sessão de 30 min 4 s / 73 ciclos concluída, sem acúmulo contínuo no fluxo.** Carga fria emulada revelou travadas. Aparelho real indisponível. Evidências/pendências em [PERFORMANCE_VALIDATION.md](PERFORMANCE_VALIDATION.md) |
+| Redução de dados | **Implementada.** Céu gzip 384 → 127 kB; JS com tabelas dos três sites ~403 kB gzip, antes 645 kB. Sem reduzir amostras horárias; erro de quantização testado |
+| Datas/observadores e estrelas | **Pipeline ampliado e conferido.** Datas/horas/sites parametrizados; segundo cenário slope/2026 gerado. Movimento próprio BSC5 incluído e comparado com ERFA. A partida continua histórica de 2024; paralaxe/aberração e novos cenários jogáveis permanecem pendentes |
+
+Validações: 213 testes TS / 51 Python na integração das três tabelas, typecheck e build aprovados. Typecheck, 213 testes TS e 51 Python aprovados; build final 403,54 kB gzip. Capturas e medição final de carga registradas no relatório de desempenho. Terreno, layout, rotas, coordenadas de implantação e números dos perfis de horizonte preservados; o texto que identificava os eixos foi corrigido. O Sol foi regenerado deliberadamente, portanto seu hash **deve** mudar nesta etapa.
+
+Fontes, comandos de reprodução e limites: [data-sources.md](data-sources.md). A astrometria não é completa: sem paralaxe/RV, aberração individual, deflexão gravitacional e transformação FK5→ICRS integral. A concordância matemática de PROJ/ERFA não mede erro absoluto do DEM ou do catálogo.
+
+## Fechamento desta rodada
+
+- Typecheck, **213 testes TS / 23 arquivos**, **51 testes Python** e build aprovados. `git diff --check`, cabeçalhos IA e links locais conferidos.
+- **36 verificações E2E de astronomia** na versão final, sem erros JS/GLSL; incluem azimute geográfico comparado às fixtures Horizons (h0/180/360), luz/energia em cinco horas, 433/708 no painel polar e capturas desktop/celular emulado EN/PT.
+- **20 verificações de descoberta** aprovadas, preservando o acesso a tarefas e instalações pelo menu normal.
+- Três amostras finais E2E (câmera/hora de referência, servidor dev): **31,45 / 28,81 / 26,89 FPS**, P95 83,3 / 83,4 / 50,1 ms; um frame de 1033,3 ms na terceira janela. Não repetir a conclusão antiga de 60 FPS como garantia atual.
+- Produção: carga final e sessão de 30 min 4 s/73 ciclos detalhadas em [PERFORMANCE_VALIDATION.md](PERFORMANCE_VALIDATION.md). O perfil móvel é emulado; a GPU física não foi ensaiada. Travadas e baixa taxa de quadros continuam nas tasks, mesmo sem vazamento contínuo no fluxo de reinícios.
+- Capturas revisadas em `.scratch-agent/astronomy-followup/visual-final-isolated/`; dados/métricas em `scientific-delta.json`, `science-validation.json`, `performance.json` e `final-load/performance.json`. Rascunhos ignorados pelo git, reproduzíveis por scripts versionáveis.
+- Sem commit, push ou deploy por este agente.
+
+## Registro histórico da etapa AST-01–10
+
+As seções seguintes registram o estado **anterior** à correção DT-16. Nelas, “preservado” e os resultados de 208/43 testes ou 645 kB referem-se à primeira etapa, não à árvore atual.
+
 ## Preservação e contratos
 
 - [x] Terreno, altura de implantação, planta da base, rotas, horizonte LOLA e tabela solar energética preservados por comparação SHA-256 antes/depois.

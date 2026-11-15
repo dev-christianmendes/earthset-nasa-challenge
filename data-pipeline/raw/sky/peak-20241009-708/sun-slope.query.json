@@ -1,0 +1,18 @@
+{
+  "format": "text",
+  "COMMAND": "'10'",
+  "OBJ_DATA": "'NO'",
+  "MAKE_EPHEM": "'YES'",
+  "EPHEM_TYPE": "'OBSERVER'",
+  "CENTER": "'coord@301'",
+  "COORD_TYPE": "'GEODETIC'",
+  "SITE_COORD": "'315.0,-89.97668111334877,1.238125'",
+  "START_TIME": "'2024-10-09 09:00'",
+  "STOP_TIME": "'2024-11-07 21:00'",
+  "STEP_SIZE": "'1 h'",
+  "QUANTITIES": "'4,9,10,13,14,15,20,24,32,45'",
+  "CSV_FORMAT": "'YES'",
+  "ANG_FORMAT": "'DEG'",
+  "APPARENT": "'AIRLESS'",
+  "EXTRA_PREC": "'YES'"
+}

@@ -2,23 +2,28 @@
 
 Cada número científico do jogo tem origem aqui. O que for ilustrativo está marcado como tal, no código e na tela.
 
-## 1. Sol (dado real, em uso)
+## 1. Sol (dado real, observador LOLA validado em 15/11/2026)
 
 | Campo | Valor |
 |---|---|
-| Fonte | NASA/JPL **Horizons**, API `https://ssd.jpl.nasa.gov/api/horizons.api` |
-| Alvo | Sol (10), efemérides DE441 |
-| Observador | Superfície da Lua (centro 301), lon 0°, lat −89,5°, altitude 0 km. Local **ilustrativo** perto do polo sul |
-| Grandeza | Azimute e elevação aparentes (`QUANTITIES='4'`) |
-| Período da tabela em uso | 09/10/2024 09:00 UTC até 07/11/2024 21:00 UTC, passo de 1 h (709 amostras, 708 intervalos). As 709 amostras estão acima do horizonte plano. |
-| Data da consulta | 14/11/2026 |
-| Texto cru | `data-pipeline/raw/horizons_sun_south_pole.txt` (para auditoria) |
-| Tabela do jogo | `src/data/sun-south-pole.json` |
-| Como gerar | `python3 data-pipeline/fetch_sun.py` (ou `--from-raw` para reprocessar o texto cru). Testes: `python3 -m unittest discover -s data-pipeline/tests` |
+| Fonte | [NASA/JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html), DE441, alvo Sol (10), centro `coord@301`, geodésico, `APPARENT=AIRLESS` |
+| Observador ativo (`peak`) | Longitude leste **216,869897645844°**, latitude **−89,917555298683°**, altura **1,474125 km** sobre a esfera de 1737,4 km; ME DE421 |
+| Outros sites solares | `slope`: 315° / −89,976681113349° / 1,238125 km; `rim`: 116,565051177078° / −89,926259214844° / 0,201625 km |
+| Origem espacial | [Rótulo LOLA LDEM_80S_20M](https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL); parâmetros em `data-pipeline/observers.json`; rótulo preservado em `data-pipeline/lola-projection.LBL` |
+| Janela | 09/10/2024 09:00 a 07/11/2024 21:00 UTC: 709 pontos, 708 intervalos de uma hora |
+| Brutos e consultas | `data-pipeline/raw/sky/peak-20241009-708/`; consultas e hashes em `data-pipeline/sky-provenance.json` |
+| Tabela do motor | `src/data/sun-south-pole.json`; `samples` = peak, `samples_by_site` = efeméride correspondente a cada site |
+| Regeneração conjunta | `python3 -B data-pipeline/fetch_sky.py --from-raw data-pipeline/raw/sky/peak-20241009-708 --activate` |
 
-**Resultado da tabela versionada:** com horizonte plano, a elevação do Sol no ponto fica entre **0,1611°** e **1,0361°** durante toda a janela. O Sol não se põe nesse ponto no período. A noite do jogo vem do relevo que bloqueia o Sol.
+**DT-16:** a efeméride regional anterior era 0° / −89,5° / 0 km. Foi substituída pela localização derivada da implantação LOLA existente, sem mover terreno ou base. O pipeline solar antigo (`fetch_sun.py`) agora grava somente o arquivo histórico `data-pipeline/generated/sun-regional-legacy.json`; ele não pode sobrescrever o cenário ativo isoladamente.
 
-**Limitação espacial:** a tabela é de um único ponto de observação, −89,5° e 0°, cerca de 15,2 km do polo. O morro `peak` do LOLA está a 2,5 km do polo, em x = −1500 m, y = −2000 m na projeção. A elevação/azimute do Sol não foram calculados exatamente para esse morro. A base usa uma aproximação regional; a sombra usa o horizonte local medido. Comparação independente da orientação do azimute ainda falta.
+Reproduzir coordenadas/alturas: `python3 -B data-pipeline/observer.py --from-dem data-pipeline/raw/lola_south_pole_band.bin` (não regenera malha ou seleção de sites).
+
+A projeção é estereográfica **esférica**, polo sul, longitude central 0°, raio 1.737.400 m. Para x/y da grade: `lon=atan2(x,y)` e `lat=−90°+2 atan(hypot(x,y)/(2R))`. O norte geográfico na grade tem ângulo `lon`; portanto `az_grade=(az_Horizons+lon) mod 360`. A renderização e o horizonte usam a grade; os painéis mostram o norte geográfico, subtraindo essa rotação. A conferência independente com [PROJ](https://proj.org/en/stable/operations/projections/stere.html) deu diferença máxima de 4,45×10⁻¹²° na inversa para os três sites. Isso mede consistência matemática, não acurácia física do DEM.
+
+O [manual Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html#lunar-mean-earth-frame-of-de421) confirma ME de DE421 para coordenadas lunares; o rótulo LOLA declara o mesmo referencial. Não foi usado `IAU_MOON` em seu lugar.
+
+**Limites espaciais:** resolução original 20 m; altura do observador interpolada bilinearmente. O perfil de horizonte anterior, preservado, usa pixels arredondados e raios a cada 5° até 20 km. A altura arredondada no centro difere da bilinear em 1,375 m (peak), 3,625 m (slope) e 14,625 m (rim). Não é localização certificada de pouso ou previsão de iluminação subminuto. Permanecem a discretização horária, o limiar binário do centro solar e a aproximação de curvatura do horizonte.
 
 ## 2. Horizonte local medido (LOLA, C1)
 
@@ -32,17 +37,15 @@ Cada número científico do jogo tem origem aqui. O que for ilustrativo está ma
 | Método | Para cada candidato num disco de 3 km em volta do polo, 72 raios (a cada 5°) até 20 km; ângulo máximo do relevo, descontada a curvatura (d²/2R, R = 1737,4 km) |
 | Escolha dos sites | Pelo próprio horizonte: **peak** = o mais exposto (horizonte médio mínimo), **slope** = o mediano, **rim** = o mais sombreado |
 
-**Resultado (14/11/2026):** com o Sol da tabela do JPL Horizons, em 709 horas:
+**Resultado atual (DT-16, 15/11/2026):** Sol do observador de cada site, 709 pontos e 708 intervalos:
 
-| Site | Horizonte máximo | Horas com Sol |
+| Site | Horizonte máximo | Amostras iluminadas / intervalos de 1 h |
 |---|---|---|
-| peak (morro) | 4,3° | 412 |
-| slope (encosta) | 25,4° | 179 |
-| rim (borda) | 55,4° | 0 |
+| peak (morro) | 4,3° | 434 / 433 |
+| slope (encosta) | 25,4° | 179 / 179 |
+| rim (borda) | 55,4° | 0 / 0 |
 
-Decisão (14/11/2026, autor): a base começa no **morro (peak)**. A tabela atual dá 412 amostras iluminadas, equivalentes a 411 intervalos de jogo de 1 h; encosta = 179 amostras, borda = 0. O equilíbrio da partida atual foi testado com esses arquivos; qualquer regeneração do Sol ou horizonte pede nova simulação completa.
-
-**Suposição a verificar (convenção de azimute):** o azimute do Horizons (0° = norte local, sentido horário) foi ligado à projeção com norte = +y (meridiano 0°, afastando-se do polo) e leste = +x, a convenção padrão da estereográfica polar sul (EPSG:3031). Se o sinal de leste estiver invertido, o Sol nasce do lado errado. Verificação pendente: comparar uma direção conhecida do relevo com o nascer do Sol na tabela.
+A base continua no **peak**. A referência regional tinha 411 intervalos iluminados; a correção acrescenta h645–648 e h652–669, sem retirar nenhum (22 h). No slope a soma fica igual, mas h196 deixa de ser iluminada e h375 passa a ser. O rim permanece sem Sol. O teste de partida compara os dados históricos e os novos: 2 → 3 corações no plano de referência com capacidade 1000, **sem alterar capacidade, custos, durações ou geração por painel**. O painel polar agora conta 708 intervalos, sem contar o ponto final como hora adicional.
 
 **Limites:** o pixel de 20 m e a escolha de três sites não são medição de um local de pouso real; é um recorte do polo para o jogo. O horizonte de 20 km ignora crateras maiores que isso.
 
@@ -62,8 +65,7 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 
 ## 5. O que é ilustrativo (lista de conferência)
 
-- Associação da efeméride regional ao morro `peak` (seções 1 e 2); o horizonte em si foi medido no LOLA.
-- Local de observação −89,5° lat (escolha de cenário, não de dado).
+- A implantação da base é uma escolha do jogo sobre o DEM LOLA; o observador é derivado desse ponto. A antiga aproximação regional −89,5°/0° foi substituída em DT-16.
 - Robô, tempos de tarefa, consumo e equilíbrio de bateria (`src/engine/robot.ts`, `src/main.ts`): regras de jogo, documentadas em `docs/regras-recursos.md`.
 - Recursos (energia, ar, água, comida): regras de jogo, sem fonte científica própria.
 
@@ -102,24 +104,30 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 
 ## 6. Céu astronômico e iluminação lunar (15/11/2026)
 
-**Fontes e reprodução:** [API JPL Horizons](https://ssd-api.jpl.nasa.gov/doc/horizons.html), [manual de grandezas](https://ssd.jpl.nasa.gov/horizons/manual.html), [BSC5 mantido pelo NOIRLab](https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/bsc5.html) e sua [listagem completa](https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/catalog5.html). Pipeline `python3 -B data-pipeline/fetch_sky.py`; offline: `python3 -B data-pipeline/fetch_sky.py --from-raw data-pipeline/raw/sky`. Saída: `src/data/sky.json`, com consultas e SHA-256 dos brutos.
+**Fontes e reprodução:** [API JPL Horizons](https://ssd-api.jpl.nasa.gov/doc/horizons.html), [manual de grandezas](https://ssd.jpl.nasa.gov/horizons/manual.html), [BSC5 mantido pelo NOIRLab](https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/bsc5.html) e sua [listagem completa](https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/catalog5.html). Pipeline `python3 -B data-pipeline/fetch_sky.py`; offline: `python3 -B data-pipeline/fetch_sky.py --from-raw data-pipeline/raw/sky/peak-20241009-708 --activate`. Saída compacta: `src/data/sky.json`; consultas e SHA-256 ficam em `data-pipeline/sky-provenance.json`, fora do JavaScript.
 
 | Conteúdo | Proveniência / transformação |
 |---|---|
 | Sol, Terra, Mercúrio, Vênus, Marte, Júpiter e Saturno | Horizons DE441; mesmo observador e janela da seção 1; 709 amostras por corpo |
 | Direção, diâmetro, iluminação, geometria terrestre e magnitude | Grandezas 4, 9, 10, 13, 14, 15, 20, 24, 32 e 45; refração desligada |
-| Rotação do céu | Inferida de Sol/Júpiter em ICRF aparente e horizonte local, conferida nos sete corpos; erro máximo 0,0000012074° |
-| Estrelas | 904 entradas BSC5, V ≤ 4,5, identificador HR e RA/Dec J2000; CDS V/50 não respondeu, utilizada a cópia NOIRLab |
+| Rotação do céu | Inferida de Sol/Júpiter em ICRF aparente e horizonte local, conferida nos sete corpos; resíduo máximo 2,79×10⁻⁹° nos sete corpos antes da quantização (atan2 do produto vetorial) |
+| Estrelas | 904 entradas BSC5, V ≤ 4,5, HR, RA/Dec J2000 e movimento próprio tangencial µα cosδ / µδ em arcsec/ano; CDS V/50 não respondeu, utilizada a cópia NOIRLab |
 | Diâmetro desenhado | Raio de esfera = distância visual × seno do semidiâmetro angular; não usar raio arbitrário |
 | Fase da Terra | Ponto subsolar e subobservador tabulados; esfera orientada pelo eixo terrestre; conferência com fração iluminada do Horizons |
 | Ocultação | Perfil LOLA existente, interpolado por azimute no fragmento; sem refração atmosférica |
 | Exposição, preenchimento e pontos não resolvidos | Escolhas de câmera/apresentação; não são fluxo radiométrico medido nem regra energética |
 
-**Sol único:** luz e disco usam a amostra de `sun-south-pole.json` já consumida pela energia. Diferença máxima para a nova consulta de conferência: 0,000050303°. Não houve regeneração da tabela energética, do relevo ou da implantação da base. A energia continua usando centro solar e visibilidade binária por site; a exibição de um limbo parcial não muda essa regra.
+**Sol único:** luz e disco usam a mesma amostra por site consumida pela energia, derivada da mesma consulta que o céu. DT-16 regenerou as efemérides e documentou o impacto (seção 1). A regra energética continua binária pelo centro solar. Terreno, perfis numéricos do horizonte e implantação não mudaram.
+
+**Formato compacto:** colunas numéricas com deltas inteiros e escala 10⁶; nenhuma hora removida. Erro por valor retido ≤ 0,00000051 na unidade original. Diâmetro solar, geometria terrestre e coordenadas são conferidos contra brutos. Matrizes guardam 9 casas. Metadados/consultas completos ficam no sidecar de proveniência. `src/astronomy/format.ts` valida e decodifica o formato 3.
+
+**Estrelas:** movimento próprio propagado como vetor tangencial normalizado, sem singularidade nos polos. A convenção de µα cosδ foi conferida no [código de catálogo da ESA tetra3](https://github.com/esa/tetra3/blob/master/tetra3/tetra3.py), além da [descrição HEASARC](https://heasarc.gsfc.nasa.gov/W3Browse/star-catalog/bsc5p.html). Conferência independente com ERFA/SOFA `pmsafe`, paralaxe e velocidade radial zeradas, para Sirius, Alpha Centauri A/B, Procyon e Polaris em 2024, 2026 e 2100: diferença numérica máxima 2,74×10⁻⁹ arcsec para **esse modelo simplificado**, não para a posição aparente real. O aviso ERFA de distância substituída é esperado com paralaxe zero. Fixtures mantêm referências independentes nos testes TS.
+
+**Outras janelas/observadores:** CLI aceita `--start`, `--hours` (1–8784), `--site peak|slope|rim`, `--raw-dir`, `--output` e replay `--from-raw`. Datas de início 1900–2100, em hora cheia. Manifesto vincula cache a consulta e impede reutilizar brutos de outra data/site. Exemplo conferido: `python3 -B data-pipeline/fetch_sky.py --start '2026-11-15 00:00' --hours 48 --site slope --output .scratch-agent/astronomy-followup/sky-slope-2026.json`. Sete corpos × 49 amostras, observador slope; não substitui a partida/DONKI histórica de 2024. `--activate` só aceita a janela padrão e o destino canônico. Uma nova data jogável exigirá clima e testes de partida próprios; não se transpõem tempestades históricas para outra data.
 
 **SPICE:** investigados [NAIF Frames](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html) e o [frame lunar DE421](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_080317.tf). Optou-se pelo referencial recuperado das saídas do próprio Horizons; não se substituiu MEAN_ME por IAU_MOON. Nenhuma dependência SPICE é necessária no navegador.
 
-**Limites:** observador regional fixo e grade horária; outras datas/locais exigem nova geração e validação. Estrelas preservam posições de catálogo J2000, sem movimento próprio/paralaxe/aberração individual; o erro de conferência do referencial não é precisão estelar global. A textura terrestre Blue Marble já existente é estática; não representa nuvens ou clima da data. Preenchimento neutro é artístico, sem energia; não há halo atmosférico ou bloom global. Sombras do relevo preservam o exagero visual 2×. Não se prometem detecção a olho nu ou fotometria instrumental apenas por um corpo estar geometricamente acima do horizonte.
+**Limites:** a partida continua na janela histórica de 2024 e no peak, em grade horária; cenários alternativos são gerados pelo pipeline. Movimento próprio estelar incluído, mas não paralaxe, velocidade radial, aberração anual/diurna individual, deflexão gravitacional ou conversão completa FK5→ICRS; o erro de conferência do referencial não é precisão estelar global. A textura terrestre Blue Marble já existente é estática; não representa nuvens ou clima da data. Preenchimento neutro é artístico, sem energia; não há halo atmosférico ou bloom global. Sombras do relevo preservam o exagero visual 2×. Não se prometem detecção a olho nu ou fotometria instrumental apenas por um corpo estar geometricamente acima do horizonte.
 
 Resultados, limites e hashes de preservação: [EARTHSET_VALIDATION_ROADMAP.md](EARTHSET_VALIDATION_ROADMAP.md).
 

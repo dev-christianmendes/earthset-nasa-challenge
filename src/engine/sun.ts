@@ -17,15 +17,20 @@ export interface SunTable {
   readonly step_hours: number;
   readonly hours: number;
   readonly samples: readonly SunSample[];
+  readonly samples_by_site?: Partial<Record<Site, readonly SunSample[]>>;
+  /** Metadado opcional: ângulo do norte geográfico na grade polar usada pelas amostras. */
+  readonly observer?: { readonly grid_north_rotation_deg: number };
+  readonly observers?: Partial<Record<Site, { readonly grid_north_rotation_deg: number }>>;
 }
 
 /** Amostra da tabela para a hora de jogo `hour`. Para no último ponto. */
-export function sampleAt(table: SunTable, hour: number): SunSample {
+export function sampleAt(table: SunTable, hour: number, site?: Site): SunSample {
   if (!Number.isFinite(hour) || hour < 0) {
     throw new RangeError(`hora inválida para o Sol: ${hour}`);
   }
-  const index = Math.min(Math.floor(hour / table.step_hours), table.samples.length - 1);
-  return table.samples[index];
+  const samples = site ? table.samples_by_site?.[site] ?? table.samples : table.samples;
+  const index = Math.min(Math.floor(hour / table.step_hours), samples.length - 1);
+  return samples[index];
 }
 
 /**
@@ -33,6 +38,6 @@ export function sampleAt(table: SunTable, hour: number): SunSample {
  * no relevo, na direção do azimute do Sol.
  */
 export function isSunlit(table: SunTable, hour: number, site: Site, terrain: TerrainTable): boolean {
-  const sample = sampleAt(table, hour);
+  const sample = sampleAt(table, hour, site);
   return sample.el > horizonAt(terrain, site, sample.az);
 }

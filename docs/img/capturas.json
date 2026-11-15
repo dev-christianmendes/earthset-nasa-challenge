@@ -1,0 +1,147 @@
+[
+ {
+  "captura": "01-menu.jpg",
+  "ok": true,
+  "detalhe": "query="
+ },
+ {
+  "captura": "02-modos.jpg",
+  "ok": true,
+  "detalhe": "query=?screen=modes"
+ },
+ {
+  "captura": "03-como-jogar.jpg",
+  "ok": true,
+  "detalhe": "query=?screen=howto"
+ },
+ {
+  "captura": "04-ciencia-menu.jpg",
+  "ok": true,
+  "detalhe": "query=?screen=science"
+ },
+ {
+  "captura": "05-configuracoes.jpg",
+  "ok": true,
+  "detalhe": "query=?screen=settings"
+ },
+ {
+  "captura": "06-creditos.jpg",
+  "ok": true,
+  "detalhe": "query=?screen=credits"
+ },
+ {
+  "captura": "07-historia.jpg",
+  "ok": true,
+  "detalhe": "query=?screen=story"
+ },
+ {
+  "captura": "08-introducao.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&cineAt=7"
+ },
+ {
+  "captura": "09-base-dia.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30"
+ },
+ {
+  "captura": "10-base-noite.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&clockAt=400"
+ },
+ {
+  "captura": "11-base-pt.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&lang=pt"
+ },
+ {
+  "captura": "12-painel-rover.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&hour=30&task=ice&after=3&tool=rover&shot=rover"
+ },
+ {
+  "captura": "13-painel-estufa.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&tool=greenhouse"
+ },
+ {
+  "captura": "14-painel-tripulacao.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&tool=crew"
+ },
+ {
+  "captura": "15-painel-energia.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&tool=energy"
+ },
+ {
+  "captura": "16-painel-missoes.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&tool=missions"
+ },
+ {
+  "captura": "17-painel-ciencia.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&tool=science"
+ },
+ {
+  "captura": "18-tempestade-alerta.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&clockAt=406&tool=science"
+ },
+ {
+  "captura": "19-selecao-habitat.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30"
+ },
+ {
+  "captura": "20-selecao-rover.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30"
+ },
+ {
+  "captura": "21-selecao-astronauta.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30"
+ },
+ {
+  "captura": "22-antena-selecionada.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30&antenna=tuned"
+ },
+ {
+  "captura": "23-luma-historico.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30"
+ },
+ {
+  "captura": "24-pausa.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30"
+ },
+ {
+  "captura": "25-fim-partida.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=708"
+ },
+ {
+  "captura": "26-celular-base.jpg",
+  "ok": true,
+  "detalhe": "query=?autostart=cadet&nointro&hour=30"
+ },
+ {
+  "captura": "27-celular-menu.jpg",
+  "ok": true,
+  "detalhe": "query="
+ },
+ {
+  "captura": "28-modo-escola-energia.jpg",
+  "ok": true,
+  "detalhe": ""
+ },
+ {
+  "captura": "29-modo-escola-base.jpg",
+  "ok": true,
+  "detalhe": ""
+ }
+]

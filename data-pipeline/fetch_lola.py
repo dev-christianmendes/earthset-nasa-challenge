@@ -211,7 +211,7 @@ def build(dem: Dem) -> dict:
         "source": "LRO LOLA LDEM_80S_20M (NASA PDS / MIT), 20 m por pixel, polo sul",
         "method": "horizonte medido em 72 direções até 20 km, com curvatura lunar; ver data-pipeline/fetch_lola.py",
         "azimuth_step_deg": AZ_STEP_DEG,
-        "azimuth_reference": "0° = norte (+y da projeção), 90° = leste (+x), sentido horário (convenção Horizons)",
+        "azimuth_reference": "0° = +y da grade polar, 90° = +x, sentido horário; converter o azimute geográfico Horizons pela longitude do observador",
         "sites": {
             name: {
                 "x_m": round(x, 1),

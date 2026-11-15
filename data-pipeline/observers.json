@@ -1,0 +1,35 @@
+{
+  "peak": {
+    "body": 301,
+    "longitude_deg": 216.86989764584402,
+    "latitude_deg": -89.9175552986833,
+    "altitude_km": 1.474125,
+    "frame": "MEAN_ME / DE421",
+    "grid_north_rotation_deg": 216.86989764584402,
+    "x_m": -1500.0,
+    "y_m": -2000.0,
+    "source": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL"
+  },
+  "slope": {
+    "body": 301,
+    "longitude_deg": 315.0,
+    "latitude_deg": -89.97668111334877,
+    "altitude_km": 1.238125,
+    "frame": "MEAN_ME / DE421",
+    "grid_north_rotation_deg": 315.0,
+    "x_m": -500.0,
+    "y_m": 500.0,
+    "source": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL"
+  },
+  "rim": {
+    "body": 301,
+    "longitude_deg": 116.56505117707799,
+    "latitude_deg": -89.92625921484377,
+    "altitude_km": 0.201625,
+    "frame": "MEAN_ME / DE421",
+    "grid_north_rotation_deg": 116.56505117707799,
+    "x_m": 2000.0,
+    "y_m": -1000.0,
+    "source": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL"
+  }
+}

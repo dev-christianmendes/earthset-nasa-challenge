@@ -2,7 +2,7 @@
   "source": "LRO LOLA LDEM_80S_20M (NASA PDS / MIT), 20 m por pixel, polo sul",
   "method": "horizonte medido em 72 direções até 20 km, com curvatura lunar; ver data-pipeline/fetch_lola.py",
   "azimuth_step_deg": 5,
-  "azimuth_reference": "0° = norte (+y da projeção), 90° = leste (+x), sentido horário (convenção Horizons)",
+  "azimuth_reference": "0° = +y da grade polar, 90° = +x, sentido horário; converter o azimute geográfico Horizons pela longitude do observador",
   "sites": {
     "peak": {
       "x_m": -1500.0,

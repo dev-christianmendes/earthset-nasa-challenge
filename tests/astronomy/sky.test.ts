@@ -1,6 +1,10 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 import { describe, it, expect } from 'vitest';
-import { BODY_IDS, angularRadius, bodyAt, direction, equatorial, illuminatedFraction, skyAngles, solarView, terrestrial, transform, utcAt, visibility } from '../../src/astronomy/sky';
+import { BODY_IDS, angularRadius, bodyAt, direction, equatorial, illuminatedFraction, skyAngles, solarView, stellarDirection, terrestrial, transform, trueAzimuth, utcAt, visibility } from '../../src/astronomy/sky';
+import { decodeSky } from '../../src/astronomy/format';
+import packed from '../../src/data/sky.json';
+import horizons from '../fixtures/sky-horizons-peak-2024.json';
+import alternatePacked from '../fixtures/sky-slope-2026.json';
 import { SKY } from '../../src/data/sky';
 import { SUN } from '../../src/data/sun';
 import { TERRAIN } from '../../src/data/terrain';
@@ -10,8 +14,58 @@ describe('céu lunar verificado', () => {
   it('mantém observador, época e grade temporal do Sol energético', () => {
     expect(SKY.start_utc).toBe(SUN.start_utc);
     expect(SKY.hours).toBe(SUN.hours);
-    expect(SKY.observer).toMatchObject({ body: 301, latitude_deg: -89.5, longitude_deg: 0, altitude_km: 0 });
+    expect(SKY.observer).toMatchObject({ body: 301, latitude_deg: -89.9175552986833, longitude_deg: 216.86989764584402, altitude_km: 1.474125 });
     for (const id of BODY_IDS) expect(SKY.bodies[id]).toHaveLength(709);
+  });
+  it('a compactação reproduz amostras brutas Horizons, incluindo norte geográfico e atributos terrestres', () => {
+    for (const id of BODY_IDS) for (const original of horizons.samples[id]) {
+      const sample = bodyAt(SKY, id, original.hour);
+      expect(Math.abs(((trueAzimuth(SKY, sample.az) - original.az + 540) % 360) - 180)).toBeLessThan(0.000001);
+      for (const key of packed.columns[id]) {
+        if (key === 'az') continue;
+        const k = key as keyof typeof sample;
+        if (original[k] === null) expect(sample[k]).toBeNull();
+        else expect(Math.abs(sample[k]! - original[k]!)).toBeLessThanOrEqual(0.00000051);
+      }
+    }
+  });
+  it('recusa dados compactados truncados, coordenadas nulas e deltas fracionários', () => {
+    const cut = structuredClone(packed);
+    cut.bodies.sun[0].pop();
+    expect(() => decodeSky(cut)).toThrow(/temporal/);
+    const absent = structuredClone(packed) as unknown as { bodies: { sun: (number | null)[][] } };
+    absent.bodies.sun[0][0] = null;
+    expect(() => decodeSky(absent)).toThrow(/ausente/);
+    const delta = structuredClone(packed);
+    delta.bodies.sun[0][0] = 0.5;
+    expect(() => decodeSky(delta)).toThrow(/Amostra/);
+  });
+  it('carrega outro observador e outra época sem contaminar a partida histórica', () => {
+    // Gerado por fetch_sky.py --start '2026-11-15 00:00' --hours 48 --site slope --output …
+    const table = decodeSky(alternatePacked);
+    expect(table.observer.longitude_deg).toBe(315);
+    expect(table.observer.latitude_deg).toBeCloseTo(-89.97668111334877, 10);
+    for (const id of BODY_IDS) expect(table.bodies[id]).toHaveLength(49);
+    expect(utcAt(table, 48)).toBe('2026-11-17 00:00:00 UTC');
+    expect(() => bodyAt(table, 'sun', 49)).toThrow(RangeError);
+    expect(bodyAt(table, 'earth', 0)).not.toEqual(bodyAt(SKY, 'earth', 0));
+    expect(SUN.start_utc).toBe('2024-10-09 09:00');
+    expect(SKY.observer.longitude_deg).toBe(216.86989764584402);
+  });
+  it('propaga movimento próprio de Sirius, Alpha Centauri e Polaris contra ERFA pmsafe', () => {
+    // Referência independente: scripts/validate-science.py, dt=100 anos julianos J2000.
+    const table = { ...SKY, start_utc: '2100-01-01 12:00' };
+    const reference: Record<number, readonly number[]> = {
+      2491: [-0.1871582042940772, 0.9391052861264652, -0.28818929219307665],
+      5459: [-0.37521781092929873, -0.31142458511223636, -0.8730557382831274],
+      424: [0.010120811525590145, 0.00791722373988049, 0.9999174399630782],
+    };
+    for (const [id, vector] of Object.entries(reference)) {
+      const star = SKY.stars.samples.find((s) => s.hr === Number(id))!;
+      const direction = stellarDirection(star, table, 0);
+      direction.forEach((v, i) => expect(v).toBeCloseTo(vector[i], 10));
+      expect(Math.hypot(...direction)).toBeCloseTo(1, 12);
+    }
   });
   it('usa exatamente o Sol energético para direção e bloqueio por relevo', () => {
     for (let hour = 0; hour <= 708; hour++) {
@@ -69,7 +123,7 @@ describe('céu lunar verificado', () => {
     expect(direction(90, 0)[0]).toBe(1);
     expect(() => bodyAt(SKY, 'earth', Number.NaN)).toThrow(RangeError);
     expect(() => bodyAt(SKY, 'earth', -1)).toThrow(RangeError);
-    expect(bodyAt(SKY, 'earth', 900)).toBe(bodyAt(SKY, 'earth', 708));
+    expect(() => bodyAt(SKY, 'earth', 900)).toThrow(RangeError);
     expect(utcAt(SKY, 0)).toBe('2024-10-09 09:00:00 UTC');
   });
 });

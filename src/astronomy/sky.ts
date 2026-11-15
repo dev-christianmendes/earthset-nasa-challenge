@@ -23,13 +23,17 @@ export interface BodySample {
   readonly ra: number;
   readonly dec: number;
 }
-export interface CatalogStar { readonly hr: number; readonly ra: number; readonly dec: number; readonly magnitude: number }
+export interface CatalogStar {
+  readonly hr: number; readonly ra: number; readonly dec: number; readonly magnitude: number;
+  /** BSC5: µα cos(δ) e µδ, arcsec por ano juliano, época J2000. */
+  readonly pm_ra_cosdec: number; readonly pm_dec: number;
+}
 export interface SkyTable {
   readonly source: string;
   readonly start_utc: string;
   readonly step_hours: number;
   readonly hours: number;
-  readonly observer: { readonly body: number; readonly longitude_deg: number; readonly latitude_deg: number; readonly altitude_km: number; readonly frame: string };
+  readonly observer: { readonly body: number; readonly longitude_deg: number; readonly latitude_deg: number; readonly altitude_km: number; readonly frame: string; readonly grid_north_rotation_deg: number };
   readonly bodies: Readonly<Record<BodyId, readonly BodySample[]>>;
   readonly icrf_to_local: readonly (readonly number[])[];
   readonly stars: { readonly source: string; readonly catalog: string; readonly epoch: string; readonly status: string; readonly samples: readonly CatalogStar[] };
@@ -38,12 +42,14 @@ export interface SkyTable {
 
 export const RAD = Math.PI / 180;
 export function sampleIndex(table: SkyTable, hour: number): number {
-  if (!Number.isFinite(hour) || hour < 0) throw new RangeError(`hora inválida para o céu: ${hour}`);
-  return Math.min(table.bodies.sun.length - 1, Math.floor(hour / table.step_hours));
+  if (!Number.isFinite(hour) || hour < 0 || hour > table.hours) throw new RangeError(`hora fora da janela do céu: ${hour}`);
+  return Math.floor(hour / table.step_hours);
 }
 export const bodyAt = (table: SkyTable, id: BodyId, hour: number): BodySample => table.bodies[id][sampleIndex(table, hour)];
 
-/** Coordenadas locais: x=leste, y=zênite, -z=norte. Mesma convenção da tabela energética. */
+/** Eixos da grade polar da cena: x=+x LOLA, y=zênite, -z=+y LOLA.
+ * Os azimutes Horizons são rotacionados no pipeline para estes eixos.
+ */
 export function direction(az: number, el: number): Vector {
   const a = az * RAD;
   const e = el * RAD;
@@ -52,6 +58,25 @@ export function direction(az: number, el: number): Vector {
 export function equatorial(ra: number, dec: number): Vector {
   return [Math.cos(dec * RAD) * Math.cos(ra * RAD), Math.cos(dec * RAD) * Math.sin(ra * RAD), Math.sin(dec * RAD)];
 }
+/** Movimento próprio tangencial em vetor, sem singularidade nos polos celestes.
+ * Sem paralaxe/velocidade radial/deflexão. Não é uma solução astrométrica completa.
+ */
+export function stellarDirection(star: CatalogStar, table: SkyTable, hour: number): Vector {
+  sampleIndex(table, hour);
+  const years = (Date.parse(table.start_utc.replace(' ', 'T') + 'Z') + hour * 3600000 - Date.UTC(2000, 0, 1, 12)) / (365.25 * 86400000);
+  const a = star.ra * RAD; const d = star.dec * RAD;
+  const p = equatorial(star.ra, star.dec);
+  const ra = star.pm_ra_cosdec * RAD / 3600 * years;
+  const dec = star.pm_dec * RAD / 3600 * years;
+  const v: Vector = [p[0] - ra * Math.sin(a) - dec * Math.cos(a) * Math.sin(d),
+    p[1] + ra * Math.cos(a) - dec * Math.sin(a) * Math.sin(d), p[2] + dec * Math.cos(d)];
+  const norm = Math.hypot(...v);
+  return [v[0] / norm, v[1] / norm, v[2] / norm];
+}
+
+/** A malha usa os eixos da projeção; o painel apresenta o azimute geográfico. */
+export const trueAzimuth = (table: SkyTable, gridAzimuth: number): number =>
+  ((gridAzimuth - table.observer.grid_north_rotation_deg) % 360 + 360) % 360;
 export function transform(matrix: readonly number[], vector: Vector): Vector {
   return [matrix[0] * vector[0] + matrix[1] * vector[1] + matrix[2] * vector[2],
     matrix[3] * vector[0] + matrix[4] * vector[1] + matrix[5] * vector[2],
@@ -72,7 +97,7 @@ export function terrestrial(lon: number, lat: number): Vector {
 
 /** O Sol desenhado e a luz usam a amostra energética existente, sem efeméride independente. */
 export function solarView(sun: SunTable, hour: number, site: Site, terrain: TerrainTable) {
-  const sample = sampleAt(sun, hour);
+  const sample = sampleAt(sun, hour, site);
   return { ...sample, direction: direction(sample.az, sample.el), lit: isSunlit(sun, hour, site, terrain), horizon: horizonAt(terrain, site, sample.az) };
 }
 
@@ -83,6 +108,7 @@ export function visibility(sample: Pick<BodySample, 'az' | 'el' | 'diameter_arcs
 }
 
 export function utcAt(table: SkyTable, hour: number): string {
+  sampleIndex(table, hour);
   const epoch = Date.parse(table.start_utc.replace(' ', 'T') + 'Z');
-  return new Date(epoch + Math.min(table.hours, Math.max(0, hour)) * 3600000).toISOString().replace('.000Z', ' UTC').replace('T', ' ');
+  return new Date(epoch + hour * 3600000).toISOString().replace('.000Z', ' UTC').replace('T', ' ');
 }

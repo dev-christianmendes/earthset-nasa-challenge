@@ -45,7 +45,7 @@ Implementado em `src/engine/robot.ts`. Números ajustáveis.
 
 **Simplificação:** o consumo e o trabalho são calculados por passo de tempo. Se uma tarefa termina no meio do passo, o efeito vale só no fim do passo. Com passos de 1 h (testes) ou de frações de hora (tela), o erro é pequeno.
 
-**Equilíbrio com o Sol real (B2.3, 14/11/2026):** a partida da tela usa o Sol medido (JPL Horizons, a partir de 09/10/2024 às 09:00 UTC), o horizonte do morro (LOLA) e o clima do DONKI. Capacidade da bateria **1000** (antes 1200, valor que dava vitória com folga demais). Resultados do plano de referência (painéis, gelo e antena, estufa "só com sobra"), no morro:
+**Histórico do equilíbrio regional (B2.3, 14/11/2026; tabela superada por DT-16):** a partida da tela usa o Sol medido (JPL Horizons, a partir de 09/10/2024 às 09:00 UTC), o horizonte do morro (LOLA) e o clima do DONKI. Capacidade da bateria **1000** (antes 1200, valor que dava vitória com folga demais). Resultados do plano de referência (painéis, gelo e antena, estufa "só com sobra"), no morro:
 
 | Capacidade | Resultado do plano | Bateria mínima |
 |---|---|---|
@@ -54,7 +54,9 @@ Implementado em `src/engine/robot.ts`. Números ajustáveis.
 | 1050 | vence com 3 | 6 |
 | 1100 | vence com 3 | 45 |
 
-A base passiva perde por volta da hora 117 com qualquer capacidade. O ponto de virada (950 para 1000) é estreito: é uma escolha de jogo, não um dado. Trava em `tests/engine/partida.test.ts` (2 corações com o plano de referência). Os testes de partida passam o clima real (antes passavam clima calmo, o que escondia esse efeito).
+A base passiva perde por volta da hora 117 com qualquer capacidade. O ponto de virada (950 para 1000) é estreito: é uma escolha de jogo, não um dado. Esses números descrevem o observador regional anterior; não são a referência atual. Os testes de partida passam o clima real (antes passavam clima calmo, o que escondia esse efeito).
+
+**Atualização DT-16 (15/11/2026):** a efeméride foi recalculada no ponto LOLA do peak, com conversão de norte geográfico para grade polar. São **433 intervalos iluminados**, contra 411. Com as mesmas regras e capacidade 1000, o plano de referência termina com **3 corações**; a base passiva continua perdendo. Calibrar na noite também passa a vencer, porém com reserva final de bateria menor do que calibrar somente com Sol. Os testes guardam os dados regionais históricos e comparam 2 → 3 corações, para que a correção científica não pareça um ajuste oculto de equilíbrio. A tabela histórica de capacidades acima não foi revalidada para o novo observador. Não se alteraram consumos, capacidades, durações nem a regra binária do centro solar.
 
 ## O que ainda não existe (fica para depois)
 

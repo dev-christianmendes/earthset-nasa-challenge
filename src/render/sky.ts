@@ -1,7 +1,7 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Céu relativo à câmera, sem paralaxe de 700 m: efemérides offline, escala angular e horizonte LOLA.
 import * as THREE from 'three';
-import { BODY_IDS, angularRadius, bodyAt, direction, equatorial, sampleIndex, terrestrial, transform, type BodyId } from '../astronomy/sky';
+import { BODY_IDS, angularRadius, bodyAt, direction, equatorial, sampleIndex, stellarDirection, terrestrial, transform, type BodyId } from '../astronomy/sky';
 import { SKY } from '../data/sky';
 import { SUN } from '../data/sun';
 import { TERRAIN } from '../data/terrain';
@@ -107,7 +107,7 @@ export function updateSky(hour: number, lit: boolean, site: Site, longExposure =
   if (h === lastSample && site === lastSite) return;
   lastSample = h; lastSite = site;
   horizonUniform.value = [...TERRAIN.sites[site].horizon_deg];
-  const solar = sampleAt(SUN, hour);
+  const solar = sampleAt(SUN, hour, site);
   solarDisc.position.fromArray(direction(solar.az, solar.el)).multiplyScalar(DISTANCE);
   solarDisc.scale.setScalar(angularRadius(bodyAt(SKY, 'sun', hour).diameter_arcsec, DISTANCE));
   const sample = bodyAt(SKY, 'earth', hour);
@@ -121,7 +121,7 @@ export function updateSky(hour: number, lit: boolean, site: Site, longExposure =
   earth.quaternion.setFromRotationMatrix(frame(d.clone().negate(), north).multiply(frame(observer, new THREE.Vector3(0, 1, 0)).transpose()));
   earthSun.value.fromArray(terrestrial(sample.solar_lon!, sample.solar_lat!));
   SKY.stars.samples.forEach((star, i) => {
-    const v = transform(matrix, equatorial(star.ra, star.dec));
+    const v = transform(matrix, stellarDirection(star, SKY, h));
     pointPositions.set(v.map((x) => x * DISTANCE), i * 3);
   });
   planets.forEach((id, i) => {

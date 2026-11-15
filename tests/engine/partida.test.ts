@@ -9,6 +9,7 @@ import type { Installation } from '../../src/engine/resources';
 import { MAX_PANELS, type TaskKind } from '../../src/engine/robot';
 import { isSunlit, type SunTable } from '../../src/engine/sun';
 import sunJson from '../../src/data/sun-south-pole.json';
+import regionalSun from '../fixtures/sun-regional-2024.json';
 import terrainJson from '../../src/data/terrain-sites.json';
 import weatherJson from '../../src/data/space-weather.json';
 import { weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
@@ -71,12 +72,12 @@ function planWithFacilities(g: GameState, onlyLit = true): GameState {
   return s;
 }
 
-function play(plan: ((g: GameState) => GameState) | null): GameState {
+function play(plan: ((g: GameState) => GameState) | null, sun: SunTable = SUN): GameState {
   let g = createGame({ installation: INSTALLATION });
   while (outcomeOf(g) === 'playing') {
     if (plan) g = plan(g);
     // Clima real do cenário (DONKI), igual ao da tela.
-    g = advance(g, 1, sunlit(g.clock.hour), weatherAt(WEATHER, g.clock.hour));
+    g = advance(g, 1, isSunlit(sun, g.clock.hour, INSTALLATION.site, TERRAIN), weatherAt(WEATHER, g.clock.hour));
   }
   return g;
 }
@@ -97,10 +98,11 @@ describe('partida completa', () => {
     expect(g.installation.panels).toBe(MAX_PANELS);
   });
 
-  it('equilíbrio com o Sol real: o plano de referência termina com 2 corações (B2.3)', () => {
-    // Capacidade 1000: com 950 o plano perde na noite; com 1050 ou mais, sobra folga (ver docs/regras-recursos.md).
+  it('DT-16: observador LOLA rende 3 corações; cenário regional histórico rendia 2, sem mudar regras', () => {
+    // Correção científica: 433 intervalos de Sol em vez de 411. Não reequilibrar consumos/capacidade.
     const g = play(planHour);
-    expect(g.hearts).toBe(2);
+    expect(g.hearts).toBe(3);
+    expect(play(planHour, regionalSun as SunTable).hearts).toBe(2);
   });
 
   it('com astronautas colhendo e fazendo manutenção, o plano mantém o resultado e rende muitas colheitas (D-18)', () => {
@@ -121,9 +123,12 @@ describe('partida completa', () => {
     expect(g.agentTasksDone.tune).toBeGreaterThan(2);
   });
 
-  it('calibrar também na noite longa gasta energia sem render e faz a base perder (a hora da ordem importa)', () => {
+  it('calibrar também na noite longa gasta energia e reduz a reserva final (DT-16)', () => {
     const g = play((x) => planWithFacilities(x, false));
-    expect(outcomeOf(g)).toBe('lost');
+    const daylight = play(planWithFacilities);
+    expect(outcomeOf(g)).toBe('won');
+    expect(g.vitals.battery).toBeLessThan(daylight.vitals.battery);
+    expect(g.agentTasksDone.calibrate).toBeGreaterThan(daylight.agentTasksDone.calibrate);
   });
 
   it('depois do fim, nenhuma ação é aceita', () => {

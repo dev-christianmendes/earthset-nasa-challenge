@@ -643,8 +643,8 @@ const dustOffset = new THREE.Vector3();
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
 
 export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true, longExposure = false): RoverView {
-  // Sol na direção real (azimute a partir do norte = −z, leste = +x).
-  const { az, el } = sampleAt(SUN, state.clock.hour);
+  // Sol na grade polar LOLA (0° = −z); convergência geográfica corrigida no pipeline.
+  const { az, el } = sampleAt(SUN, state.clock.hour, state.installation.site);
   const dir = sunDir.fromArray(direction(az, el));
   sun.position.copy(dir).multiplyScalar(1200);
   sun.target.position.set(0, 0, 0);

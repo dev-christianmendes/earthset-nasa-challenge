@@ -76,7 +76,7 @@ Ordem: P0 (DT-01–04) → P1 (DT-05–06) → P2 (DT-07–09 e DT-13) → P3 (D
 - [ ] **DT-13 · P2 · Medium · investigação de latência/UX** Medir confirmação, movimento e trabalho separadamente; explicar preparo/deslocamento/abrigo e reproduzir espera de segundos sem feedback.
 - [ ] **DT-14 · investigação P2 · Medium · hipótese** Medir bloqueios de compilação de shaders e modelos tardios; confirmar ou descartar antes de otimizar.
 - [ ] **DT-15 · investigação P3 · Low · hipótese** Medir descarte/propriedade de recursos GPU e sessões longas; não presumir vazamento contínuo.
-- [ ] **DT-16 · investigação científica · Medium · hipótese** Validar ponto de observação e azimute Sol/LOLA, com comparação independente e impacto na iluminação.
+- [x] **DT-16 · Medium · confirmada/corrigida** Observadores LOLA/ME DE421 e azimute conferidos com PROJ; Sol por site regenerado; 411 → 433 intervalos no peak e 2 → 3 corações, com comparação histórica e partidas completas. Ver roadmap/fontes.
 - [ ] **DT-17 · fechamento · Medium** Executar matriz completa na mesma revisão, incorporar regressões à automação e atualizar plano/memória/diário com evidências.
 
 Nenhum item é encerrado por mera edição de código. Validação: typecheck + testes + build; Python quando houver dados; E2E e screenshots desktop/celular revisados quando houver tela. Nada de commit, push ou deploy sem pedido explícito.
@@ -94,3 +94,20 @@ Escopo e evidências em [EARTHSET_VALIDATION_ROADMAP.md](EARTHSET_VALIDATION_ROA
 - [ ] **AST-P1** Validar ponto exato do site/azimute independentemente (DT-16), astrometria estelar completa, outras janelas/observadores, desempenho em GPU móvel real e carregamento frio. Limites atuais declarados; não encerrar a dívida DT-13–17 com esta etapa.
 
 Terreno, layout, implantação, horizonte e tabela solar energética preservados por SHA-256. Nenhuma regra do motor alterada. Há custo de pacote (JS gzip ~645 kB) e variação de FPS registrados no roadmap.
+
+
+## 12. Seguimento da astronomia e desempenho (15/11/2026)
+
+Esta seção atualiza o estado histórico do bloco 11. Não encerra DT-02–15/17 por associação.
+
+- [x] **AST-P1.1 / DT-16** Observador dos três sites e norte geográfico/grade polar validados independentemente; energia e luz usam a efeméride correspondente. Terreno/implantação preservados; mudança do resultado da partida explicitada e testada.
+- [x] **AST-P1.2** Instrumentação de carga fria, emulação móvel, CPU/rede limitadas, recursos WebGL, heap/DOM após GC e ciclos de reinício/qualidade implementada. Resultado da rodada prolongada no relatório de desempenho.
+- [x] **AST-P1.3** Dados compactados por colunas/deltas, metadados separados; 709 amostras por corpo preservadas, tolerância verificada. JS ~403 kB gzip contra ~645 kB.
+- [x] **AST-P1.4** Pipeline com data/duração/site/cache/destino; segundo cenário 2026/slope conferido sem contaminar energia/clima de 2024. Movimento próprio BSC5 com referência ERFA/SOFA.
+- [ ] **AST-PERF-01 · High** Reduzir travadas confirmadas de carga fria (até 1870 ms de long task/2816,6 ms de quadro no perfil emulado final), após atribuir custos por fase. Hipótese de shaders permanece condicionada a trace. Aceite/reprodução em `PERFORMANCE_VALIDATION.md`.
+- [ ] **AST-PERF-02 · Medium** GPU móvel física, carga/qualidade e sessão térmica; medir política de sombras quando FPS cai. Nenhum aparelho conectado. Emulação não encerra o aceite físico.
+- [ ] **AST-PERF-03 · Low** Avaliar divisão/lazy loading e orçamento dos GLB/texturas; ainda há chunk >500 kB não comprimido. Comparar bytes totais/carga fria, não só nomes de chunks.
+- [ ] **AST-SCI-01 · Medium** Paralaxe, RV, aberração individual, deflexão e transformação de catálogo para ICRS, com referências independentes. Movimento próprio já incluído não encerra astrometria completa.
+- [ ] **AST-SCI-02 · Medium** Expor outros cenários jogáveis somente com horizonte, Sol, céu e clima correspondentes e testes completos. O pipeline ampliado não muda a partida histórica nem desloca tempestades DONKI para 2026.
+
+Evidências e comandos: `EARTHSET_VALIDATION_ROADMAP.md`, `PERFORMANCE_VALIDATION.md` e `data-sources.md`. Sem commit/push/deploy por este agente.

@@ -43,6 +43,13 @@ describe('amostra do Sol', () => {
 });
 
 describe('Sol na base', () => {
+  it('usa a efeméride do site sem alterar o comportamento de tabelas antigas', () => {
+    const table: SunTable = { ...SYNTHETIC, samples_by_site: { slope: [{ az: 15, el: -1 }] } };
+    expect(sampleAt(table, 0, 'slope')).toEqual({ az: 15, el: -1 });
+    expect(sampleAt(table, 0, 'peak')).toEqual(sampleAt(SYNTHETIC, 0));
+    expect(isSunlit(table, 0, 'slope', FLAT)).toBe(false);
+    expect(isSunlit(table, 0, 'peak', FLAT)).toBe(true);
+  });
   it('o pico vê o Sol quando a elevação passa de zero', () => {
     expect(isSunlit(SYNTHETIC, 0, 'peak', FLAT)).toBe(true);
     expect(isSunlit(SYNTHETIC, 3, 'peak', FLAT)).toBe(false);
@@ -66,9 +73,9 @@ describe('tabela real (JPL Horizons)', () => {
       Array.from({ length: 709 }, (_, h) => isSunlit(REAL, h, site, TERRAIN)).filter(Boolean).length;
     expect(count('peak')).toBeGreaterThanOrEqual(count('slope'));
     expect(count('slope')).toBeGreaterThanOrEqual(count('rim'));
-    // Medido no LOLA, com o Sol de 09/10/2024 09:00 (início do cenário): pico 412 h, encosta 179 h, borda 0 h de Sol.
+    // Medido no LOLA, com o Sol de 09/10/2024 09:00 (início do cenário): observador LOLA corrigido (DT-16): pico 434 amostras, encosta 179 amostras, borda 0 h de Sol.
     // A borda é o local mais sombreado do polo, com horizonte de até 55°; sem Sol nesse relevo.
-    expect(count('peak')).toBe(412);
+    expect(count('peak')).toBe(434);
     expect(count('slope')).toBe(179);
     expect(count('rim')).toBe(0);
   });

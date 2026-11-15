@@ -250,7 +250,7 @@ const updateSpacePanel = mountSpacePanel(document.getElementById('space-panel') 
 const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, BASE.site);
 const updateScienceHorizon = mountHorizonPanel(document.getElementById('science-horizon') as HTMLElement, SUN, TERRAIN, BASE.site);
 function inspectSky(id: BodyId): void {
-  const sample = id === 'sun' ? sampleAt(SUN, game.clock.hour) : bodyAt(SKY, id, game.clock.hour);
+  const sample = id === 'sun' ? sampleAt(SUN, game.clock.hour, game.installation.site) : bodyAt(SKY, id, game.clock.hour);
   lookAtSky(sample.az, sample.el);
 }
 const updateSkyPanel = mountSkyPanel(document.getElementById('sky-panel') as HTMLElement, inspectSky);

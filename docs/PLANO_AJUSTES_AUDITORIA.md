@@ -192,7 +192,9 @@ Prioridade de execução e severidade são campos diferentes. Os números de tar
 
 ## DT-16
 
-**Validar associação espacial e azimute entre Sol e horizonte LOLA · Medium · investigação científica · hipótese.**
+**Validar associação espacial e azimute entre Sol e horizonte LOLA · Medium · confirmada e corrigida em 15/11/2026.**
+
+Validação: coordenadas dos três sites derivadas de LOLA e conferidas com PROJ; mesmo frame ME DE421 no rótulo e Horizons; azimute convertido por longitude. Sol ativo por site regenerado junto do céu. Peak: 411 → 433 intervalos; plano de referência: 2 → 3 corações sem mudar regras. Terreno e implantação preservados. Limites DEM/grade/altura explicitados em `data-sources.md`; evidências e testes em `EARTHSET_VALIDATION_ROADMAP.md`. Os indícios e o experimento abaixo registram a origem da investigação.
 
 - **Onde:** `docs/data-sources.md`, pipelines `fetch_sun.py/fetch_lola.py`, tabelas e `sun.ts/terrain.ts`.
 - **Indício:** efeméride de −89,5°/0° e horizonte de outro ponto; documentação já declara aproximação regional e validação independente de azimute pendente.

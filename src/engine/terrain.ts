@@ -4,7 +4,7 @@
 import type { Site } from './resources';
 
 export interface TerrainSite {
-  /** Posição do site na projeção polar sul, em metros (x para leste, y para norte). */
+  /** Posição na grade polar sul, em metros. Norte geográfico depende da longitude do site. */
   readonly x_m: number;
   readonly y_m: number;
   /** Ângulo, em graus, que o relevo tapa em cada direção (passo de azimute_step_deg). */
@@ -17,7 +17,7 @@ export interface TerrainTable {
 }
 
 /**
- * Horizonte do site na direção de azimute `azDeg` (0° = norte, sentido horário).
+ * Horizonte do site no azimute da grade `azDeg` (0° = +y LOLA, sentido horário).
  * Interpola linearmente entre as direções medidas; o azimute dá a volta (360° = 0°).
  */
 export function horizonAt(table: TerrainTable, site: Site, azDeg: number): number {

@@ -68,12 +68,14 @@ tests/engine/*.test.ts      Testes do motor (Vitest). partida.test.ts roda parti
 docs/backlog.md             Plano em blocos e estado de cada item (ler antes de escolher trabalho)
 docs/PLANO_AJUSTES_AUDITORIA.md Dívida técnica de 15/11: DT-01–17, evidências, ordem e critérios de aceite
 docs/EARTHSET_VALIDATION_ROADMAP.md Iluminação/céu: implementação, fontes, capturas, FPS e limites científicos
+docs/PERFORMANCE_VALIDATION.md Carga fria, emulação móvel, sessão longa, pacote e achados AST-PERF
 docs/CONTEXTO_CODEX.md       Memória de retomada; ler a atualização de dívida técnica de 15/11
 docs/regras-recursos.md     Regras e números de recursos, equipamentos, corações e robô
 docs/event-rules.md         Regras do evento (datas, elegibilidade, IA, critérios, pontos em aberto)
 docs/execution-log.md       Diário de cada etapa: arquivos, comandos, resultados, falhas
 docs/data-sources.md        Fontes de cada número científico, método e o que é ilustrativo
-data-pipeline/fetch_sun.py  Pipeline do Sol (JPL Horizons) → src/data/sun-south-pole.json; testes em data-pipeline/tests
+data-pipeline/fetch_sky.py  Pipeline conjunto Sol/céu (JPL Horizons), observadores LOLA e --activate; testes em data-pipeline/tests
+data-pipeline/fetch_sun.py  Consulta regional histórica; grava legado, não a tabela ativa
 src/engine/alert.ts         Estados de alerta (NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO) a partir do catálogo NASA
 src/engine/safe-mode.ts     Modo seguro do rover na radiação: volta à base, espera, recomeça a ida
 src/ui/space-panel.ts       Painel científico: histórico NASA DONKI, proveniência, limites (aba Ciência)
@@ -201,3 +203,5 @@ Data: 14/11/2026 (noite). **Earthset 4.0 em curso: ver `docs/PLANO_V4.md` e o bl
 **Atualização (14/11/2026, noite):** jogabilidade interativa concluída (P0 a P4, D-18 e D-19): astronautas com tarefas, estufa jogável, rover e instalações pelo painel contextual, teclado, 163 testes de motor e 38 verificações de interface. Ver `docs/INTERACOES.md` e o bloco 8 de `docs/backlog.md`.
 
 **Atualização (15/11/2026, auditoria):** dívida técnica registrada no bloco 10 de `docs/backlog.md` e em `docs/PLANO_AJUSTES_AUDITORIA.md`; memória em `docs/CONTEXTO_CODEX.md`. São 12 achados históricos, 3 hipóteses, a investigação da latência relatada e o fechamento (DT-01–17). DT-01 já tem correção externa parcialmente revalidada; DT-12 ainda requer cobertura dos limites de exposição. Reproduzir na versão atual antes de corrigir ou encerrar. O registro do plano não implementa ajustes nem autoriza commit/push/deploy.
+
+**Atualização (15/11/2026, seguimento):** DT-16 validada/corrigida por PROJ/LOLA/Horizons ME DE421; energia e luz com Sol por site, 433 intervalos no peak. Nenhuma constante de equilíbrio alterada (referência passa de 2 a 3 corações). Dados do céu compactados e pipeline de datas/sites ampliado; movimento próprio estelar incluído. Fonte atual em `docs/data-sources.md`, tarefas no bloco 12 e medições em `docs/PERFORMANCE_VALIDATION.md`. Emulação móvel não substitui aparelho físico.

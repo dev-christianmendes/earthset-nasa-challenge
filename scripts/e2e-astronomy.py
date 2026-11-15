@@ -10,10 +10,11 @@ from playwright.sync_api import sync_playwright
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else '5188'
 URL = f'http://localhost:{PORT}/'
-OUT = Path('.scratch-agent/astronomy-2026-11-15')
+OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path('.scratch-agent/astronomy-2026-11-15')
 OUT.mkdir(parents=True, exist_ok=True)
 failures = []
 checks = []
+source_sun = {s['hour']: s['az'] for s in json.loads(Path('tests/fixtures/sky-horizons-peak-2024.json').read_text())['samples']['sun']}
 
 
 def check(name, condition, detail=None):
@@ -41,6 +42,7 @@ with sync_playwright() as p:
     open_hour(24)
     check('a porta serve Earthset', page.title().startswith('Earthset'), page.title())
     check('apenas uma instância do renderizador', page.locator('body > canvas').count() == 1)
+    check('painel polar conta 708 intervalos, sem somar o ponto final', '433 of 708 h' in page.locator('#horizon-panel .cap').text_content())
     state = page.evaluate('''async()=>{const s=await auditImport('/src/render/scene.ts');const a=await auditImport('/src/astronomy/sky.ts');const d=await auditImport('/src/data/sun.ts');const sky=await auditImport('/src/data/sky.ts');const gl=s.renderer.getContext(),e=gl.getExtension('WEBGL_debug_renderer_info');const sun=a.direction(d.SUN.samples[24].az,d.SUN.samples[24].el);return{gpu:gl.getParameter(e.UNMASKED_RENDERER_WEBGL),shadows:s.renderer.shadowMap.enabled,sunDirection:s.sun.position.clone().sub(s.sun.target.position).normalize().toArray(),expected:sun,ground:s.scene.children.filter(o=>o.isMesh&&o.geometry.attributes.position?.count===25600).map(o=>({cast:o.castShadow,receive:o.receiveShadow})),sky:s.scene.getObjectByName('astronomical-sky').children.map(o=>o.name),stars:sky.SKY.stars.samples.length}}''')
     check('sombras globais ligadas', state['shadows'])
     check('luz usa direção exata da tabela energética', max(abs(a-b) for a,b in zip(state['sunDirection'],state['expected'])) < 1e-10)
@@ -70,6 +72,9 @@ with sync_playwright() as p:
         page.click('[data-tool=science]')
         page.wait_for_selector('#sky-panel table')
         check(f'hora {hour}: Ciência tem sete corpos e fontes', page.locator('#sky-panel tbody tr').count() == 7 and page.locator('#sky-panel a').count() == 2)
+        if hour in source_sun:
+            displayed = float(page.locator('#sky-panel tbody tr').first.locator('td').first.inner_text().split('°')[0])
+            check(f'hora {hour}: azimute geográfico da interface confere com Horizons', abs(((displayed-source_sun[hour]+180)%360)-180) < .006)
     # Detalhe de limbo solar e fase terrestre, sem modificar posições ou iluminação via console.
     open_hour(0,'&sky=sun')
     page.screenshot(path=str(OUT/'sun-limb-hour-0.png'))

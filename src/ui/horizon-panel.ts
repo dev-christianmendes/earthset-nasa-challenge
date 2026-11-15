@@ -41,6 +41,7 @@ export function mountHorizonPanel(
   site: Site,
 ): (hour: number) => void {
   const svg = el('svg', { viewBox: `0 0 ${SIZE} ${SIZE}`, width: SIZE, height: SIZE, role: 'img' }) as SVGSVGElement;
+  const rotation = sun.observers?.[site]?.grid_north_rotation_deg ?? sun.observer?.grid_north_rotation_deg ?? 0;
   svg.setAttribute('aria-label', t('horizon.svg'));
 
   svg.append(el('circle', { cx: C, cy: C, r: R, fill: 'rgba(10,14,24,0.6)', stroke: 'rgba(255,255,255,0.18)' }));
@@ -51,7 +52,7 @@ export function mountHorizonPanel(
   const step = terrain.azimuth_step_deg;
   const shape = profile
     .map((deg, k) => {
-      const [x, y] = point(k * step, radiusFor(deg));
+      const [x, y] = point(k * step - rotation, radiusFor(deg));
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(' ');
@@ -62,11 +63,11 @@ export function mountHorizonPanel(
   let litHours = 0;
   let litD = '';
   let unlitD = '';
-  for (let h = 0; h < sun.samples.length; h++) {
-    const s = sampleAt(sun, h);
+  for (let h = 0; h < sun.hours; h += sun.step_hours) {
+    const s = sampleAt(sun, h, site);
     const lit = isSunlit(sun, h, site, terrain);
-    if (lit) litHours++;
-    const [x, y] = point(s.az, SUN_RING);
+    if (lit) litHours += sun.step_hours;
+    const [x, y] = point(s.az - rotation, SUN_RING);
     const seg = `M${x.toFixed(1)} ${y.toFixed(1)}h0.01`;
     if (lit) litD += seg;
     else unlitD += seg;
@@ -83,7 +84,7 @@ export function mountHorizonPanel(
 
   const caption = document.createElement('p');
   caption.className = 'cap';
-  const captionFor = (): string => t('horizon.caption', { lit: litHours, total: sun.samples.length });
+  const captionFor = (): string => t('horizon.caption', { lit: litHours, total: sun.hours });
   caption.textContent = captionFor();
   root.append(caption);
 
@@ -98,8 +99,8 @@ export function mountHorizonPanel(
     const h = Math.floor(hour);
     if (h === lastHour) return;
     lastHour = h;
-    const s = sampleAt(sun, h);
-    const [x, y] = point(s.az, SUN_RING);
+    const s = sampleAt(sun, h, site);
+    const [x, y] = point(s.az - rotation, SUN_RING);
     marker.setAttribute('cx', x.toFixed(1));
     marker.setAttribute('cy', y.toFixed(1));
     marker.setAttribute('fill', isSunlit(sun, h, site, terrain) ? '#ffcf6b' : '#ffffff');

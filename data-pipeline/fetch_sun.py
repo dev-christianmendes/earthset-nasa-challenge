@@ -37,7 +37,7 @@ STEP = "1 h"
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW_PATH = ROOT / "data-pipeline" / "raw" / "horizons_sun_south_pole.txt"
-OUT_PATH = ROOT / "src" / "data" / "sun-south-pole.json"
+OUT_PATH = ROOT / "data-pipeline" / "generated" / "sun-regional-legacy.json"  # Histórico; o cenário ativo vem de fetch_sky.py --activate.
 
 
 def build_params() -> dict[str, str]:
