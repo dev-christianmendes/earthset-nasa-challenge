@@ -126,6 +126,30 @@ with sync_playwright() as p:
     ok(got, "mudar de ideia e abrigar leva ao estado ABRIGO", chip(pg))
     pg.close()
 
+    # 9. Rover distante da base: modo seguro, espera, recomeço da ida (antena: operação às 413 h, evento às 415 h)
+    pg = open_game(b, "nointro&clockAt=410.5&task=antenna")
+    pg.keyboard.press("3")
+    def rover_txt(): return pg.evaluate("document.getElementById('ctx').innerText.replace(/\\s+/g,' ')")
+    seen = []; luma_rover = False
+    for _ in range(80):
+        tx = rover_txt()
+        for k in ("driving back to base", "docked, waiting"):
+            if k in tx and k not in seen: seen.append(k)
+        if "rover was away from base" in luma(pg): luma_rover = True
+        if "docked, waiting" in tx and luma_rover: break
+        pg.wait_for_timeout(200)
+    ok(seen[:1] == ["driving back to base"], "rover longe da base entra em modo seguro e volta", seen)
+    ok("docked, waiting" in seen, "chega à base e espera o fim do evento", seen)
+    ok(luma_rover, "a LUMA avisa que o progresso feito fora se perde")
+    speed4(pg)
+    done = False
+    for _ in range(120):
+        pg.wait_for_timeout(500)
+        if hour(pg) > 446: done = True; break
+    tx = rover_txt()
+    ok(done and "Safe mode" not in tx, "depois do evento o rover sai do modo seguro e retoma a missão", f"hora {hour(pg)} · {tx[:80]}")
+    pg.close()
+
     # 6. Reinício da partida: menu → nova missão volta à hora 0 e ao cenário
     pg = b.new_page(viewport={"width": 1280, "height": 800}); pg.goto(f"http://localhost:{port}/"); pg.wait_for_timeout(3000)
     for label in ["New mission", "Cadet", "Begin mission", "Skip intro"]:

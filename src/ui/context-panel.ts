@@ -33,6 +33,7 @@ import { isWorking } from '../engine/robot';
 import { PHASES, missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
 import { ICE_WATER_PER_TRIP, MAX_PANELS, type TaskKind } from '../engine/robot';
 import type { AlertView } from '../engine/alert';
+import { safeStatus } from '../engine/safe-mode';
 import { t } from '../i18n';
 import type { SelectableId } from '../render/picking';
 import type { Tool } from './hud';
@@ -345,10 +346,16 @@ function missionSteps(): HTMLElement {
     });
     const waiting = radiationNow || s.vitals.battery <= 0;
     label.classList.toggle('waiting', waiting);
-    label.textContent = waiting ? t(radiationNow ? 'phase.wait.radiation' : 'phase.wait.battery') : phaseLabel(phase, task.kind);
+    label.textContent = waitText(s) ?? (waiting ? t(radiationNow ? 'phase.wait.radiation' : 'phase.wait.battery') : phaseLabel(phase, task.kind));
     eta.textContent = t('ctx.rover.eta', { h: Math.ceil(task.hoursLeft), s: Math.max(1, Math.round(task.hoursLeft / speedNow)), speed: speedNow });
   });
   return box;
+}
+
+/** Texto do modo seguro do rover (voltando, na base, sem energia), ou null fora dele. */
+function waitText(state: GameState): string | null {
+  const status = safeStatus(state.robot, state.vitals.battery);
+  return status ? t(`phase.safe.${status}`) : null;
 }
 
 function roverView(state: GameState): View {
@@ -362,7 +369,7 @@ function roverView(state: GameState): View {
       status.append(
         row(t('ctx.status'), (v, st) => {
           const task = st.robot.queue[0];
-          v.textContent = !task ? t('ctx.rover.idle') : radiationNow ? t('phase.wait.radiation') : st.vitals.battery <= 0 ? t('phase.wait.battery') : phaseLabel(missionPhase(task), task.kind);
+          v.textContent = !task ? t('ctx.rover.idle') : waitText(st) ?? (radiationNow ? t('phase.wait.radiation') : st.vitals.battery <= 0 ? t('phase.wait.battery') : phaseLabel(missionPhase(task), task.kind));
         }),
       );
       const missions = make('div', 'ctx-tasks');

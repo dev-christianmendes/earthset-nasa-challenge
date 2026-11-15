@@ -68,7 +68,7 @@ export function lumaAdvice(state: GameState, alert: AlertView | null, level: Lum
   if (state.crewOrder === 'outside' && alert?.episode) return advice('luma.outside', 'critical', 'crew', { hours: state.crew.exposureHours.toFixed(1) });
   if (state.crewOrder === 'auto' && state.crew.prevRadiation) {
     const record = alert?.evidence;
-    return record ? advice('luma.radiation.src', 'critical', 'crew', { id: record.id, time: utcLabel(record.time_utc) }) : advice('luma.radiation', 'critical', 'crew');
+    return record ? advice(state.robot.safe ? 'luma.radiation.src.rover' : 'luma.radiation.src', 'critical', 'crew', { id: record.id, time: utcLabel(record.time_utc) }) : advice('luma.radiation', 'critical', 'crew');
   }
   const [worst, value] = worstResource(state);
   if (state.hearts <= 1) return advice('luma.lastHeart', 'critical', RESOURCE_ACTION[worst]);

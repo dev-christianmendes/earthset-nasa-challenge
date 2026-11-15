@@ -2,6 +2,8 @@
 // Robô de apoio: fila de tarefas (gelo, painel, antena). Motor puro.
 // Números e regras: docs/regras-recursos.md, seção "Robô". Todos ajustáveis.
 
+import type { SafeMode } from './safe-mode';
+
 export type TaskKind = 'ice' | 'panel' | 'antenna';
 
 export interface RobotTask {
@@ -13,6 +15,8 @@ export interface RobotTask {
 export interface RobotState {
   readonly queue: readonly RobotTask[];
   readonly antennaInstalled: boolean;
+  /** Modo seguro da radiação (ver safe-mode.ts); null fora do evento. */
+  readonly safe: SafeMode | null;
 }
 
 export const MAX_QUEUE = 4;
@@ -29,7 +33,7 @@ export const ICE_HELP_HOURS = 4;
 export const ICE_HELP_SPEED = TASK_HOURS.ice / ICE_HELP_HOURS;
 
 export function createRobot(): RobotState {
-  return { queue: [], antennaInstalled: false };
+  return { queue: [], antennaInstalled: false, safe: null };
 }
 
 /** Código do motivo para recusar uma tarefa. A tela traduz o código (src/i18n.ts). */
@@ -103,6 +107,7 @@ export function progressRobot(robot: RobotState, hours: number, iceSpeed = 1): R
   }
   return {
     robot: {
+      ...robot,
       queue,
       antennaInstalled: robot.antennaInstalled || completed.includes('antenna'),
     },

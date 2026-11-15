@@ -51,5 +51,32 @@ Texto do autor registrado sem alteração em `docs/ORIENTACOES_AUDITORIA_V5.md`.
 - [~] **V5.P0** Auditoria (parcial, ver `docs/AUDITORIA_V5.md`): matriz de implementação com evidências (arquivo, linha, resultado de teste) e as seis classes do documento. Reproduzir o relato do autor no navegador antes de corrigir.
 - [ ] **V5.P1** Estabilidade: latência, travamentos e integração (medir antes e depois).
 - [~] **V5.P2** Interatividade (descoberta feita em 14/11: abas Greenhouse, Crew, Energy e Rover abrem o painel contextual; modo da estufa e troca de astronauta no painel; dica de toque na cena; teste `scripts/e2e-descoberta.py`. Pendente: destino do rover escolhido pelo jogador, diagnóstico de falhas da antena, animações de deslocamento): estufa, astronautas, rover, energia, habitat, antena, processamento de gelo e missões.
-- [~] **V5.P3** (feito: Kp removido, catálogo de eventos, estados de alerta com HUD, LUMA e antena, painel científico com histórico (aba Ciência e chip do HUD), teste `scripts/e2e-tempestade.py`. decisão de ficar fora com risco explícito (`outside`). Pendente: priorizar energia/suporte, adiar gelo como decisão com custo, rover em modo seguro, animações de abrigo, documentação científica final) Tempestades solares com dados reais da NASA (DONKI): auditoria dos dados existentes, mapeamento determinístico às 708 h, alerta NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO, LUMA, decisões, painel científico.
+- [~] **V5.P3** (feito: Kp removido, catálogo de eventos, estados de alerta com HUD, LUMA e antena, painel científico com histórico (aba Ciência e chip do HUD), teste `scripts/e2e-tempestade.py`. decisão de ficar fora com risco explícito (`outside`). rover em modo seguro (volta, espera e recomeça a ida). Pendente: priorizar energia/suporte, adiar gelo como decisão com custo, animações de abrigo, documentação científica final) Tempestades solares com dados reais da NASA (DONKI): auditoria dos dados existentes, mapeamento determinístico às 708 h, alerta NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO, LUMA, decisões, painel científico.
 - [ ] **V5.P4** Validação: Playwright, desempenho, documentação científica e revisão.
+
+
+## Bloco 10 · Dívida técnica da auditoria de 15/11/2026
+
+Pedido do autor: planejar e registrar para verificação posterior; esta etapa não implementa correções. Plano com evidências, dependências e critérios de aceite: [PLANO_AJUSTES_AUDITORIA.md](PLANO_AJUSTES_AUDITORIA.md). Memória: [CONTEXTO_CODEX.md](CONTEXTO_CODEX.md). Achados são da versão auditada; verificar o código atual antes de agir. DT-01 e DT-12 já receberam alterações externas, com estados distintos abaixo.
+
+Ordem: P0 (DT-01–04) → P1 (DT-05–06) → P2 (DT-07–09 e DT-13) → P3 (DT-10–12). Investigações DT-14–16 exigem confirmação; fechamento em DT-17. Severidade não é a prioridade de execução.
+
+- [~] **DT-01 · P0 · High histórico** Revalidar teste do rover sem propriedade inexistente/falso positivo. Correção externa em `hoursLeft` presente; typecheck e 9 testes direcionados passaram em 15/11. Falta proteção de regressão e fechamento completo.
+- [ ] **DT-02 · P0 · High** Estabilizar integração temporal, energia disponível e contagem de corações; comparar recursos e resultado sob partições diferentes.
+- [ ] **DT-03 · P0 · High** Preservar horários fracionários de SEP e impedir alertas fundamentados em registros futuros.
+- [ ] **DT-04 · P0 · Medium** Filtrar também notificações e eventos ligados futuros no histórico científico; atualizar a renderização quando se tornarem disponíveis.
+- [ ] **DT-05 · P1 · Medium** Impedir crescimento sem água e tratar abastecimento parcial no intervalo.
+- [ ] **DT-06 · P1 · Medium** Reservar ajuda ao gelo somente com astronauta efetivamente disponível, sem dupla ocupação.
+- [ ] **DT-07 · P2 · Medium** Sincronizar chegada visual ao abrigo, proteção e exposição em 1×/2×/4×.
+- [ ] **DT-08 · P2 · Medium** Unificar fluxos do motor, HUD e painéis, incluindo cuidados e calibração.
+- [ ] **DT-09 · P2 · Medium** Fazer indicação/luzes da estufa refletirem operação automática durante abrigo.
+- [ ] **DT-10 · P3 · Low** Remover salto do rover entre entrega e próxima missão, incluindo câmera e cancelamento.
+- [ ] **DT-11 · P3 · Low** Preservar painel solar montado durante retorno/entrega, sem antecipar geração.
+- [~] **DT-12 · P3 · Low** Cobrir cruzamento de exposição em 12/24 h. Ajuste externo para 1× evita o caso, mas não cobre a passagem de ciclo; E2E atualizado não reexecutado nesta etapa.
+- [ ] **DT-13 · P2 · Medium · investigação de latência/UX** Medir confirmação, movimento e trabalho separadamente; explicar preparo/deslocamento/abrigo e reproduzir espera de segundos sem feedback.
+- [ ] **DT-14 · investigação P2 · Medium · hipótese** Medir bloqueios de compilação de shaders e modelos tardios; confirmar ou descartar antes de otimizar.
+- [ ] **DT-15 · investigação P3 · Low · hipótese** Medir descarte/propriedade de recursos GPU e sessões longas; não presumir vazamento contínuo.
+- [ ] **DT-16 · investigação científica · Medium · hipótese** Validar ponto de observação e azimute Sol/LOLA, com comparação independente e impacto na iluminação.
+- [ ] **DT-17 · fechamento · Medium** Executar matriz completa na mesma revisão, incorporar regressões à automação e atualizar plano/memória/diário com evidências.
+
+Nenhum item é encerrado por mera edição de código. Validação: typecheck + testes + build; Python quando houver dados; E2E e screenshots desktop/celular revisados quando houver tela. Nada de commit, push ou deploy sem pedido explícito.

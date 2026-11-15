@@ -3,6 +3,7 @@
 // Regra dos corações: docs/regras-recursos.md (ajustável).
 import { MATCH_HOURS, advanceClock, createClock, type Clock } from './clock';
 import { CALM, type SpaceWeatherSample } from './space-weather';
+import { endSafeMode, isAway, isHeadingHome, startSafeMode, stepSafeMode } from './safe-mode';
 import { advanceCrew, createCrew, crewAvailableForHelp, crewOutside, exposeCrew, type CrewState } from './crew';
 import {
   AGENT_TASK_KINDS,
@@ -220,15 +221,22 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   // Decisão 'outside': o jogador aceita o risco e a equipe continua fora; senão a radiação abriga a todos.
   const exposed = weather.radiation && state.crewOrder === 'outside';
   const shelterRad = weather.radiation && !exposed;
-  const working = isWorking(state.robot, state.vitals.battery) && !shelterRad;
-  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, calibrationFactor(state.calibrationLeft), state.crop);
+  // Modo seguro (safe-mode.ts): longe da base, o rover volta; na volta com carga, termina o trajeto; na base, espera.
+  let robotNow = state.robot;
+  const head = robotNow.queue[0];
+  if (shelterRad && head && isAway(head)) robotNow = startSafeMode(robotNow);
+  else if (robotNow.safe && (!shelterRad || !head)) robotNow = endSafeMode(robotNow);
+  const powered = state.vitals.battery > 0;
+  const driving = !!robotNow.safe && robotNow.safe.returnLeft > 0 && powered;
+  const working = isWorking(robotNow, state.vitals.battery) && !robotNow.safe && (!shelterRad || (!!head && isHeadingHome(head)));
+  const flow = deriveFlow(state.vitals, state.installation, sunlit, working || driving, calibrationFactor(state.calibrationLeft), state.crop);
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
   // Com a tripulação livre, o astronauta ajuda na viagem de gelo (D-06).
   const helpAvailable = state.crewOrder === 'auto' && crewAvailableForHelp(state.crew, shelterRad);
   const progress = working
-    ? progressRobot(state.robot, step, helpAvailable ? ICE_HELP_SPEED : 1)
-    : { robot: state.robot, completed: [] as readonly TaskKind[] };
+    ? progressRobot(robotNow, step, helpAvailable ? ICE_HELP_SPEED : 1)
+    : { robot: stepSafeMode(robotNow, step, powered), completed: [] as readonly TaskKind[] };
 
   let installation = state.installation;
   let water = drained.water;

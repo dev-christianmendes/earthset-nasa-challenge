@@ -1,10 +1,22 @@
 # Contexto para o Codex (ponto de entrada)
 
-> **Levantamento mais recente (14/11/2026):** [MAPA_SISTEMA.md](MAPA_SISTEMA.md) registra o código e os dados observados; [PLANO_CONSOLIDADO.md](PLANO_CONSOLIDADO.md) propõe a ordem para fechar a versão do evento. As seções de estado abaixo preservam contexto histórico e contêm números e hashes antigos. Regras de trabalho: `AGENTS.md`.
+> **Atualização de dívida técnica (15/11/2026):** usar [PLANO_AJUSTES_AUDITORIA.md](PLANO_AJUSTES_AUDITORIA.md), o bloco 10 do [backlog.md](backlog.md) e a memória de retomada abaixo para os achados da auditoria. [MAPA_SISTEMA.md](MAPA_SISTEMA.md) e as demais seções abaixo preservam levantamentos anteriores e podem conter números, hashes e estados superados. O plano de produto v4 continua em [PLANO_V4.md](PLANO_V4.md). Regras de trabalho: `AGENTS.md`.
 
 Data de referência: 14/11/2026. Este documento é a **fonte principal** para o agente Codex. Ele diz o que já existe, o que falta, quem decide o quê e como trabalhar sem quebrar o projeto. Os demais documentos são de apoio e estão listados na seção 2, com o nível de confiança de cada um.
 
 Prazo de envio do desafio: **15/11/2026, 23h59** (meta interna 12h).
+
+## Memória persistente · dívida técnica (15/11/2026)
+
+- O autor pediu registrar o plano e as tarefas para verificação posterior, sem implementar correções nesta etapa. A fonte da dívida é [PLANO_AJUSTES_AUDITORIA.md](PLANO_AJUSTES_AUDITORIA.md), com 17 IDs; a fila rastreável está no bloco 10 de [backlog.md](backlog.md).
+- Prioridades: DT-01–04 (contratos, integração temporal e cronologia científica), DT-05–06 (água e ocupação), DT-07–09/13 (abrigo, fluxos, produção e resposta), DT-10–12 (transições/regressões); DT-14–16 são hipóteses, DT-17 fecha a validação.
+- Estado importante: DT-01 já foi corrigida externamente para `hoursLeft`; typecheck e 9 testes direcionados passaram nesta etapa. DT-12 teve comparação reduzida para 1×, mas continua sem cobertura de cruzamento 12/24 h. Reproduzir antes de tratar achado histórico como defeito atual.
+- Não há vazamento contínuo de GPU comprovado: dez reinícios mantiveram 202 geometrias/10 texturas/17 programas. São hipóteses o descarte de recursos substituídos, bloqueio tardio de shaders e associação espacial/azimute Sol–LOLA.
+- Relato de demora: separar confirmação da ordem de duração simulada. Linha de base Intel Xe/Vulkan: 4,9 ms até feedback DOM, 263 ms até movimento e 5,315 s até inspeção em 1×. Investigar casos de segundos sem confirmação; não prometer resposta de movimento em 150 ms quando há preparo previsto.
+- A auditoria sofreu edições externas/HMR; o plano identifica a versão fixada em memória e limita o alcance das medições. Não inferir aprovação do build completo a partir do bundle em memória, nem desempenho móvel real a partir de emulação.
+- Ao retomar, ler o plano e as últimas entradas do diário. Encerrar uma dívida somente com reprodução/validação da versão atual e evidência registrada; manter motor puro e proveniência científica. Sem commit/push/deploy sem pedido explícito.
+
+
 
 ---
 

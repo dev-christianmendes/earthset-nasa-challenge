@@ -10,6 +10,7 @@ import { phaseFraction, type AgentTaskKind } from '../engine/astronaut';
 import { calibrationFactor } from '../engine/facilities';
 import type { SpaceWeatherSample } from '../engine/space-weather';
 import { isWorking, type TaskKind } from '../engine/robot';
+import { safeDistance } from '../engine/safe-mode';
 import { missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
 import { sampleAt } from '../engine/sun';
 import { SUN } from '../data/sun';
@@ -399,6 +400,16 @@ function smoothstep(k: number): number {
 
 function placeRover(state: GameState, t: number, dt: number, radiation: boolean): RoverView {
   const task = state.robot.queue[0];
+  const safe = state.robot.safe;
+  if (task && safe) {
+    // Modo seguro: volta pela rota da missão, na posição dada pela distância restante (motor).
+    const d = safeDistance(safe);
+    const route = routeFor(task.kind, state.installation.panels);
+    const p = along([...route].reverse(), 1 - d);
+    const moving = safe.returnLeft > 0 && state.vitals.battery > 0;
+    setRover(p.x, p.z, moving ? p.heading : roverAt.heading, moving ? 0.015 * Math.sin(t * 22) : 0);
+    return { working: false, moving, phase: null, kind: null, k: 0 };
+  }
   const working = !!task && isWorking(state.robot, state.vitals.battery) && !radiation;
   if (task && !working) {
     setRover(roverAt.x, roverAt.z, roverAt.heading);

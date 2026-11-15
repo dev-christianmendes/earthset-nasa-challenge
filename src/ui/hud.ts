@@ -7,6 +7,7 @@ import { MAX_PANELS, MAX_QUEUE, isWorking, type TaskKind } from '../engine/robot
 import { MATCH_HOURS } from '../engine/clock';
 import { deriveFlow, isGreenhouseOn, type GreenhouseMode } from '../engine/resources';
 import type { SpaceWeatherSample } from '../engine/space-weather';
+import { safeStatus } from '../engine/safe-mode';
 import type { AlertView } from '../engine/alert';
 import { crewOutside } from '../engine/crew';
 import { hoursToReady } from '../engine/greenhouse';
@@ -261,8 +262,8 @@ function renderRover(state: GameState, ctx: HudContext): void {
     button.disabled = !playing || full || blocked;
   }
   ui.panelNote.textContent = t('mission.panel.count', { n: state.installation.panels, max: MAX_PANELS });
-  const waiting = r.queue.length > 0 && (ctx.weather.radiation || state.vitals.battery <= 0);
-  const key = `${getLang()}|${waiting}|${r.queue.map((q) => `${q.kind}:${q.hoursLeft.toFixed(2)}`).join(',')}`;
+  const waiting = r.queue.length > 0 && (ctx.weather.radiation || state.vitals.battery <= 0 || r.safe !== null);
+  const key = `${getLang()}|${waiting}|${safeStatus(r, state.vitals.battery)}|${r.queue.map((q) => `${q.kind}:${q.hoursLeft.toFixed(2)}`).join(',')}`;
   if (key === lastQueue) return;
   lastQueue = key;
   ui.queue.replaceChildren();
@@ -301,7 +302,10 @@ function renderRover(state: GameState, ctx: HudContext): void {
       label.className = 'phase-label';
       if (waiting) {
         label.classList.add('waiting');
-        label.textContent = t(ctx.weather.radiation ? 'phase.wait.radiation' : 'phase.wait.battery');
+        {
+          const sm = safeStatus(state.robot, state.vitals.battery);
+          label.textContent = sm ? t(`phase.safe.${sm}`) : t(ctx.weather.radiation ? 'phase.wait.radiation' : 'phase.wait.battery');
+        }
       } else {
         const b = document.createElement('b');
         b.textContent = phaseText(phase, task.kind);
@@ -337,7 +341,7 @@ function renderRover(state: GameState, ctx: HudContext): void {
 function renderBase(state: GameState, ctx: HudContext): void {
   const r = state.robot;
   const ghOn = isGreenhouseOn(state.vitals, state.installation);
-  const rover = r.queue.length === 0 ? t('val.garage') : ctx.weather.radiation || state.vitals.battery <= 0 ? t('val.waiting') : t('val.mission');
+  const rover = r.queue.length === 0 ? t('val.garage') : ctx.weather.radiation || state.vitals.battery <= 0 || r.safe ? t('val.waiting') : t('val.mission');
   const processing = r.queue[0]?.kind === 'ice' && missionPhase(r.queue[0]) === 'deliver';
   el('base-status').replaceChildren(
     li(t('status.habitat'), t('val.pressurised'), 'ok'),
