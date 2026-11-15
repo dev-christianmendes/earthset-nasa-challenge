@@ -76,10 +76,21 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 | Script | `data-pipeline/fetch_donki.py` (testes em `data-pipeline/tests/test_fetch_donki.py`) |
 | Saída | `src/data/space-weather.json`, lida por `src/engine/space-weather.ts` |
 | Respostas cruas | `data-pipeline/raw/donki_gst.json`, `donki_sep.json` (pequenas; versionadas para auditoria) |
+| Uso no jogo | **Só a radiação (SEP) tem efeito**: abriga a tripulação, para o robô e dispara o aviso da antena. O **Kp é medida da magnetosfera da Terra**: fica na tabela como dado observado, **sem efeito** na simulação (decisão do autor, 14/11/2026; antes reduzia a geração dos painéis em 10% por nível G, regra removida por não ter base técnica para a Lua). |
 | Método | Kp marcado em t vale para as 3 horas anteriores, [t-3h, t) (convenção NOAA). Cada SEP marca radiação por 24 h a partir do evento; a duração não vem da DONKI, então 24 h é ilustrativo |
+| Catálogo de eventos (v5) | `src/data/space-weather-events.json`, gerado pelo mesmo script: 17 registros SEP e 1 GST **como a DONKI os registrou** (ID original, horário UTC, instrumento, link `ccmc.gsfc.nasa.gov/DONKI/view/...`), os alertas que a NASA enviou (ID, horário, link), os eventos ligados citados (FLR, CME, IPS) e 3 episódios de radiação. Cada campo tem proveniência: `observed`, `from-id`, `computed` ou `game-rule` (legenda no cabeçalho de `fetch_donki.py`). |
+| Não baixado | Registros completos de **FLR** (404 em 14/11/2026), **CME** e **IPS** (429 com a `DEMO_KEY`; o servidor do CCMC não respondeu). Do que foi citado pelos SEP e GST só existem o ID e o horário lido do ID (`from-id`). Nada foi inventado para preencher. Com uma `NASA_API_KEY` própria, esses endpoints podem ser tentados de novo. |
 | Chave | `NASA_API_KEY` no ambiente; sem ela usa `DEMO_KEY`, que tem limite baixo (10 chamadas por hora) |
 
 **Por que 09/10/2024:** o Sol no polo sul depende da estação lunar. A tabela versionada tem elevação positiva nas 709 amostras; o clima e o Sol usam a mesma janela. Não é previsão. Kp ≥ 5 começa na amostra 30, chega a 8,67; 76 amostras têm radiação. A duração de 24 h por evento SEP é uma regra ilustrativa de interpretação.
+
+### 3.1 Leitura científica dos registros (v5)
+
+- **Episódios de radiação (regra de jogo, a partir de dado observado):** EP-01, 9 SEP de 09/10/2024 03:50 a 08:55 UTC (hora de jogo −6 a 23); EP-02, 7 SEP de 26/10/2024 16:45 a 21:43 UTC (415 a 443); EP-03, 1 SEP de 28/10/2024 08:57 UTC (455 a 478). Entre as horas 24 e 414 não há SEP registrado na janela.
+- **O jogo abre com radiação em curso:** EP-01 começou 5 h antes das 09:00 UTC (início da janela), então a hora 0 já tem radiação. É dado observado, mas a abertura da partida decorre da escolha da janela e precisa ser decidida (ver `docs/AUDITORIA_V5.md`).
+- **Tempo entre a erupção e o SEP (computado a partir dos IDs):** EP-01, a erupção ligada ocorreu 2,4 h antes do primeiro SEP (e a CME, 1,6 h); EP-02, 10,2 a 10,8 h antes; EP-03, 50 a 51 h antes. A janela é **muito variável**: não sustenta um aviso fixo.
+- **Alertas oficiais da NASA (computado):** dos 10 alertas citados, 9 saíram de 0,1 a 8,1 h **depois** do registro do SEP e 1 saiu 0,4 h antes. A DONKI avisa sobretudo **depois** do início, o que limita qualquer aviso antecipado do jogo.
+- **Aplicabilidade à Lua:** SEP são partículas do Sol e o catálogo é medido em órbita da Terra (GOES, SEISS >100 MeV). A Lua está à mesma distância do Sol, mas sem magnetosfera nem atmosfera, e a dose na superfície depende de energia, fluxo, duração e proteção, que o jogo **não** calcula. O Kp, ao contrário, mede a magnetosfera da Terra e **não** se aplica à Lua.
 
 ## 4. Malha do relevo na cena (V1)
 

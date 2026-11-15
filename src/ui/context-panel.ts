@@ -28,11 +28,11 @@ import {
 } from '../engine/greenhouse';
 import { CALIBRATION_BONUS, CALIBRATION_HOURS, TUNE_HOURS, WARNING_AHEAD_TUNED, calibrationFactor, warningAhead } from '../engine/facilities';
 import { EXPOSURE_HOURS_PER_HEART } from '../engine/crew';
-import { GREENHOUSE, PANEL_OUTPUT_PER_HOUR, deriveFlow } from '../engine/resources';
+import { GREENHOUSE, PANEL_OUTPUT_PER_HOUR, deriveFlow, type GreenhouseMode } from '../engine/resources';
 import { isWorking } from '../engine/robot';
-import { solarFactor, stormLevel } from '../engine/space-weather';
 import { PHASES, missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
 import { ICE_WATER_PER_TRIP, MAX_PANELS, type TaskKind } from '../engine/robot';
+import type { AlertView } from '../engine/alert';
 import { t } from '../i18n';
 import type { SelectableId } from '../render/picking';
 import type { Tool } from './hud';
@@ -40,11 +40,10 @@ import type { Tool } from './hud';
 /** O que a interface sabe do mundo fora do estado do motor (clima, luz, aviso de tempestade, velocidade). */
 export interface ContextInfo {
   radiation: boolean;
-  kp: number;
   lit: boolean;
   speed: number;
   /** Horas até a próxima tempestade avisada pela antena (null: sem aviso). */
-  warningHours: number | null;
+  alert: AlertView;
 }
 
 export interface ContextHandlers {
@@ -55,6 +54,8 @@ export interface ContextHandlers {
   overview(): void;
   /** Foco de câmera no objeto selecionado. */
   focus(id: SelectableId): void;
+  /** Troca o objeto selecionado (ex.: de um astronauta para o outro). */
+  select(id: SelectableId): void;
   close(): void;
 }
 
@@ -68,9 +69,12 @@ let selected: SelectableId | null = null;
 let signature = '';
 let updaters: Updater[] = [];
 let shelteredNow = false;
+/** Radiação que para o trabalho (falso se o jogador decidiu continuar fora). */
 let radiationNow = false;
+/** Evento de radiação em curso, qualquer que seja a decisão do jogador. */
+let eventNow = false;
 let speedNow = 1;
-let world: ContextInfo = { radiation: false, kp: 0, lit: true, speed: 1, warningHours: null };
+let world: ContextInfo = { radiation: false, lit: true, speed: 1, alert: { level: 'normal', episode: null, evidence: null, precursor: null, recoveryLeft: 0, lagRange: null } };
 
 const TOOL_FOR: Partial<Record<SelectableId, Tool>> = {
   habitat: 'crew',
@@ -150,6 +154,24 @@ function taskButton(state: GameState, kind: AgentTaskKind, agent?: number): HTML
     button.addEventListener('click', () => handlers.act(action));
   }
   return button;
+}
+
+const GREENHOUSE_MODES: readonly GreenhouseMode[] = ['off', 'surplus', 'always'];
+
+/** Modo de operação da estufa (antes só no painel lateral antigo). */
+function modeControl(current: GreenhouseMode): HTMLElement {
+  const wrap = make('div', 'ctx-care');
+  wrap.append(make('div', 'ctx-care-label', t('gh2.mode')));
+  const seg = make('div', 'seg three');
+  for (const mode of GREENHOUSE_MODES) {
+    const b = make('button', mode === current ? 'active' : '', t(`greenhouse.${mode}`));
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(mode === current));
+    b.addEventListener('click', () => handlers.act({ type: 'SET_GREENHOUSE', mode }));
+    seg.append(b);
+  }
+  wrap.append(seg, make('small', 'ctx-hint', t(`gh2.mode.${current}`)));
+  return wrap;
 }
 
 function careControl(
@@ -235,6 +257,7 @@ function greenhouseView(state: GameState): View {
       );
       const care = make('div', 'ctx-cares');
       care.append(
+        modeControl(s.installation.greenhouse),
         careControl(t('gh2.irrigation'), s.crop.irrigation, IRRIGATION, 'gh2.irrigation.hint', (level) => ({ type: 'SET_GREENHOUSE_CARE', irrigation: level })),
         careControl(t('gh2.lighting'), s.crop.lighting, LIGHTING, 'gh2.lighting.hint', (level) => ({ type: 'SET_GREENHOUSE_CARE', lighting: level })),
       );
@@ -276,7 +299,11 @@ function crewView(state: GameState, index: number): View {
       );
       const tasks = make('div', 'ctx-tasks');
       for (const kind of AGENT_TASK_KINDS) tasks.append(taskButton(s, kind, index));
-      return [status, heading(t('agent.assign')), tasks, agentProgress(index, who)];
+      const other = 1 - index;
+      const swap = make('button', 'ctx-link', t('ctx.otherCrew', { who: t(`ctx.crew${other}`) }));
+      swap.type = 'button';
+      swap.addEventListener('click', () => handlers.select(other === 0 ? 'crew0' : 'crew1'));
+      return [status, heading(t('agent.assign')), tasks, agentProgress(index, who), swap];
     },
   };
 }
@@ -375,8 +402,8 @@ function roverView(state: GameState): View {
 
 /** Fluxo por hora agora (energia, ar, água e comida), com o mesmo cálculo do motor. */
 function flowNow(state: GameState): ReturnType<typeof deriveFlow> {
-  const working = isWorking(state.robot, state.vitals.battery) && !world.radiation;
-  const solar = solarFactor(stormLevel(world.kp)) * calibrationFactor(state.calibrationLeft);
+  const working = isWorking(state.robot, state.vitals.battery) && !radiationNow;
+  const solar = calibrationFactor(state.calibrationLeft);
   return deriveFlow(state.vitals, state.installation, world.lit, working, solar, state.crop);
 }
 
@@ -424,7 +451,7 @@ function panelsView(state: GameState): View {
         row(t('pan.count'), (v, st) => void (v.textContent = t('pan.count.v', { n: st.installation.panels, max: MAX_PANELS }))),
         row(t('pan.output'), (v, st) => {
           const maxOut = st.installation.panels * PANEL_OUTPUT_PER_HOUR * calibrationFactor(st.calibrationLeft);
-          const now = world.lit ? maxOut * solarFactor(stormLevel(world.kp)) : 0;
+          const now = world.lit ? maxOut : 0;
           v.textContent = world.lit ? t('pan.output.v', { now: num(now, 1), max: num(maxOut, 1) }) : t('pan.dark');
         }),
         row(t('pan.calibration'), (v, st) => {
@@ -450,7 +477,7 @@ function antennaView(state: GameState): View {
         row(t('ant.lead'), (v, st) => void (v.textContent = st.robot.antennaInstalled ? t('ant.lead.v', { h: warningAhead(st.antennaTuneLeft) }) : '—')),
         row(t('ant.tuned'), (v, st) => void (v.textContent = st.antennaTuneLeft > 0 ? t('ant.tuned.v', { h: Math.ceil(st.antennaTuneLeft) }) : t('ant.tuned.none'))),
         row(t('ant.next'), (v, st) => {
-          v.textContent = !st.robot.antennaInstalled ? '—' : world.warningHours === null ? t('ant.next.none') : t('ant.next.v', { h: Math.ceil(world.warningHours) });
+          v.textContent = !st.robot.antennaInstalled ? '—' : t(`alert.level.${world.alert.level}`);
         }),
       );
       const nodes: HTMLElement[] = [list];
@@ -464,7 +491,7 @@ function antennaView(state: GameState): View {
 function habitatView(state: GameState): View {
   return {
     title: t('ctx.habitat'),
-    signature: `habitat/${state.crewOrder}`,
+    signature: `habitat/${state.crewOrder}/${eventNow}`,
     build: (s) => {
       const crew = make('ul', 'status-list');
       for (const i of [0, 1]) {
@@ -481,14 +508,16 @@ function habitatView(state: GameState): View {
         row(t('hab.exposure'), (v, st) => void (v.textContent = t('hab.exposure.v', { h: num(st.crew.exposureHours % EXPOSURE_HOURS_PER_HEART, 1), max: EXPOSURE_HOURS_PER_HEART }))),
       );
       const seg = make('div', 'seg');
-      for (const order of ['auto', 'shelter'] as const) {
+      const orders = eventNow ? (['auto', 'shelter', 'outside'] as const) : (['auto', 'shelter'] as const);
+      for (const order of orders) {
         const b = make('button', s.crewOrder === order ? 'active' : '', t(`hab.order.${order}`));
         b.type = 'button';
         b.setAttribute('aria-pressed', String(s.crewOrder === order));
         b.addEventListener('click', () => handlers.act({ type: 'SET_CREW_ORDER', order }));
         seg.append(b);
       }
-      return [heading(t('hab.crew')), crew, heading(t('hab.order')), seg, heading(t('ctx.status')), rates];
+      const risk = eventNow ? make('p', 'fine', s.crewOrder === 'outside' ? t('hab.risk.outside', { max: EXPOSURE_HOURS_PER_HEART }) : `${t('hab.risk.shelter')} ${t('hab.risk.outside', { max: EXPOSURE_HOURS_PER_HEART })}`) : null;
+      return [heading(t('hab.crew')), crew, heading(t('hab.order')), seg, ...(risk ? [risk] : []), heading(t('ctx.status')), rates];
     },
   };
 }
@@ -583,9 +612,10 @@ export function showContext(id: SelectableId | null): void {
 export function renderContext(state: GameState, info: ContextInfo): void {
   if (!selected) return;
   world = info;
-  radiationNow = info.radiation;
+  eventNow = info.radiation;
+  radiationNow = info.radiation && state.crewOrder !== 'outside';
   speedNow = info.speed;
-  const radiation = info.radiation;
+  const radiation = radiationNow;
   shelteredNow = radiation || state.crewOrder === 'shelter';
   const view = viewFor(selected, state);
   if (view.signature !== signature) {

@@ -9,6 +9,10 @@ Registro das decisões tomadas pelo agente com delegação do autor (14/11/2026:
 - **O que fazer:** motor: função pura que, dado o clima e a hora, diz se há tempestade nas próximas 6 h (`space-weather.ts`), com teste. UI: aviso no HUD ("Storm in 4 h") quando a antena estiver instalada. Sem antena: nenhum aviso antecipado.
 - **Texto da explicação (school):** "The antenna lets the base receive space-weather warnings ahead of time."
 
+> **Emenda 2 (14/11/2026):** o aviso fixo de 6 h foi substituído pelos estados de alerta de `src/engine/alert.ts`. O alcance da antena (6 h, 12 h com ajuste) virou o quanto antes do SEP uma erupção ou CME registrada ainda conta como MONITORAMENTO. Os dados mostram erupção→SEP de 1,6 h a 50 h, então não há "tempo restante".
+>
+> **Emenda (14/11/2026, autor):** o aviso da antena passou a ser de **início de radiação de partículas solares** (SEP), e não de tempestade geomagnética. O Kp é da Terra e deixou de afetar o jogo (os painéis não perdem mais 10% por nível G). O aviso de 6 h (12 h com o ajuste) continua sendo uma **regra simplificada de jogo**, não uma previsão real; a P3 do plano v5 (`docs/ORIENTACOES_AUDITORIA_V5.md`) vai redesenhar os alertas com base nos dados da DONKI.
+
 ## D-02. Astronautas: sem tarefas de jogo
 
 - **Decisão:** os astronautas são tripulação visual. Não coletam, não consertam, não têm recurso próprio. Continuam andando conforme o estado (estufa, ajuda ao robô).

@@ -1,5 +1,7 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 import { describe, expect, it } from 'vitest';
+import { SPACE_EVENTS } from '../../src/data/space-weather-events';
+import { alertAt } from '../../src/engine/alert';
 import { createGame, dispatch } from '../../src/engine/game';
 import { objectivesOf, nextObjective, OBJECTIVE_PANELS } from '../../src/engine/objectives';
 import { lumaAdvice } from '../../src/engine/guide';
@@ -71,9 +73,30 @@ describe('LUMA (guia por regras)', () => {
     expect(lumaAdvice(low, null, 'critical')).toMatchObject({ key: 'luma.low.water', action: 'rover' });
   });
 
-  it('com tempestade anunciada, avisa com as horas restantes', () => {
+  it('em monitoramento, cita o registro da NASA e não promete tempo restante', () => {
     const g = createGame({ installation: INST });
-    expect(lumaAdvice(g, 3)).toEqual({ key: 'luma.storm', vars: { hours: 3 }, severity: 'warning', action: 'crew' });
+    const ep2 = SPACE_EVENTS.radiation_episodes[1];
+    const alert = alertAt(SPACE_EVENTS, ep2.start_hour - 2, { reach: 12, sheltered: false });
+    const advice = lumaAdvice(g, alert);
+    expect(advice.key).toMatch(/^luma\.monitor\.(FLR|CME)$/);
+    expect(advice.severity).toBe('warning');
+    expect(advice.vars).toMatchObject({ id: alert.precursor?.id });
+    expect(advice.vars).not.toHaveProperty('hours');
+  });
+
+  it('na recuperação, pede para esperar antes de sair', () => {
+    const g = createGame({ installation: INST });
+    const end = SPACE_EVENTS.radiation_episodes[0].end_hour;
+    const advice = lumaAdvice(g, alertAt(SPACE_EVENTS, end + 1, { reach: null, sheltered: true }));
+    expect(advice).toMatchObject({ key: 'luma.recovery', severity: 'warning' });
+  });
+
+  it('com radiação e tripulação em automático, cita o registro SEP da NASA', () => {
+    const g = createGame({ installation: INST });
+    const alert = alertAt(SPACE_EVENTS, 1, { reach: null, sheltered: false });
+    const exposed = { ...g, crew: { ...g.crew, prevRadiation: true } };
+    expect(lumaAdvice(exposed, alert)).toMatchObject({ key: 'luma.radiation.src', severity: 'critical', action: 'crew' });
+    expect(lumaAdvice(exposed, null).key).toBe('luma.radiation');
   });
 
   it('com recurso crítico, pede atenção ao recurso mais baixo', () => {

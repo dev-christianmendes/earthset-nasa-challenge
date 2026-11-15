@@ -121,12 +121,12 @@ export const EXPLANATIONS: Record<string, Record<Lang, Explanation>> = {
   space: {
     pt: {
       what: 'O clima do Sol: tempestades e partículas que chegam à Lua.',
-      why: 'Uma tempestade G reduz a energia dos painéis. A radiação para o robô. A antena avisa com antecedência.',
+      why: 'A radiação para o robô e manda a tripulação para dentro. A antena avisa com antecedência.',
       source: 'NASA DONKI, cenário de 09/10/2024. Dado real de uma janela histórica.',
     },
     en: {
       what: 'Space weather: storms and particles from the Sun that reach the Moon.',
-      why: 'A G storm cuts solar output. Radiation stops the robot. The antenna gives warnings ahead of time.',
+      why: 'Radiation stops the robot and sends the crew inside. The antenna gives warnings ahead of time.',
       source: 'NASA DONKI, 9 Oct 2024 scenario. Real data from a past window.',
     },
   },

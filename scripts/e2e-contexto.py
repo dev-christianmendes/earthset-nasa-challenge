@@ -153,8 +153,8 @@ with sync_playwright() as p:
     pg.keyboard.press("Escape")
 
     # 6. Abrir uma ferramenta fecha o painel contextual
-    pg.click("[data-tool=energy]"); pg.wait_for_timeout(300)
-    check("abrir um painel de ferramenta fecha o contextual", title() == "", title())
+    pg.click("[data-tool=base]"); pg.wait_for_timeout(300)
+    check("abrir um painel lateral (Base) fecha o contextual", title() == "", title())
     pg.click("#side-close")
 
     # 7. Pausa: tocar na cena não seleciona

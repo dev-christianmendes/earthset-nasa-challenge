@@ -1,0 +1,955 @@
+{
+  "source": "NASA DONKI (SEP e GST), https://ccmc.gsfc.nasa.gov/tools/DONKI/ ; ver data-pipeline/fetch_donki.py",
+  "start_utc": "2024-10-09 09:00",
+  "hours": 708,
+  "radiation_rule": "Cada SEP marca radiação por 24 h a partir da hora do evento; a DONKI não informa a duração (regra de jogo).",
+  "not_downloaded": [
+    "FLR (endpoint 404 em 14/11/2026)",
+    "CME (429 com DEMO_KEY)",
+    "IPS (429 com DEMO_KEY)"
+  ],
+  "events": [
+    {
+      "id": "2024-10-09T03:50:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T03:50Z",
+      "hour": -5.17,
+      "before_window_start": true,
+      "instruments": [
+        "GOES-P: SEISS >100 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33868/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T01:25:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-09T01:25Z",
+          "hour": -7.58,
+          "lag_to_event_hours": 2.42,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 1.63,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241009-AL-004",
+          "issued_utc": "2024-10-09T06:15Z",
+          "hour": -2.75,
+          "delay_after_event_hours": 2.42,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33869/1"
+        },
+        {
+          "id": "20241009-AL-006",
+          "issued_utc": "2024-10-09T11:56Z",
+          "hour": 2.93,
+          "delay_after_event_hours": 8.1,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33876/1"
+        }
+      ],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T04:28:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T04:28Z",
+      "hour": -4.53,
+      "before_window_start": true,
+      "instruments": [
+        "MODEL: REleASE:SOHO/EPHIN 15.8-39.8 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33893/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 2.27,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T04:34:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T04:34Z",
+      "hour": -4.43,
+      "before_window_start": true,
+      "instruments": [
+        "MODEL: REleASE:ACE/EPAM 15.8-39.8 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33891/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 2.37,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T05:05:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T05:05Z",
+      "hour": -3.92,
+      "before_window_start": true,
+      "instruments": [
+        "GOES-P: SEISS >10 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33866/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T01:25:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-09T01:25Z",
+          "hour": -7.58,
+          "lag_to_event_hours": 3.67,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 2.88,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241009-AL-003",
+          "issued_utc": "2024-10-09T05:13Z",
+          "hour": -3.78,
+          "delay_after_event_hours": 0.13,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33867/1"
+        }
+      ],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T05:30:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T05:30Z",
+      "hour": -3.5,
+      "before_window_start": true,
+      "instruments": [
+        "MODEL: REleASE:ACE/EPAM 28.2-50.1 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33892/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 3.3,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T06:01:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T06:01Z",
+      "hour": -2.98,
+      "before_window_start": true,
+      "instruments": [
+        "SOHO: COSTEP 28.2-50.1 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33874/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T01:25:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-09T01:25Z",
+          "hour": -7.58,
+          "lag_to_event_hours": 4.6,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 3.82,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T06:01:00-SEP-002",
+      "type": "SEP",
+      "time_utc": "2024-10-09T06:01Z",
+      "hour": -2.98,
+      "before_window_start": true,
+      "instruments": [
+        "SOHO: COSTEP 15.8-39.8 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33875/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T01:25:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-09T01:25Z",
+          "hour": -7.58,
+          "lag_to_event_hours": 4.6,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 3.82,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T07:08:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T07:08Z",
+      "hour": -1.87,
+      "before_window_start": true,
+      "instruments": [
+        "MODEL: REleASE:SOHO/EPHIN 28.2-50.1 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33894/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 4.93,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-09T08:55:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-09T08:55Z",
+      "hour": -0.08,
+      "before_window_start": true,
+      "instruments": [
+        "STEREO A: IMPACT 13-100 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/33870/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T01:25:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-09T01:25Z",
+          "hour": -7.58,
+          "lag_to_event_hours": 7.5,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 6.72,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241009-AL-005",
+          "issued_utc": "2024-10-09T09:05Z",
+          "hour": 0.08,
+          "delay_after_event_hours": 0.17,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33871/1"
+        }
+      ],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-10T15:00:00-GST-001",
+      "type": "GST",
+      "time_utc": "2024-10-10T15:00Z",
+      "hour": 30.0,
+      "before_window_start": false,
+      "kp_max": 8.67,
+      "kp_source": [
+        "NOAA"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/GST/33913/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-09T02:12:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-09T02:12Z",
+          "hour": -6.8,
+          "lag_to_event_hours": 36.8,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-10T14:46:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-10T14:46Z",
+          "hour": 29.77,
+          "lag_to_event_hours": 0.23,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-10T17:13:00-MPC-001",
+          "type": "MPC",
+          "time_utc": "2024-10-10T17:13Z",
+          "hour": 32.22,
+          "lag_to_event_hours": -2.22,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241010-AL-005",
+          "issued_utc": "2024-10-10T18:32Z",
+          "hour": 33.53,
+          "delay_after_event_hours": 3.53,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33914/1"
+        },
+        {
+          "id": "20241010-AL-006",
+          "issued_utc": "2024-10-10T18:50Z",
+          "hour": 33.83,
+          "delay_after_event_hours": 3.83,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33915/1"
+        },
+        {
+          "id": "20241010-AL-007",
+          "issued_utc": "2024-10-10T21:32Z",
+          "hour": 36.53,
+          "delay_after_event_hours": 6.53,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33919/1"
+        },
+        {
+          "id": "20241010-AL-008",
+          "issued_utc": "2024-10-10T21:41Z",
+          "hour": 36.68,
+          "delay_after_event_hours": 6.68,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33921/1"
+        },
+        {
+          "id": "20241011-AL-001",
+          "issued_utc": "2024-10-11T00:34Z",
+          "hour": 39.57,
+          "delay_after_event_hours": 9.57,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33925/1"
+        },
+        {
+          "id": "20241011-AL-002",
+          "issued_utc": "2024-10-11T00:36Z",
+          "hour": 39.6,
+          "delay_after_event_hours": 9.6,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/33926/1"
+        }
+      ],
+      "note": "Índice Kp é da magnetosfera da Terra; não mede radiação na Lua e não afeta o jogo.",
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-26T16:45:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-26T16:45Z",
+      "hour": 415.75,
+      "before_window_start": false,
+      "instruments": [
+        "MODEL: REleASE:ACE/EPAM 15.8-39.8 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34214/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 60.95,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 10.8,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 10.22,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 9.95,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T15:34:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-26T15:34Z",
+          "hour": 414.57,
+          "lag_to_event_hours": 1.18,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241026-AL-006",
+          "issued_utc": "2024-10-26T16:19Z",
+          "hour": 415.32,
+          "delay_after_event_hours": -0.43,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/34215/1"
+        }
+      ],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-26T18:05:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-26T18:05Z",
+      "hour": 417.08,
+      "before_window_start": false,
+      "instruments": [
+        "GOES-P: SEISS >10 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34222/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 62.28,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 12.13,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 11.55,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 11.28,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T15:34:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-26T15:34Z",
+          "hour": 414.57,
+          "lag_to_event_hours": 2.52,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-28T04:13:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-28T04:13Z",
+          "hour": 451.22,
+          "lag_to_event_hours": -34.13,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241026-AL-008",
+          "issued_utc": "2024-10-26T18:15Z",
+          "hour": 417.25,
+          "delay_after_event_hours": 0.17,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/34223/1"
+        },
+        {
+          "id": "20241026-AL-009",
+          "issued_utc": "2024-10-26T18:40Z",
+          "hour": 417.67,
+          "delay_after_event_hours": 0.58,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/34224/1"
+        }
+      ],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-26T18:57:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-26T18:57Z",
+      "hour": 417.95,
+      "before_window_start": false,
+      "instruments": [
+        "SOHO: COSTEP 15.8-39.8 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34227/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:30:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-24T03:30Z",
+          "hour": 354.5,
+          "lag_to_event_hours": 63.45,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 63.15,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 13.0,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 12.42,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 12.15,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T15:34:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-26T15:34Z",
+          "hour": 414.57,
+          "lag_to_event_hours": 3.38,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-28T04:13:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-28T04:13Z",
+          "hour": 451.22,
+          "lag_to_event_hours": -33.27,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-26T19:02:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-26T19:02Z",
+      "hour": 418.03,
+      "before_window_start": false,
+      "instruments": [
+        "SOHO: COSTEP 28.2-50.1 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34229/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:30:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-24T03:30Z",
+          "hour": 354.5,
+          "lag_to_event_hours": 63.53,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 63.23,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 13.08,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 12.5,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 12.23,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T15:34:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-26T15:34Z",
+          "hour": 414.57,
+          "lag_to_event_hours": 3.47,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-28T04:13:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-28T04:13Z",
+          "hour": 451.22,
+          "lag_to_event_hours": -33.18,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241026-AL-010",
+          "issued_utc": "2024-10-26T19:51Z",
+          "hour": 418.85,
+          "delay_after_event_hours": 0.82,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/34232/1"
+        }
+      ],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-26T19:50:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-26T19:50Z",
+      "hour": 418.83,
+      "before_window_start": false,
+      "instruments": [
+        "MODEL: REleASE:ACE/EPAM 28.2-50.1 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34234/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 64.03,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 13.88,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 13.3,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 13.03,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T15:34:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-26T15:34Z",
+          "hour": 414.57,
+          "lag_to_event_hours": 4.27,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-26T20:06:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-26T20:06Z",
+      "hour": 419.1,
+      "before_window_start": false,
+      "instruments": [
+        "MODEL: REleASE:SOHO/EPHIN 15.8-39.8 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34233/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 64.3,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 14.15,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 13.57,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 13.3,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T15:34:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-26T15:34Z",
+          "hour": 414.57,
+          "lag_to_event_hours": 4.53,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-26T21:43:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-26T21:43Z",
+      "hour": 420.72,
+      "before_window_start": false,
+      "instruments": [
+        "MODEL: REleASE:SOHO/EPHIN 28.2-50.1 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34311/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 65.92,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 15.77,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 15.18,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 14.92,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T15:34:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-26T15:34Z",
+          "hour": 414.57,
+          "lag_to_event_hours": 6.15,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [],
+      "provenance": "observed"
+    },
+    {
+      "id": "2024-10-28T08:57:00-SEP-001",
+      "type": "SEP",
+      "time_utc": "2024-10-28T08:57Z",
+      "hour": 455.95,
+      "before_window_start": false,
+      "instruments": [
+        "STEREO A: IMPACT 13-100 MeV"
+      ],
+      "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/34250/-1",
+      "linked_events": [
+        {
+          "id": "2024-10-24T03:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-24T03:48Z",
+          "hour": 354.8,
+          "lag_to_event_hours": 101.15,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T05:57:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T05:57Z",
+          "hour": 404.95,
+          "lag_to_event_hours": 51.0,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:32:00-FLR-001",
+          "type": "FLR",
+          "time_utc": "2024-10-26T06:32Z",
+          "hour": 405.53,
+          "lag_to_event_hours": 50.42,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-26T06:48:00-CME-001",
+          "type": "CME",
+          "time_utc": "2024-10-26T06:48Z",
+          "hour": 405.8,
+          "lag_to_event_hours": 50.15,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-27T10:24:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-27T10:24Z",
+          "hour": 433.4,
+          "lag_to_event_hours": 22.55,
+          "provenance": "from-id"
+        },
+        {
+          "id": "2024-10-28T16:58:00-IPS-001",
+          "type": "IPS",
+          "time_utc": "2024-10-28T16:58Z",
+          "hour": 463.97,
+          "lag_to_event_hours": -8.02,
+          "provenance": "from-id"
+        }
+      ],
+      "alerts": [
+        {
+          "id": "20241028-AL-001",
+          "issued_utc": "2024-10-28T09:04Z",
+          "hour": 456.07,
+          "delay_after_event_hours": 0.12,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/34251/1"
+        },
+        {
+          "id": "20241028-AL-002",
+          "issued_utc": "2024-10-28T12:09Z",
+          "hour": 459.15,
+          "delay_after_event_hours": 3.2,
+          "url": "https://ccmc.gsfc.nasa.gov/DONKI/view/Alert/34253/1"
+        }
+      ],
+      "provenance": "observed"
+    }
+  ],
+  "radiation_episodes": [
+    {
+      "id": "EP-01",
+      "start_hour": -6,
+      "end_hour": 23,
+      "before_window_start": true,
+      "sep_ids": [
+        "2024-10-09T03:50:00-SEP-001",
+        "2024-10-09T04:28:00-SEP-001",
+        "2024-10-09T04:34:00-SEP-001",
+        "2024-10-09T05:05:00-SEP-001",
+        "2024-10-09T05:30:00-SEP-001",
+        "2024-10-09T06:01:00-SEP-001",
+        "2024-10-09T06:01:00-SEP-002",
+        "2024-10-09T07:08:00-SEP-001",
+        "2024-10-09T08:55:00-SEP-001"
+      ],
+      "provenance": "game-rule"
+    },
+    {
+      "id": "EP-02",
+      "start_hour": 415,
+      "end_hour": 444,
+      "before_window_start": false,
+      "sep_ids": [
+        "2024-10-26T16:45:00-SEP-001",
+        "2024-10-26T18:05:00-SEP-001",
+        "2024-10-26T18:57:00-SEP-001",
+        "2024-10-26T19:02:00-SEP-001",
+        "2024-10-26T19:50:00-SEP-001",
+        "2024-10-26T20:06:00-SEP-001",
+        "2024-10-26T21:43:00-SEP-001"
+      ],
+      "provenance": "game-rule"
+    },
+    {
+      "id": "EP-03",
+      "start_hour": 455,
+      "end_hour": 479,
+      "before_window_start": false,
+      "sep_ids": [
+        "2024-10-28T08:57:00-SEP-001"
+      ],
+      "provenance": "game-rule"
+    }
+  ]
+}

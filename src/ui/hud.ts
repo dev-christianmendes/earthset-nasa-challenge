@@ -6,7 +6,8 @@ import { outcomeOf } from '../engine/game';
 import { MAX_PANELS, MAX_QUEUE, isWorking, type TaskKind } from '../engine/robot';
 import { MATCH_HOURS } from '../engine/clock';
 import { deriveFlow, isGreenhouseOn, type GreenhouseMode } from '../engine/resources';
-import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
+import type { SpaceWeatherSample } from '../engine/space-weather';
+import type { AlertView } from '../engine/alert';
 import { crewOutside } from '../engine/crew';
 import { hoursToReady } from '../engine/greenhouse';
 import { chaptersOf, currentChapter } from '../engine/chapters';
@@ -21,7 +22,7 @@ export type Tool = 'base' | 'rover' | 'crew' | 'energy' | 'greenhouse' | 'missio
 export interface HudContext {
   readonly weather: SpaceWeatherSample;
   /** Horas até a tempestade (aviso da antena) ou null. */
-  readonly warningHours: number | null;
+  readonly alert: AlertView;
   readonly lit: boolean;
   readonly mode: ModeConfig;
   readonly explanations: boolean;
@@ -204,19 +205,20 @@ function renderTop(state: GameState, ctx: HudContext): void {
   setChip('water', vitals.water, `${Math.round(vitals.water)}`);
   setChip('food', vitals.food, `${Math.round(vitals.food)}`);
 
-  const level = stormLevel(ctx.weather.kp);
+  const al = ctx.alert;
   let text = t('space.calm');
   let tone = '';
-  if (ctx.weather.radiation) {
-    text = t('space.radiation', { storm: level > 0 ? t('space.storm', { level, percent: Math.round(solarFactor(level) * 100) }) : t('space.calm') });
+  if (al.level === 'monitoring' && al.precursor) {
+    text = t(`space.monitoring.${al.precursor.type}`);
+    tone = 'warn';
+  } else if (al.level === 'alert' || al.level === 'shelter') {
+    text = t(al.level === 'alert' && state.crewOrder === 'outside' ? 'space.outside' : `space.${al.level}`);
     tone = 'bad';
-  } else if (level > 0) {
-    text = t('space.storm', { level, percent: Math.round(solarFactor(level) * 100) });
-    tone = 'bad';
-  } else if (ctx.warningHours !== null) {
-    text = t('space.warning', { hours: ctx.warningHours });
+  } else if (al.level === 'recovery') {
+    text = t('space.recovery', { hours: Math.ceil(al.recoveryLeft) });
     tone = 'warn';
   }
+  ui.space.title = al.evidence ? `NASA DONKI ${al.evidence.id}` : al.precursor ? `NASA DONKI ${al.precursor.id}` : '';
   if (ui.space.textContent !== text) ui.space.textContent = text;
   ui.space.className = `alert-chip ${tone}`;
 
@@ -230,9 +232,9 @@ function renderTop(state: GameState, ctx: HudContext): void {
   ui.flows.hidden = !ctx.mode.technicalHud;
   if (ctx.mode.technicalHud) {
     const working = isWorking(state.robot, vitals.battery) && !ctx.weather.radiation;
-    const f = deriveFlow(vitals, installation, ctx.lit, working, solarFactor(level));
+    const f = deriveFlow(vitals, installation, ctx.lit, working);
     const sign = (v: number) => (v >= 0 ? '+' : '') + v.toFixed(2);
-    ui.flows.textContent = `E ${sign(f.energy)}/h · O₂ ${sign(f.air)}/h · H₂O ${sign(f.water)}/h · food ${sign(f.food)}/h · Kp ${ctx.weather.kp.toFixed(1)}`;
+    ui.flows.textContent = `E ${sign(f.energy)}/h · O₂ ${sign(f.air)}/h · H₂O ${sign(f.water)}/h · food ${sign(f.food)}/h`;
   }
 }
 
@@ -370,15 +372,13 @@ function renderEnergy(state: GameState, ctx: HudContext): void {
   const batteryPct = pct(vitals.battery, installation.batteryCapacity);
   el('energy-pct').textContent = `${Math.round(batteryPct)}%`;
   el('energy-cap').textContent = `${Math.round(vitals.battery)} ${t('energy.cap', { cap: installation.batteryCapacity })}`;
-  const level = stormLevel(ctx.weather.kp);
   const working = isWorking(state.robot, vitals.battery) && !ctx.weather.radiation;
-  const flow = deriveFlow(vitals, installation, ctx.lit, working, solarFactor(level));
+  const flow = deriveFlow(vitals, installation, ctx.lit, working);
   const hour = state.clock.hour;
   const nightText = hour < night[0] ? t('energy.night.in', { h: Math.ceil(night[0] - hour) }) : hour < night[1] ? t('energy.night.now', { h: night[1] }) : t('energy.night.past');
   el('energy-status').replaceChildren(
     li(t('energy.sun'), ctx.lit ? t('energy.lit') : t('energy.dark'), ctx.lit ? 'ok' : 'warn'),
     li(t('status.panels'), `${installation.panels} / ${MAX_PANELS}`),
-    li(t('energy.output'), `${Math.round(solarFactor(level) * 100)}%`, level > 0 ? 'bad' : 'ok'),
     li(t('energy.flow'), t('energy.flow.v', { v: (flow.energy >= 0 ? '+' : '') + flow.energy.toFixed(2) }), flow.energy >= 0 ? 'ok' : 'warn'),
     li(t('energy.night'), nightText, hour >= night[0] && hour < night[1] ? 'warn' : ''),
   );

@@ -592,3 +592,67 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Documentação:** `docs/INTERACOES.md` (arquitetura, máquina de estados, fluxo, regras da estufa, controles, testes, desempenho antes e depois, limitações), README (como rodar o teste de interface e controles), `AGENTS.md` (mapa e estado).
 - **Verificação final:** `npm run typecheck` ok, `npm run test` 163 ok, `npm run build` ok, `npm audit --omit=dev` sem vulnerabilidades de produção.
 - **Commit:** não feito.
+
+## 2026-11-14 · Orientações do autor registradas (auditoria v5)
+
+- **Contexto:** o autor reportou que, na porta 5180, estufa e astronautas não têm interação. Antes disso, a porta 5173 servia o projeto antigo (`earthset` v0.1, pasta na lixeira); o servidor foi encerrado a pedido do autor.
+- **Verificação anterior à auditoria:** `python3 scripts/e2e-contexto.py 5180` retornou 38 ok e 0 falhas, e a sessão do autor contradiz esse resultado. A divergência entra como primeira tarefa da auditoria (V5.P0): o teste usa `?autostart=cadet` e pode não passar pelo caminho real do jogador (menu, modo, introdução).
+- **Arquivos:** `docs/ORIENTACOES_AUDITORIA_V5.md` (texto do autor, sem alteração), `docs/backlog.md` (Bloco 9).
+- **Commit:** não feito (o autor proibiu commit, push e deploy sem autorização).
+
+## 2026-11-14 · V5.P0 auditoria (parcial)
+
+- **Comandos:** Playwright pelo caminho real (menu → New mission → Cadet → Begin mission → Skip intro) com GPU (`--use-angle=vulkan`) e com swiftshader; `python3 scripts/e2e-contexto.py 5180`; leitura de `main.ts`, `picking.ts`, `space-weather.ts`, dados DONKI.
+- **Resultado:** com GPU (61 fps), o clique na estufa abre o painel completo; a aba Greenhouse do menu inferior mostra o painel antigo, sem as ações novas; nada indica que a cena é clicável. e2e: 38 ok, 0 falhas. Dados: 17 SEP e 1 GST reais da DONKI; `radiation` (24 h por SEP) e o efeito de Kp nos painéis são regras de gameplay; sem alerta em estados, sem metadados do evento na partida, sem painel científico.
+- **Falha do meu método:** o primeiro teste usou swiftshader (0,7 fps) e o clique não selecionou. Concluí cedo que a seleção falhava; era o ambiente. Causa do clique perdido em swiftshader: não explicada.
+- **Arquivos:** `docs/AUDITORIA_V5.md`. Nenhum arquivo de código alterado.
+- **Commit:** não feito.
+
+## 2026-11-14 · V5.P2 (parte 1): descoberta das interações
+
+- **Mudança:** abas Greenhouse, Crew, Energy e Rover abrem o painel contextual (`src/main.ts`); modo da estufa e troca de astronauta no painel (`src/ui/context-panel.ts`); dica de toque na cena (`src/i18n.ts`, `beginPlay`).
+- **Testes novos:** `scripts/e2e-descoberta.py` (menu → Cadet → abas): estufa com Inspect, Harvest, Maintenance, Irrigation, Lighting e Mode; modo "Always on" aplicado; irrigação alta muda o consumo (0.08 → 0.16 água/h); ordem de astronauta confirmada; troca de astronauta; Rover e Energy; sem erros de console. Resultado: `{"falhas": []}`.
+- **Regressão:** `e2e-contexto.py` falhou uma vez (esperava o painel lateral da aba Energy, que agora abre o contextual); teste ajustado para a aba Base e repetido: 38 ok, 0 falhas.
+- **Verificação:** typecheck ok, 163 testes ok, build ok. Capturas desktop e celular vistas (painel da estufa completo).
+- **Commit:** não feito.
+
+## 2026-11-14 · V5.P3 (parte 0): efeito do Kp removido
+
+- **Decisão do autor:** remover o efeito do Kp nos painéis (índice da Terra, sem base técnica para a Lua).
+- **Mudança:** motor (`space-weather.ts`, `game.ts`), HUD, cena, painel contextual, textos e documentação; `hoursUntilRadiation` substitui `hoursUntilStorm`. Detalhes em `docs/AUDITORIA_V5.md`, seção 7.
+- **Verificação:** typecheck ok, `npm run test` 172 ok, build ok, `e2e-descoberta.py` 20 ok, `e2e-contexto.py` 38 ok (GPU, porta 5180). Captura da HUD vista ("radiation: robot paused").
+- **Observação:** durante a etapa, `tests/engine/crew.test.ts`, `game.test.ts` e `robot.test.ts` foram alterados por outra edição fora desta sessão (testes de ajuda da tripulação, D-06). Não toquei neles; passaram junto.
+- **Commit:** não feito.
+
+## 2026-11-14 · V5.P3 (passo 1): catálogo de eventos NASA DONKI
+
+- **Comandos:** `curl` à API (FLR 404, CME e IPS 429 com `DEMO_KEY`, `NASA_API_KEY` ausente, servidor do CCMC sem resposta); `python3 data-pipeline/fetch_donki.py --from-raw data-pipeline/raw` (grava `space-weather-events.json`, `space-weather.json` sem diferença); `python3 -m unittest discover -s data-pipeline/tests` (35 ok); `npm run typecheck`, `npm run test` ok.
+- **Arquivos:** `data-pipeline/fetch_donki.py`, `data-pipeline/tests/test_fetch_donki.py`, `src/data/space-weather-events.json` e `.ts`, `src/engine/space-events.ts`, `tests/engine/eventos-solares.test.ts`, `docs/data-sources.md` (3.1), `docs/AUDITORIA_V5.md` (seção 8).
+- **Falha anotada:** o script falhou na primeira leitura dos registros crus porque `linkedEvents` pode ser nulo; tratado e testado.
+- **Observação:** os testes de ajuda da tripulação (D-06) que apareceram nos arquivos `crew`, `game` e `robot` durante a etapa anterior sumiram do disco (edição externa desfeita); não são meus.
+- **Commit:** não feito.
+
+## 2026-11-14 · V5.P3 (passo 2): estados de alerta
+
+- **Decisão do autor:** manter a janela de 09/10/2024 (jogo abre com radiação em curso).
+- **Mudança:** `src/engine/alert.ts` (novo), `crew.ts` (`crewSheltered`), `space-weather.ts` (sem `antennaWarning`), `guide.ts` (LUMA com registro NASA), `hud.ts`, `context-panel.ts`, `main.ts`, `i18n.ts`, `index.html`; atalhos dev `clockAt` e `antenna`.
+- **Testes:** typecheck ok; `npm run test` 180 ok antes dos atalhos e do ajuste final; build ok; Python 35 ok; `e2e-tempestade.py` (novo) sem falhas; `e2e-descoberta.py` 20 ok; `e2e-contexto.py` 38 ok (GPU, porta 5180). Captura do monitoramento em português vista.
+- **Falha do meu teste, corrigida:** a primeira versão do teste de ordens "bloqueadas" só conferia que algum botão estava desabilitado (por outros motivos). O comportamento real é: a ordem é aceita e pausa no abrigo. Troquei por verificação do estado e da retomada.
+- **Commit:** não feito.
+
+## 15/11/2026 · V5.P3 passo 3: painel científico e histórico de eventos
+
+- `src/ui/space-panel.ts` (novo): na aba Ciência da partida, lista os eventos NASA DONKI **já ocorridos** (nunca o futuro), do mais novo ao mais antigo. Cada um traz tipo, horário UTC, ID e link do registro, aplicabilidade à Lua, consequência simulada, eventos ligados (com intervalo calculado) e o primeiro alerta enviado pela NASA. Selos distinguem "observado" de "regra do jogo"; o Kp aparece como "medido na Terra" e o GST diz que não vale para a Lua.
+- Bloco "Limites dos dados": catálogo sem falsos alarmes (viés de retrospecto), 24 h e 6 h são regra do jogo, Kp nunca vira radiação lunar, o que não foi baixado (FLR, CME, IPS), janela real reproduzida como simulação.
+- O chip de alerta do HUD agora abre o painel. Textos EN/PT em `src/i18n.ts` (`sci.*`). Links externos com `rel="noopener noreferrer"`; o jogo não consulta a NASA durante a partida.
+- Verificação: typecheck ok, 180 testes ok, build ok. `scripts/e2e-tempestade.py` ganhou a seção 7 (abrir pelo chip, histórico crescente 9 → 17 eventos da hora 0 à 430, limitações e proveniência, Kp, links); passou sem falhas, com GPU. Captura em português vista.
+- Duas falhas iniciais eram do meu teste (título em maiúsculas por CSS; o GST só existe mais tarde na janela). Corrigi o teste, não o painel.
+- Limites: sem teste unitário do painel (é DOM; coberto pelo navegador). Latência não foi remedida.
+
+## 15/11/2026 · V5.P3 passo 4: decisão de continuar fora, com risco explícito
+
+- Motor: `CrewOrder` ganhou `outside` ("continuar fora e aceitar o risco"). Só vale durante o evento (volta a `auto` quando a radiação acaba). Regra de jogo: cada pessoa fora soma 1 h de exposição por hora; 12 h somadas custam 1 coração (`exposeCrew` em `crew.ts`, ligado em `game.advance`). Rover e tarefas externas continuam; no abrigo continuam pausados. Voltar a abrigar no meio do evento cobra de novo 1 h de caminho.
+- Tela: o habitat oferece a terceira opção só durante o evento, com o risco escrito (horas e custo em coração, "regra do jogo, não é dose medida"). Chip do HUD: "ALERTA: tripulação fora por ordem sua". LUMA avisa a exposição acumulada e que dá para abrigar a qualquer momento. A tela usa `weatherForView()` para que "radiação = trabalho parado" não apareça quando o jogador decidiu ficar fora.
+- Testes: `tests/engine/decisoes.test.ts` (9). 189 testes, typecheck e build ok. `e2e-tempestade.py` (seção 8) passa: oferta da decisão, risco escrito, chip, LUMA, exposição crescente, voltar a abrigar leva a ABRIGO. `e2e-contexto` e `e2e-descoberta` sem falhas.
+- Dois erros meus no caminho, corrigidos: (1) o teste do robô comparava `progress`, campo que não existe (`hoursLeft`), e passava no vazio por causa de um `?? 99`; agora compara `hoursLeft` (6 no abrigo, menor fora). (2) o teste de navegador viu a exposição "diminuir": era o painel mostrando o valor módulo 12 depois de perder um coração em 4×; o teste passou a usar 1×.
+- Ainda sem decisão: priorizar energia e suporte de vida, adiar o gelo como escolha com custo, rover em modo seguro (hoje ele só pausa), energia insuficiente. Latência não remedida.

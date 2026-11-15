@@ -2,8 +2,8 @@
 // Partida: estado, ações do jogador, passagem do tempo e fim. Motor puro.
 // Regra dos corações: docs/regras-recursos.md (ajustável).
 import { MATCH_HOURS, advanceClock, createClock, type Clock } from './clock';
-import { CALM, solarFactor, stormLevel, type SpaceWeatherSample } from './space-weather';
-import { advanceCrew, createCrew, crewAvailableForHelp, crewOutside, type CrewState } from './crew';
+import { CALM, type SpaceWeatherSample } from './space-weather';
+import { advanceCrew, createCrew, crewAvailableForHelp, crewOutside, exposeCrew, type CrewState } from './crew';
 import {
   AGENT_TASK_KINDS,
   INSPECT_WEAR_RELIEF,
@@ -78,7 +78,11 @@ export interface GameState {
   readonly missionsDone: Readonly<Record<TaskKind, number>>;
 }
 
-export type CrewOrder = 'auto' | 'shelter';
+/**
+ * auto: trabalha e, com radiação, vai ao abrigo. shelter: fica dentro sempre.
+ * outside: decisão de continuar fora durante a radiação, aceitando a exposição; volta a auto quando ela acaba.
+ */
+export type CrewOrder = 'auto' | 'shelter' | 'outside';
 
 export type GameAction =
   | { readonly type: 'SET_CREW_ORDER'; readonly order: CrewOrder }
@@ -134,7 +138,7 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
   }
   switch (action.type) {
     case 'SET_CREW_ORDER': {
-      if (action.order !== 'auto' && action.order !== 'shelter') {
+      if (action.order !== 'auto' && action.order !== 'shelter' && action.order !== 'outside') {
         return { ok: false, reason: 'invalid-mode' };
       }
       return { ok: true, state: { ...state, crewOrder: action.order } };
@@ -213,12 +217,15 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   if (step <= 0) return state;
 
   // Radiação de partículas solares para o robô: ele não trabalha enquanto ela durar.
-  const working = isWorking(state.robot, state.vitals.battery) && !weather.radiation;
-  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, solarFactor(stormLevel(weather.kp)) * calibrationFactor(state.calibrationLeft), state.crop);
+  // Decisão 'outside': o jogador aceita o risco e a equipe continua fora; senão a radiação abriga a todos.
+  const exposed = weather.radiation && state.crewOrder === 'outside';
+  const shelterRad = weather.radiation && !exposed;
+  const working = isWorking(state.robot, state.vitals.battery) && !shelterRad;
+  const flow = deriveFlow(state.vitals, state.installation, sunlit, working, calibrationFactor(state.calibrationLeft), state.crop);
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
   // Com a tripulação livre, o astronauta ajuda na viagem de gelo (D-06).
-  const helpAvailable = state.crewOrder === 'auto' && crewAvailableForHelp(state.crew, weather.radiation);
+  const helpAvailable = state.crewOrder === 'auto' && crewAvailableForHelp(state.crew, shelterRad);
   const progress = working
     ? progressRobot(state.robot, step, helpAvailable ? ICE_HELP_SPEED : 1)
     : { robot: state.robot, completed: [] as readonly TaskKind[] };
@@ -232,7 +239,7 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     if (kind === 'panel') installation = { ...installation, panels: installation.panels + 1 };
   }
   // Astronautas: a tarefa anda no tempo de jogo; radiação ou ordem de abrigo a suspende (eles ficam no abrigo).
-  const sheltered = weather.radiation || state.crewOrder === 'shelter';
+  const sheltered = shelterRad || state.crewOrder === 'shelter';
   let crop = stepCrop(state.crop, step, flow.greenhouseOn);
   let agentTasksDone = state.agentTasksDone;
   let calibrationLeft = Math.max(0, state.calibrationLeft - step);
@@ -264,7 +271,8 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   }
 
   // Tripulação: quem está fora quando a radiação começa leva 1 hora para entrar; cada 12 h de exposição tira 1 coração.
-  const crewStep = advanceCrew(state.crew, crewOutside(state.installation, state.vitals, state.robot, state.crewOrder).map((out, i) => out || (state.agents[i] ? isOutside(state.agents[i]) : false)), weather.radiation, step);
+  const outsideNow = crewOutside(state.installation, state.vitals, state.robot, state.crewOrder).map((out, i) => out || (state.agents[i] ? isOutside(state.agents[i]) : false));
+  const crewStep = exposed ? exposeCrew(state.crew, outsideNow, step) : advanceCrew(state.crew, outsideNow, weather.radiation, step);
   hearts = Math.max(0, hearts - crewStep.heartsLost);
 
   return {
@@ -280,7 +288,8 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
     agentTasksDone,
     calibrationLeft,
     antennaTuneLeft,
-    crewOrder: state.crewOrder,
+    // A decisão de ficar fora vale só durante o evento.
+    crewOrder: state.crewOrder === 'outside' && !weather.radiation ? 'auto' : state.crewOrder,
     missionsDone,
   };
 }

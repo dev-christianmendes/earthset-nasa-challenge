@@ -7,9 +7,12 @@ import { advance, createGame, dispatch, outcomeOf, type GameAction, type GameSta
 import type { GreenhouseMode, Installation } from './engine/resources';
 import type { TaskKind } from './engine/robot';
 import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
-import { MATCH_HOURS } from './engine/clock';
+import { createClock, MATCH_HOURS } from './engine/clock';
 import { isSunlit } from './engine/sun';
-import { antennaWarning, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
+import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
+import { alertAt, type AlertView } from './engine/alert';
+import { crewSheltered } from './engine/crew';
+import { SPACE_EVENTS } from './data/space-weather-events';
 import { MODES, installationFor, isModeId, type ModeId } from './engine/modes';
 import { lumaAdvice, lumaEvents, type LumaAction } from './engine/guide';
 import { SUN } from './data/sun';
@@ -26,6 +29,7 @@ import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, rend
 import { initLuma, pushLumaEvents, relabelLuma, resetLuma, updateLuma } from './ui/luma';
 import { currentScreen, loadSettings, popScreen, pushScreen, saveSettings, showScreen, type ScreenId } from './ui/screens';
 import { mountHorizonPanel } from './ui/horizon-panel';
+import { mountSpacePanel } from './ui/space-panel';
 import { getLang, t } from './i18n';
 
 /** Base inicial (equilíbrio do motor, docs/regras-recursos.md). A patente vem do modo (D-17). */
@@ -51,8 +55,18 @@ const LIT: boolean[] = Array.from({ length: MATCH_HOURS + 1 }, (_, h) => isSunli
 setLightMap(LIT);
 const sunlit = (hour: number): boolean => LIT[Math.min(MATCH_HOURS, Math.max(0, Math.floor(hour)))];
 const weatherNow = (): SpaceWeatherSample => weatherAt(WEATHER, game.clock.hour);
-const warningNow = (): number | null => antennaWarning(WEATHER, game.clock.hour, game.robot.antennaInstalled, warningAhead(game.antennaTuneLeft));
-const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, kp: weatherNow().kp, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], warningHours: warningNow() });
+/** Clima para a tela: "radiação" aqui significa trabalho parado; se o jogador decidiu ficar fora, o trabalho continua. */
+const weatherForView = (): SpaceWeatherSample => {
+  const w = weatherNow();
+  return w.radiation && game.crewOrder === 'outside' ? { ...w, radiation: false } : w;
+};
+/** Estado de alerta pelo catálogo NASA DONKI; a antena instalada dá o alcance do monitoramento (D-01, emenda v5). */
+const alertNow = (): AlertView =>
+  alertAt(SPACE_EVENTS, game.clock.hour, {
+    reach: game.robot.antennaInstalled ? warningAhead(game.antennaTuneLeft) : null,
+    sheltered: crewSheltered(game.crew, game.crewOrder),
+  });
+const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], alert: alertNow() });
 
 // ---------- Ações ----------
 
@@ -116,8 +130,29 @@ mountContext(document.getElementById('ctx') as HTMLElement, {
   },
   overview: () => goTo('overview', performance.now()),
   focus: (id) => goTo(FOCUS_SHOT[id], performance.now(), 0.9),
+  select: (id) => selectObject(id),
   close: () => selectObject(null),
 });
+
+// Abas do menu inferior ligadas a objetos da cena abrem o painel contextual (com todas as ações):
+// é o lugar onde o jogador procura primeiro. Base, Missões e Ciência continuam painéis laterais.
+const TOOL_OBJECT: Partial<Record<Tool, SelectableId>> = { greenhouse: 'greenhouse', crew: 'crew0', rover: 'rover', energy: 'panels' };
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
+  const id = TOOL_OBJECT[button.dataset.tool as Tool];
+  if (!id) continue;
+  button.addEventListener(
+    'click',
+    (event) => {
+      event.stopImmediatePropagation();
+      if (!started || ended || paused || currentScreen() !== null || cinematicRunning()) return;
+      const again = selectedObject() === id || (id === 'crew0' && selectedObject() === 'crew1');
+      selectObject(again ? null : id);
+      if (!again) goTo(FOCUS_SHOT[id], performance.now(), 0.9);
+      for (const b of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) b.classList.toggle('active', !again && b === button);
+    },
+    true,
+  );
+}
 
 renderer.domElement.setAttribute('role', 'img');
 renderer.domElement.setAttribute('aria-label', t('a11y.scene'));
@@ -184,11 +219,12 @@ initLuma((action) => {
 
 let hudDueAt = 0;
 function renderNow(now: number): void {
-  const weather = weatherNow();
-  const warning = warningNow();
-  renderHud(game, { weather, warningHours: warning, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
+  const weather = weatherForView();
+  const alert = alertNow();
+  renderHud(game, { weather, alert, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
   if (started && selectedObject()) renderContext(game, contextInfo());
-  if (started) updateLuma(lumaAdvice(game, warning, MODES[mode].luma), game.clock.hour, now);
+  if (started) updateLuma(lumaAdvice(game, alert, MODES[mode].luma), game.clock.hour, now);
+  if (started && currentTool() === 'science') updateSpacePanel(game.clock.hour, alert, getLang());
 }
 
 onLanguage(() => {
@@ -201,6 +237,7 @@ onLanguage(() => {
 
 // ---------- Ciência (painel polar) ----------
 
+const updateSpacePanel = mountSpacePanel(document.getElementById('space-panel') as HTMLElement, SPACE_EVENTS);
 const updateHorizon = mountHorizonPanel(document.getElementById('horizon-panel') as HTMLElement, SUN, TERRAIN, BASE.site);
 const updateScienceHorizon = mountHorizonPanel(document.getElementById('science-horizon') as HTMLElement, SUN, TERRAIN, BASE.site);
 
@@ -306,6 +343,10 @@ function beginPlay(): void {
   showToast(t('toast.chapter', { n: 1 }), t('chapter.1'));
   renderNow(performance.now());
   if (MODES[mode].luma === 'full') openPanel('rover');
+  // Descoberta: a cena é clicável. Aparece depois do aviso do capítulo.
+  window.setTimeout(() => {
+    if (started && !ended && !selectedObject()) showToast(t('toast.hint.small'), t('toast.hint'));
+  }, 5000);
 }
 
 document.getElementById('cine-skip')?.addEventListener('click', () => skipCinematic());
@@ -390,7 +431,7 @@ function frame(now: number): void {
   last = now;
   // A cena anda no relógio visual (parado na pausa); no menu e na introdução, no relógio real.
   const sceneTime = started ? visualTime : now;
-  updateScene(game, sceneTime, sunlit(game.clock.hour), weatherNow(), started ? active : true);
+  updateScene(game, sceneTime, sunlit(game.clock.hour), weatherForView(), started ? active : true);
   updateHighlight(now / 1000);
   if (cinematicRunning()) updateCinematic(now);
   else updateDirector(now);
@@ -478,6 +519,7 @@ function perfTick(now: number): void {
 /**
  * Atalhos de captura, só no servidor de desenvolvimento (não entram no build):
  * ?autostart=cadet&nointro&hour=30&task=ice&after=3&tool=rover&shot=rover&lang=pt&cineAt=9&screen=modes
+ * Alertas: &clockAt=406 (muda só o relógio, sem simular recursos) e &antenna=base|tuned (antena instalada, sem ou com ajuste).
  */
 function maybeAutostart(): void {
   if (!import.meta.env.DEV) return;
@@ -519,6 +561,12 @@ function maybeAutostart(): void {
     return;
   }
   newMission(false);
+  const clockAt = q.get('clockAt');
+  if (clockAt !== null) game = { ...game, clock: createClock(Number(clockAt)) };
+  const antennaMode = q.get('antenna');
+  if (antennaMode === 'base' || antennaMode === 'tuned') {
+    game = { ...game, robot: { ...game.robot, antennaInstalled: true }, antennaTuneLeft: antennaMode === 'tuned' ? 150 : 0 };
+  }
   const step = (hours: number) => {
     for (let h = 0; h < hours; h += 0.25) {
       const prev = game;
@@ -539,3 +587,7 @@ function maybeAutostart(): void {
 }
 
 requestAnimationFrame(frame);
+
+// O aviso de clima espacial do HUD abre o painel científico (registro NASA, limites e histórico).
+ui.space.addEventListener('click', () => openPanel('science'));
+ui.space.style.cursor = 'pointer';

@@ -71,6 +71,10 @@ docs/event-rules.md         Regras do evento (datas, elegibilidade, IA, critéri
 docs/execution-log.md       Diário de cada etapa: arquivos, comandos, resultados, falhas
 docs/data-sources.md        Fontes de cada número científico, método e o que é ilustrativo
 data-pipeline/fetch_sun.py  Pipeline do Sol (JPL Horizons) → src/data/sun-south-pole.json; testes em data-pipeline/tests
+src/engine/alert.ts         Estados de alerta (NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO) a partir do catálogo NASA
+src/ui/space-panel.ts       Painel científico: histórico NASA DONKI, proveniência, limites (aba Ciência)
+scripts/e2e-tempestade.py   Cenário de radiação no navegador (alerta, monitoramento, abrigo, recuperação, pausa, reinício)
+src/engine/space-events.ts Catálogo de eventos NASA DONKI (SEP, GST), episódios de radiação e proveniência; dados em src/data/space-weather-events.json
 src/engine/sun.ts           Sol: tabela, amostra por hora, horizonte local por site
 AI_DISCLOSURE.md            Declaração de uso de IA (ferramentas, modelos, texto em inglês)
 .github/workflows/ci.yml    CI: typecheck, testes, build, auditoria, fronteira do motor
@@ -91,6 +95,7 @@ src/render/picking.ts       Seleção na cena (raycasting) e anel de destaque
 src/render/crop.ts          Plantas da estufa por estágio de crescimento (malhas instanciadas)
 src/ui/context-panel.ts     Painel contextual do objeto selecionado (ações vêm do motor, via dispatch em seco)
 scripts/e2e-contexto.py     Fluxo real de interface (Playwright, Python) contra `npm run dev`
+scripts/e2e-descoberta.py   Caminho de descoberta do jogador (menu → abas, sem ?autostart); exige GPU (Vulkan), não swiftshader
 ```
 
 Atalhos de captura (só `npm run dev`): `?autostart=cadet&hour=24&task=ice&after=2&tool=rover&shot=rover`, `?autostart=cadet&cineAt=7`, `?screen=modes&lang=pt`. O título da página começa com "Earthset ·".

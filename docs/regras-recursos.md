@@ -40,7 +40,7 @@ Implementado em `src/engine/robot.ts`. Números ajustáveis.
 | Fila | Até 4 tarefas, executadas na ordem. O tempo que sobra num passo vai para a próxima. |
 | Gelo | 6 h por viagem; `+12` de água ao concluir (teto 100). |
 | Painel | 4 h; `+1` painel ao concluir. Até 12 painéis, contando os da fila. |
-| Antena | 8 h; uma só. Marca `antennaInstalled`. Com a antena, o HUD avisa quando há tempestade nas próximas 6 h (D-01); sem antena, só mostra o clima atual. Não muda recursos. |
+| Antena | 8 h; uma só. Marca `antennaInstalled`. Com a antena, a base passa a MONITORAR: se uma erupção ou CME registrada pela NASA veio até 6 h (12 h com o ajuste) antes do próximo SEP, o estado vira MONITORAMENTO (sem tempo restante). Sem antena, o primeiro estado é o ALERTA do próprio SEP. Estados: NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO (`src/engine/alert.ts`, `docs/AUDITORIA_V5.md` seção 9). O Kp da Terra não afeta recursos. Não muda recursos. |
 | Consumo | `+1,0` de energia por hora **enquanto trabalha**. Não trabalha com bateria zerada. |
 
 **Simplificação:** o consumo e o trabalho são calculados por passo de tempo. Se uma tarefa termina no meio do passo, o efeito vale só no fim do passo. Com passos de 1 h (testes) ou de frações de hora (tela), o erro é pequeno.

@@ -3,6 +3,7 @@
 // Escolhe a orientação mais urgente a partir do estado e detecta eventos entre dois estados.
 // Só devolve chaves de texto, gravidade e o sistema a abrir; o texto fica em src/i18n.ts (luma.*).
 import type { GameState } from './game';
+import type { AlertView } from './alert';
 import { currentChapter, type ChapterId } from './chapters';
 import type { LumaLevel } from './modes';
 import { missionPhase } from './mission';
@@ -59,13 +60,25 @@ function advice(key: string, severity: LumaSeverity, action: LumaAction | null, 
  * Orientação atual. Perigos aparecem em todos os modos; o passo da história só nos modos com dicas
  * ('full' e 'goals'). No modo 'critical' (Comandante), sem perigo, a LUMA fica em silêncio operacional.
  */
-export function lumaAdvice(state: GameState, stormInHours: number | null, level: LumaLevel = 'full'): LumaAdvice {
-  // 1. Perigo agora: radiação com a tripulação em modo automático, ou último coração.
-  if (state.crewOrder === 'auto' && state.crew.prevRadiation) return advice('luma.radiation', 'critical', 'crew');
+/** Horário UTC legível: '2024-10-09T03:50Z' vira '2024-10-09 03:50 UTC'. */
+const utcLabel = (time: string): string => time.replace('T', ' ').replace('Z', ' UTC');
+
+export function lumaAdvice(state: GameState, alert: AlertView | null, level: LumaLevel = 'full'): LumaAdvice {
+  // 1. Perigo agora: decisão de ficar fora durante a radiação, radiação com a tripulação em modo automático, ou último coração.
+  if (state.crewOrder === 'outside' && alert?.episode) return advice('luma.outside', 'critical', 'crew', { hours: state.crew.exposureHours.toFixed(1) });
+  if (state.crewOrder === 'auto' && state.crew.prevRadiation) {
+    const record = alert?.evidence;
+    return record ? advice('luma.radiation.src', 'critical', 'crew', { id: record.id, time: utcLabel(record.time_utc) }) : advice('luma.radiation', 'critical', 'crew');
+  }
   const [worst, value] = worstResource(state);
   if (state.hearts <= 1) return advice('luma.lastHeart', 'critical', RESOURCE_ACTION[worst]);
-  // 2. Aviso da antena: tempestade em até 6 h.
-  if (stormInHours !== null) return advice('luma.storm', 'warning', 'crew', { hours: stormInHours });
+  // 2. Monitoramento (antena): erupção ou CME registrada pela NASA. Sem tempo restante: não há base para prever.
+  if (alert?.level === 'monitoring' && alert.precursor) {
+    const p = alert.precursor;
+    const range = alert.lagRange;
+    return advice(`luma.monitor.${p.type}`, 'warning', 'crew', { id: p.id, time: utcLabel(p.time_utc), min: range ? Math.round(range[0]) : '?', max: range ? Math.round(range[1]) : '?' });
+  }
+  if (alert?.level === 'recovery') return advice('luma.recovery', 'warning', null, { hours: Math.ceil(alert.recoveryLeft) });
   // 3. Recurso baixo.
   if (value < LUMA_LOW) return advice(`luma.low.${worst}`, 'warning', RESOURCE_ACTION[worst]);
   // 4. Passo da história (capítulo atual).

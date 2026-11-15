@@ -8,7 +8,7 @@ import type { GameState } from '../engine/game';
 import { isGreenhouseOn } from '../engine/resources';
 import { phaseFraction, type AgentTaskKind } from '../engine/astronaut';
 import { calibrationFactor } from '../engine/facilities';
-import { solarFactor, stormLevel, type SpaceWeatherSample } from '../engine/space-weather';
+import type { SpaceWeatherSample } from '../engine/space-weather';
 import { isWorking, type TaskKind } from '../engine/robot';
 import { missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
 import { sampleAt } from '../engine/sun';
@@ -724,7 +724,6 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   for (const m of rover.headlights) m.emissiveIntensity = view.working ? 3 : 0.4;
 
   updateCrop(state.crop.growth);
-  const level = stormLevel(weather.kp);
   const batteryPct = (state.vitals.battery / state.installation.batteryCapacity) * 100;
   updateBase({
     t,
@@ -738,7 +737,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     antennaRepairing: view.working && view.kind === 'antenna' && (view.phase === 'operate' || view.phase === 'deliver'),
     processing: view.working && view.kind === 'ice' && view.phase === 'deliver',
     iceActive: state.robot.queue.some((q) => q.kind === 'ice'),
-    panelGlow: 0.6 * solarFactor(level) * calibrationFactor(state.calibrationLeft) * (lit ? 1 : 0.25),
+    panelGlow: 0.6 * calibrationFactor(state.calibrationLeft) * (lit ? 1 : 0.25),
     earthAz: EARTH_AZ,
     earthEl: EARTH_EL,
   });
