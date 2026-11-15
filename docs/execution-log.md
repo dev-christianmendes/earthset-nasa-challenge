@@ -782,3 +782,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Comandos:** `npm run typecheck` (0), `npx vitest run` (24 arquivos, 225 testes), `npm run build` (0).
 - **Git:** arquivos desta etapa ainda sem commit.
 
+## 15/11/2026 · Regressão dos defeitos E01 a E05 do parecer
+
+- **Origem:** parecer de julgamento simulado (revisão `2ebfee6`). Reproduzidos em 15/11 no código atual (`b65d9b2`): nenhum defeito reproduziu. Os cenários viraram testes permanentes.
+- **Arquivo novo:** `tests/engine/parecer-regressao.test.ts` (8 testes): E01 partição do tempo (sem energia e com Sol), E02 evidência futura de SEP (hora fixa e toda a missão), E03 painel científico na hora 417,2, E04 estufa sem água, E05 gelo com dois astronautas ocupados.
+- **E06:** teste Python de metadado angular já existe em `data-pipeline/tests` e passa (54 testes). Nenhuma alteração.
+- **Comandos:** `npm run typecheck` (0); `npx vitest run` (25 arquivos, 233 testes, todos passando).
+- **Backlog:** DT-02 a DT-06 marcados como parciais, com o que ainda falta em cada um.
+- **Git:** sem commit nesta etapa.
+

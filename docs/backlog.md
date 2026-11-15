@@ -39,11 +39,11 @@ Correspondência da numeração antiga (blocos do backlog anterior): bloco 6 e 7
 Plano com evidências: `docs/PLANO_AJUSTES_AUDITORIA.md`. Pedido do autor: registrar e verificar depois. **Achados da versão auditada: reproduzir no código atual antes de corrigir ou encerrar.** Ordem: P0 (DT-01 a 04) → P1 (DT-05 e 06) → P2 (DT-07 a 09 e 13) → P3 (DT-10 a 12). DT-14 a 16 são investigações; DT-17 fecha a validação. Severidade não é a prioridade de execução.
 
 - [~] **DT-01 · P0 · High** Teste do rover sem propriedade inexistente ou falso positivo. Correção externa em `hoursLeft` presente; typecheck e 9 testes direcionados passaram em 15/11. **Falta:** proteção de regressão e fechamento.
-- [ ] **DT-02 · P0 · High** Estabilizar a integração temporal, a energia disponível e a contagem de corações. Comparar recursos e resultado sob partições diferentes de tempo.
-- [ ] **DT-03 · P0 · High** Preservar horários fracionários de SEP e impedir alertas baseados em registros futuros.
-- [ ] **DT-04 · P0 · Medium** Filtrar também notificações e eventos futuros no histórico científico, e atualizar a renderização quando ficarem disponíveis.
-- [ ] **DT-05 · P1 · Medium** Impedir crescimento sem água e tratar abastecimento parcial no intervalo.
-- [ ] **DT-06 · P1 · Medium** Reservar ajuda ao gelo só com astronauta disponível, sem dupla ocupação.
+- [~] **DT-02 · P0 · High** Estabilizar a integração temporal, a energia disponível e a contagem de corações. Comparar recursos e resultado sob partições diferentes de tempo. **Parcial:** o cenário E01 do parecer (sem energia e com Sol) está protegido em `tests/engine/parecer-regressao.test.ts`. Falta variar partições e condições além desses cenários.
+- [~] **DT-03 · P0 · High** Preservar horários fracionários de SEP e impedir alertas baseados em registros futuros. **Parcial:** evidência futura de SEP (E02) protegida em `tests/engine/parecer-regressao.test.ts`, em hora fixa e em toda a missão. Falta o horário fracionário de SEP ser preservado no pipeline (`data-pipeline/fetch_donki.py`).
+- [~] **DT-04 · P0 · Medium** Filtrar também notificações e eventos futuros no histórico científico, e atualizar a renderização quando ficarem disponíveis. **Parcial:** painel científico (E03) protegido por teste na hora 417,2. Falta atualizar a renderização quando o registro passa a existir.
+- [~] **DT-05 · P1 · Medium** Impedir crescimento sem água e tratar abastecimento parcial no intervalo. **Coberto no cenário do parecer:** crescimento com água zero (E04) em `tests/engine/parecer-regressao.test.ts`. Falta o abastecimento parcial no intervalo.
+- [~] **DT-06 · P1 · Medium** Reservar ajuda ao gelo só com astronauta disponível, sem dupla ocupação. **Coberto no cenário do parecer:** ajuda do gelo com dois astronautas ocupados (E05) em `tests/engine/parecer-regressao.test.ts`. Falta o caso de astronauta único que sai de tarefa no meio do gelo.
 - [ ] **DT-07 · P2 · Medium** Sincronizar a chegada visual ao abrigo, a proteção e a exposição em 1×, 2× e 4×.
 - [ ] **DT-08 · P2 · Medium** Unificar os fluxos do motor, do HUD e dos painéis, incluindo cuidados e calibração.
 - [ ] **DT-09 · P2 · Medium** Fazer a indicação e as luzes da estufa refletirem a operação automática durante o abrigo.
