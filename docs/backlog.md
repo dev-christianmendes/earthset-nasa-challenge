@@ -39,7 +39,6 @@ Correspondência da numeração antiga (blocos do backlog anterior): bloco 6 e 7
 
 Plano com evidências: `docs/PLANO_AJUSTES_AUDITORIA.md`. Pedido do autor: registrar e verificar depois. **Achados da versão auditada: reproduzir no código atual antes de corrigir ou encerrar.** Ordem: P0 (DT-01 a 04) → P1 (DT-05 e 06) → P2 (DT-07 a 09 e 13) → P3 (DT-10 a 12). DT-14 a 16 são investigações; DT-17 fecha a validação. Severidade não é a prioridade de execução.
 
-- [~] **DT-01 · P0 · High** Teste do rover sem propriedade inexistente ou falso positivo. Correção externa em `hoursLeft` presente; typecheck e 9 testes direcionados passaram em 15/11. **Falta:** proteção de regressão e fechamento.
 - [~] **DT-02 · P0 · High** Estabilizar a integração temporal, a energia disponível e a contagem de corações. Comparar recursos e resultado sob partições diferentes de tempo. **Parcial:** o cenário E01 do parecer (sem energia e com Sol) está protegido em `tests/engine/parecer-regressao.test.ts`. Falta variar partições e condições além desses cenários.
 - [~] **DT-03 · P0 · High** Preservar horários fracionários de SEP e impedir alertas baseados em registros futuros. **Parcial:** evidência futura de SEP (E02) protegida em `tests/engine/parecer-regressao.test.ts`, em hora fixa e em toda a missão. Falta o horário fracionário de SEP ser preservado no pipeline (`data-pipeline/fetch_donki.py`).
 - [~] **DT-04 · P0 · Medium** Filtrar também notificações e eventos futuros no histórico científico, e atualizar a renderização quando ficarem disponíveis. **Parcial:** painel científico (E03) protegido por teste na hora 417,2. Falta atualizar a renderização quando o registro passa a existir.
@@ -56,7 +55,7 @@ Plano com evidências: `docs/PLANO_AJUSTES_AUDITORIA.md`. Pedido do autor: regis
 - [ ] **DT-15 · investigação P3 · hipótese** Medir descarte e propriedade de recursos GPU em sessões longas. Não presumir vazamento contínuo: dez reinícios mantiveram 202 geometrias, 10 texturas e 17 programas (`docs/PERFORMANCE_VALIDATION.md`).
 - [ ] **DT-17 · fechamento · Medium** Executar a matriz completa na mesma revisão, incorporar regressões à automação e atualizar o plano com evidências.
 
-Concluído e fora desta lista: DT-16 (observador LOLA e azimute validados; 433 intervalos de Sol no peak; 3 corações no plano de referência). Ver `docs/PROJECT_STATUS.md`.
+Concluídos e fora desta lista: DT-01 (teste do rover verificado: `npm run typecheck` cobre `tests/` e não há casts que escondam propriedades; mutação temporária no progresso do robô quebrou 22 testes em 8 arquivos, e o código foi restaurado), DT-16 (observador LOLA e azimute validados; 433 intervalos de Sol no peak; 3 corações no plano de referência). Ver `docs/PROJECT_STATUS.md`.
 
 **Regra:** nenhum item encerra por edição de código. Validação: typecheck, testes e build; Python quando houver dados; E2E e capturas desktop e celular quando houver tela. Sem commit, push ou deploy sem pedido.
 

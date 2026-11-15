@@ -853,3 +853,11 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Pendente:** cancelar ordem pelo teclado, barra inferior e câmera, botões da tela final, telas secundárias.
 - **Git:** sem commit.
 
+## 15/11/2026 · DT-01, teste do rover
+
+- **Verificação estática:** `tsconfig.json` inclui `tests/`, e `npm run typecheck` passa. Há só dois casts em `tests/` (`astronomy/sky.test.ts` e `parecer-regressao.test.ts`), ambos justificados. Todos os arquivos de teste têm asserções.
+- **Mutação temporária:** em `src/engine/robot.ts`, o progresso deixou de descontar horas (`const rest = head.hoursLeft`). Resultado: 22 falhas em 8 arquivos (`ajuda-gelo`, `causalidade`, `decisoes`, `modos-capitulos`, `parecer-regressao`, `partida`, `robot`, `rover-seguro`). O arquivo foi restaurado; `git status` limpo.
+- **Após restauração:** typecheck (0) e `npx vitest run` (25 arquivos, 233 testes).
+- **Backlog:** DT-01 concluído e retirado da lista.
+- **Git:** sem commit.
+
