@@ -48,9 +48,7 @@ Plano com evidências: `docs/PLANO_AJUSTES_AUDITORIA.md`. Pedido do autor: regis
 - [ ] **DT-08 · P2 · Medium** Unificar os fluxos do motor, do HUD e dos painéis, incluindo cuidados e calibração.
 - [ ] **DT-09 · P2 · Medium** Fazer a indicação e as luzes da estufa refletirem a operação automática durante o abrigo.
 - [ ] **DT-10 · P3 · Low** Remover o salto do rover entre a entrega e a próxima missão, incluindo câmera e cancelamento.
-- [ ] **DT-11 · P3 · Low** Preservar o painel solar montado durante retorno e entrega, sem antecipar geração.
 - [~] **DT-12 · P3 · Low** Cobrir o cruzamento de exposição em 12/24 h. O ajuste para 1× evita o caso, mas não cobre a passagem de ciclo; o E2E atualizado não foi reexecutado.
-- [ ] **DT-13 · P2 · Medium · investigação de latência** Medir confirmação, movimento e trabalho separadamente. Linha de base (Intel Xe/Vulkan): 4,9 ms até o feedback no DOM, 263 ms até o movimento e 5,315 s até a inspeção em 1×. **Aceite:** explicar preparo, deslocamento e abrigo; reproduzir qualquer espera de segundos sem feedback.
 - [ ] **DT-14 · investigação P2 · hipótese** Medir bloqueios de compilação de shaders e de modelos tardios. Confirmar ou descartar antes de otimizar.
 - [ ] **DT-15 · investigação P3 · hipótese** Medir descarte e propriedade de recursos GPU em sessões longas. Não presumir vazamento contínuo: dez reinícios mantiveram 202 geometrias, 10 texturas e 17 programas (`docs/PERFORMANCE_VALIDATION.md`).
 - [ ] **DT-17 · fechamento · Medium** Executar a matriz completa na mesma revisão, incorporar regressões à automação e atualizar o plano com evidências.
@@ -75,7 +73,14 @@ Concluídos e fora desta lista: DT-01 (teste do rover verificado: `npm run typec
 - [?] **D-B** Dependabot: há branch remota `dependabot/npm_and_yarn/vitest-5.1.0`. `npm audit` aponta 3 problemas em vitest 3.2.7 e tinypool, só de desenvolvimento. A troca para vitest 5 é maior. **Sugestão:** revisar depois do evento.
 - [?] **D-C** O README aponta para `docs/ESTADO_PROJETO_2026-11-15.pdf` como "status atual". Manter, ou apontar para `docs/PROJECT_STATUS.md`? O PDF não foi revisado nesta higienização.
 - [?] **D-D** Caminhos da tabela P0 de `docs/PLANO_V4.md` (`src/ui/menu.ts` e `src/ui/intro.ts`) não existem. Corrigir a tabela ou mantê-la como registro da proposta.
+- [?] **D-F** Velocidade do rover. Com `TASK_HOURS` (gelo 6, painel 4, antena 8) e as fases de `src/engine/mission.ts`, cada trecho de ~22 m dura ~1,7 s em 1×: o rover anda a 13–20 m/s. Aumentar os tempos muda o equilíbrio (147 entregas de gelo na partida de vitória). Decidir se muda e quanto, como foi feito com os astronautas (D-20).
 - [?] **D-E** `docs/arquitetura.md` ainda traz o desenho planejado (fases F0 a F6, seção 9). Decidir se é reescrito como documento de arquitetura implementada depois do envio.
+
+## 6a. Pendências de interface, câmera e som (auditoria integrada de 15/11, D-21)
+
+- [ ] **UX-01 · Medium** Passos do astronauta e sons de instalação e de conclusão por equipamento (hoje: seleção, ordem, recusa, alarme, conclusão genérica, motor e broca). **Aceite:** sons ligados aos eventos, sem arquivos sem licença.
+- [ ] **UX-02 · Medium** Controle de câmera por teclado (setas para orbitar, +/− para zoom) e indicação de gestos na primeira partida. Hoje: mouse e toque pelo OrbitControls, seleção de objetos por teclado.
+- [ ] **UX-03 · Low** Celular em pé: funciona, mas o painel cobre metade da cena. Avaliar painel recolhível por arraste.
 
 ## 7. Achados de código fora do escopo documental
 

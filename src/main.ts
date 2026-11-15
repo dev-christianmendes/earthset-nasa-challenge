@@ -9,7 +9,7 @@ import type { TaskKind } from './engine/robot';
 import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
 import { createClock, MATCH_HOURS } from './engine/clock';
 import { isSunlit } from './engine/sun';
-import { weatherAt, type SpaceWeatherSample } from './engine/space-weather';
+import { radiationHoursLeft, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
 import { alertAt, type AlertView } from './engine/alert';
 import { crewSheltered } from './engine/crew';
 import { SPACE_EVENTS } from './data/space-weather-events';
@@ -23,11 +23,13 @@ import { antenna, greenhouse, habitat, powerUnit, processor, storage } from './r
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
 import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
 import { warningAhead } from './engine/facilities';
-import { goTo, lookAtSky, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
+import { goTo, isFollowing, lookAtSky, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
 import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updateCinematic } from './render/cinematic';
 import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
 import { initLuma, pushLumaEvents, relabelLuma, resetLuma, updateLuma } from './ui/luma';
 import { currentScreen, loadSettings, popScreen, pushScreen, saveSettings, showScreen, type ScreenId } from './ui/screens';
+import { initAudio, isMuted, play, setLoop, setMuted } from './ui/audio';
+import { mountIcons } from './ui/icons';
 import { mountHorizonPanel } from './ui/horizon-panel';
 import { mountSpacePanel } from './ui/space-panel';
 import { mountSkyPanel, skyLongExposure } from './ui/sky-panel';
@@ -75,7 +77,7 @@ const alertNow = (): AlertView =>
     reach: game.robot.antennaInstalled ? warningAhead(game.antennaTuneLeft) : null,
     sheltered: crewSheltered(game.crew, game.crewOrder),
   });
-const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], alert: alertNow() });
+const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], alert: alertNow(), radiationLeft: radiationHoursLeft(WEATHER, game.clock.hour) });
 
 // ---------- Ações ----------
 
@@ -94,12 +96,14 @@ function act(action: GameAction): string | null {
   // Validação imediata: a mensagem de recusa aparece na hora, como antes.
   const check = dispatch(game, action);
   if (!check.ok) {
+    play('error');
     const failure = reasonText(check.reason);
     ui.message.textContent = failure;
     renderNow(performance.now());
     return failure;
   }
   ui.message.textContent = '';
+  play('confirm');
   if (isRunning()) {
     // Com o tempo correndo, a ação vale na próxima fronteira de 0,25 h; o resultado não depende do quadro.
     const at = (Math.floor(grantedHours() / ACTION_HOURS + 1e-9) + 1) * ACTION_HOURS;
@@ -131,6 +135,19 @@ function advanceGame(hours: number): void {
   if (rest > 1e-9) game = advance(game, rest, sunlit, weatherAtHour);
 }
 
+/**
+ * Texto do aviso de ordem recebida: se a ordem vai esperar (radiação, ordem de abrigo, bateria vazia), diz por quê
+ * e quanto tempo. Antes, a ordem confirmada ficava parada sem explicação no começo da partida (radiação das horas 0 a 24).
+ */
+function orderToast(crew: boolean): string {
+  const radiation = weatherNow().radiation && game.crewOrder !== 'outside';
+  let why: string | null = null;
+  if (radiation) why = t('wait.why.radiation', { s: Math.max(1, Math.round(radiationHoursLeft(WEATHER, game.clock.hour) / SPEEDS[speedIndex])) });
+  else if (crew && game.crewOrder === 'shelter') why = t('wait.why.shelter');
+  else if (!crew && game.vitals.battery <= 0) why = t('wait.why.battery');
+  return why ? t('toast.order.wait', { why }) : t('toast.order');
+}
+
 // ---------- Seleção na cena e painel contextual (D-18) ----------
 
 const FOCUS_SHOT: Record<SelectableId, Shot> = {
@@ -146,6 +163,7 @@ const FOCUS_SHOT: Record<SelectableId, Shot> = {
 };
 
 function selectObject(id: SelectableId | null): void {
+  if (id) play('select');
   if (id) setTool(null);
   showContext(id);
   setHighlight(id);
@@ -161,13 +179,14 @@ mountContext(document.getElementById('ctx') as HTMLElement, {
     }
     // Ordem recebida: confirmação imediata e um enquadramento curto (o jogador mantém o controle da câmera).
     if (action.type === 'ASSIGN_AGENT_TASK') {
-      showToast(t('toast.order'), t(`task.${action.kind}`));
-      goTo(action.kind === 'calibrate' ? 'energy' : action.kind === 'tune' ? 'antenna' : 'greenhouse', performance.now(), 0.9);
+      showToast(orderToast(true), t(`task.${action.kind}`));
+      // Quem escolheu acompanhar alguém continua acompanhando; senão, um enquadramento curto do local.
+      if (!isFollowing()) goTo(action.kind === 'calibrate' ? 'energy' : action.kind === 'tune' ? 'antenna' : 'greenhouse', performance.now(), 0.9);
     }
     if (action.type === 'ENQUEUE_TASK') {
-      showToast(t('toast.order'), t(`mission.${action.kind}`));
+      showToast(orderToast(false), t(`mission.${action.kind}`));
       // Primeira missão da fila: a câmera acompanha o rover saindo da garagem (o jogador pode arrastar para soltar).
-      if (game.robot.queue.length === 1) goTo('rover', performance.now(), 0.9);
+      if (game.robot.queue.length === 1 && !isFollowing()) goTo('rover', performance.now(), 0.9);
     }
   },
   openTool(tool) {
@@ -283,6 +302,7 @@ function renderNow(now: number): void {
 onLanguage(() => {
   renderer.domElement.setAttribute('aria-label', t('a11y.scene'));
   relabelLuma();
+  renderSoundBtn();
   showContext(selectedObject());
   renderChapters(document.getElementById('story-chapters') as HTMLElement, null);
   speedBtn.title = t('hud.speed');
@@ -431,6 +451,26 @@ function setPaused(on: boolean): void {
   else showScreen(null);
 }
 document.getElementById('pause-btn')?.addEventListener('click', () => setPaused(true));
+// Som (sinais estilizados de rádio e traje; ver src/ui/audio.ts). O estado fica salvo no navegador.
+initAudio();
+function renderSoundBtn(): void {
+  const soundBtn = document.getElementById('sound-btn');
+  if (!soundBtn) return;
+  soundBtn.innerHTML = '';
+  const icon = document.createElement('span');
+  icon.dataset.icon = isMuted() ? 'soundOff' : 'sound';
+  soundBtn.append(icon);
+  mountIcons(soundBtn);
+  soundBtn.setAttribute('aria-pressed', String(!isMuted()));
+  soundBtn.setAttribute('aria-label', t(isMuted() ? 'sound.on' : 'sound.off'));
+  soundBtn.title = `${t(isMuted() ? 'sound.on' : 'sound.off')}. ${t('sound.note')}`;
+}
+document.getElementById('sound-btn')?.addEventListener('click', () => {
+  setMuted(!isMuted());
+  renderSoundBtn();
+  if (!isMuted()) play('select');
+});
+renderSoundBtn();
 document.getElementById('resume')?.addEventListener('click', () => setPaused(false));
 document.getElementById('to-menu')?.addEventListener('click', backToMenu);
 document.getElementById('end-menu')?.addEventListener('click', backToMenu);
@@ -483,6 +523,8 @@ function frame(now: number): void {
     radiationBefore = radiationNow;
     if (events.length) {
       pushLumaEvents(events, game.clock.hour, now);
+      if (events.some((e) => e.id === 'radiation-start' || e.id === 'heart')) play('alert');
+      else if (events.some((e) => e.id.startsWith('done-') || e.id.startsWith('agent-'))) play('complete');
       const chapter = events.find((e) => e.id.startsWith('chapter-'));
       if (chapter) showToast(t('toast.chapter', { n: chapter.vars.n }), t(`chapter.${chapter.vars.n}`));
       if (currentTool() === 'missions') renderNow(now);
@@ -492,7 +534,10 @@ function frame(now: number): void {
   last = now;
   // A cena anda no relógio visual (parado na pausa); no menu e na introdução, no relógio real.
   const sceneTime = started ? visualTime : now;
-  updateScene(game, sceneTime, sunlit(game.clock.hour), weatherForView(), started ? active : true, skyLongExposure());
+  const roverView = updateScene(game, sceneTime, sunlit(game.clock.hour), weatherForView(), started ? active : true, skyLongExposure());
+  // Sons contínuos estilizados: motor do rover em deslocamento e broca na escavação (só com o jogo correndo).
+  setLoop('rover', active && roverView.moving);
+  setLoop('drill', active && roverView.working && roverView.kind === 'ice' && roverView.phase === 'operate');
   updateHighlight(now / 1000);
   if (cinematicRunning()) updateCinematic(now);
   else updateDirector(now);
@@ -595,6 +640,8 @@ function maybeAutostart(): void {
     /** Envia uma ação ao motor como o painel faria (verificação da tripulação e do rover). */
     act: (action: GameAction) => act(action),
     hour: () => game.clock.hour,
+    state: () => game,
+    radiation: () => weatherNow().radiation,
     screenOf(id: SelectableId): [number, number] | null {
       const fixed: Partial<Record<SelectableId, THREE.Object3D>> = { rover: robot, greenhouse, habitat, antenna, processor, storage, panels: powerUnit };
       const object = fixed[id] ?? crewObject(id === 'crew0' ? 0 : 1);

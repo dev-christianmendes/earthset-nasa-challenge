@@ -4,6 +4,86 @@
 import * as THREE from 'three';
 import { camera, controls, crewObject, robot } from './scene';
 import { FOCUS } from './base-layout';
+import { OBSTACLES } from './crew-nav';
+import { surfaceHeight } from './terrain-height';
+
+// ---------- Obstrução e chão ----------
+// A câmera que segue não pode entrar nas estruturas nem no relevo. Volumes = pegadas da navegação (crew-nav.ts)
+// com a altura de cada estrutura medida nos modelos v4. Peças baixas ou finas (painéis, plataforma, torres, garagem) ficam de fora.
+const OCCLUDER_HEIGHT: Record<string, number> = { habitat: 5.4, airlock: 3.6, greenhouse: 2.6, antenna: 3.4, power: 2.1, processor: 2.2, tanks: 2.8, storage: 1.6 };
+const occluders: THREE.Box3[] = OBSTACLES.filter((o) => OCCLUDER_HEIGHT[o.name] !== undefined).map((o) => {
+  const [minX, maxX, minZ, maxZ] = o.kind === 'rect' ? [o.minX, o.maxX, o.minZ, o.maxZ] : [o.x - o.r, o.x + o.r, o.z - o.r, o.z + o.r];
+  const ground = surfaceHeight((minX + maxX) / 2, (minZ + maxZ) / 2);
+  return new THREE.Box3(new THREE.Vector3(minX, ground - 2, minZ), new THREE.Vector3(maxX, ground + OCCLUDER_HEIGHT[o.name], maxZ));
+});
+const ray = new THREE.Ray();
+const hit = new THREE.Vector3();
+const offset = new THREE.Vector3();
+/** Distância escolhida pelo jogador (zoom); a obstrução só aproxima a câmera temporariamente. */
+let preferredDistance = -1;
+/** Distância aplicada (suavizada), para não pular quando um obstáculo entra ou sai da frente. */
+let appliedDistance = -1;
+const CAMERA_MARGIN = 0.5;
+const MIN_FOLLOW_DISTANCE = 2.2;
+
+/** Menor distância livre entre o alvo e a câmera ao longo da direção atual (Infinity se nada tapa). */
+function freeDistance(target: THREE.Vector3, dir: THREE.Vector3, max: number): number {
+  ray.set(target, dir);
+  let best = Infinity;
+  for (const box of occluders) {
+    if (box.containsPoint(target)) continue;
+    if (ray.intersectBox(box, hit)) {
+      const d = hit.distanceTo(target);
+      if (d < max && d < best) best = d;
+    }
+  }
+  return best;
+}
+
+const UP = new THREE.Vector3(0, 1, 0);
+const axis = new THREE.Vector3();
+const tryDir = new THREE.Vector3();
+/** Elevação extra (rad) aplicada para olhar por cima de uma estrutura rente ao alvo; suavizada. */
+let liftAngle = 0;
+const MAX_LIFT = 1.15;
+
+/** Afasta a câmera de obstruções e do chão. Só quando segue um alvo (astronauta ou rover). */
+function avoidOcclusion(dt: number): void {
+  offset.copy(camera.position).sub(controls.target);
+  const current = offset.length();
+  if (current < 1e-3) return;
+  if (preferredDistance < 0) preferredDistance = current;
+  if (appliedDistance < 0) appliedDistance = current;
+  offset.divideScalar(current);
+  // A direção do jogador é a atual sem a elevação extra que nós mesmos aplicamos no quadro anterior.
+  axis.crossVectors(offset, UP);
+  if (axis.lengthSq() > 1e-8) offset.applyAxisAngle(axis.normalize(), -liftAngle);
+  // Procura a menor elevação extra em que a câmera cabe inteira; se a direção do jogador cabe, nenhuma.
+  let wantLift = MAX_LIFT;
+  let wantDist = MIN_FOLLOW_DISTANCE;
+  for (let a = 0; a <= MAX_LIFT + 1e-6; a += 0.115) {
+    tryDir.copy(offset);
+    if (a > 0 && axis.lengthSq() > 1e-8) tryDir.applyAxisAngle(axis, a);
+    const free = freeDistance(controls.target, tryDir, preferredDistance);
+    if (free - CAMERA_MARGIN >= Math.min(preferredDistance, MIN_FOLLOW_DISTANCE + 1)) {
+      wantLift = a;
+      wantDist = Math.min(preferredDistance, free - CAMERA_MARGIN);
+      break;
+    }
+  }
+  // Entra rápido (nunca mostra o interior de uma parede) e sai devagar.
+  const kIn = Math.min(1, dt / 0.08);
+  const kOut = Math.min(1, dt / 0.7);
+  liftAngle += (wantLift - liftAngle) * (wantLift > liftAngle ? kIn : kOut);
+  appliedDistance += (wantDist - appliedDistance) * (wantDist < appliedDistance ? kIn : kOut);
+  if (axis.lengthSq() > 1e-8) offset.applyAxisAngle(axis, liftAngle);
+  // Mesmo suavizada, a distância nunca passa do espaço livre na direção aplicada.
+  const freeNow = freeDistance(controls.target, offset, appliedDistance + CAMERA_MARGIN);
+  const dist = Math.max(0.8, Math.min(appliedDistance, freeNow - CAMERA_MARGIN));
+  camera.position.copy(controls.target).addScaledVector(offset, dist);
+  const floor = surfaceHeight(camera.position.x, camera.position.z) + 0.6;
+  if (camera.position.y < floor) camera.position.y = floor;
+}
 
 export type Shot = 'overview' | 'crew' | 'crew1' | 'rover' | 'ice' | 'energy' | 'antenna' | 'greenhouse' | 'habitat' | 'logistics' | 'showcase';
 
@@ -78,6 +158,9 @@ export function goTo(name: Shot, nowMs: number, seconds = 1.4): void {
   controls.maxPolarAngle = THREE.MathUtils.degToRad(84);
   const s = shotFor(name);
   follow = s.follow;
+  preferredDistance = s.pos.distanceTo(s.target);
+  appliedDistance = -1;
+  liftAngle = 0;
   if (follow) lastFollow.copy(follow.position);
   controls.autoRotate = name === 'showcase' && !reduced;
   controls.autoRotateSpeed = 0.35;
@@ -96,9 +179,19 @@ controls.addEventListener('start', () => {
   tween = null;
   controls.autoRotate = false;
 });
+/** Fim de um gesto do jogador (arrastar, roda, pinça): a distância escolhida passa a ser a preferida. */
+controls.addEventListener('end', () => {
+  preferredDistance = Math.max(preferredDistance, camera.position.distanceTo(controls.target));
+  if (liftAngle < 0.05) preferredDistance = camera.position.distanceTo(controls.target);
+  appliedDistance = camera.position.distanceTo(controls.target);
+});
+
+let lastDirectorMs = 0;
 
 export function updateDirector(nowMs: number): void {
   if (!enabled) return;
+  const dt = lastDirectorMs ? Math.min(0.1, Math.max(0, (nowMs - lastDirectorMs) / 1000)) : 0;
+  lastDirectorMs = nowMs;
   if (tween) {
     const k = Math.min(1, (nowMs - tween.start) / tween.dur);
     const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -119,6 +212,12 @@ export function updateDirector(nowMs: number): void {
     }
   }
   controls.update();
+  if (follow && !tween) avoidOcclusion(dt);
+}
+
+/** Está acompanhando o astronauta ou o rover (o jogador escolheu seguir: ordens não trocam a câmera). */
+export function isFollowing(): boolean {
+  return follow !== null;
 }
 
 /** Para de seguir (por exemplo, ao abrir a visão geral). */

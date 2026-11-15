@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createGame, advance } from '../../src/engine/game';
 import type { Installation } from '../../src/engine/resources';
 import { dispatch } from '../../src/engine/game';
-import { CALM, weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
+import { CALM, radiationHoursLeft, weatherAt, type SpaceWeatherTable } from '../../src/engine/space-weather';
 
 const INSTALLATION: Installation = {
   rank: 'explorador',
@@ -45,5 +45,27 @@ describe('clima espacial (C2 e C3)', () => {
     expect(afterRadiation.robot.queue[0].hoursLeft).toBe(hours0);
     const afterCalm = advance(game, 2, true, CALM);
     expect(afterCalm.robot.queue[0].hoursLeft).toBeLessThan(hours0);
+  });
+});
+
+describe('radiationHoursLeft', () => {
+  const table: SpaceWeatherTable = {
+    start_utc: '2024-10-09T00:00:00Z',
+    step_hours: 1,
+    hours: 6,
+    samples: [true, true, true, false, true, true].map((radiation) => ({ kp: 0, radiation })),
+  };
+
+  it('sem radiação, nada a esperar', () => {
+    expect(radiationHoursLeft(table, 3.5)).toBe(0);
+  });
+
+  it('conta as horas até a radiação passar, a partir do meio de uma hora', () => {
+    expect(radiationHoursLeft(table, 0)).toBe(3);
+    expect(radiationHoursLeft(table, 1.25)).toBeCloseTo(1.75, 9);
+  });
+
+  it('no fim da tabela, para no último ponto', () => {
+    expect(radiationHoursLeft(table, 4.5)).toBeCloseTo(1.5, 9);
   });
 });

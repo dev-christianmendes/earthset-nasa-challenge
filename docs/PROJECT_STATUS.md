@@ -51,6 +51,11 @@ A tabela de desempenho e as capturas de 15/11 estão em `docs/PERFORMANCE_VALIDA
 - Clima espacial e alertas: estados NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO (`src/engine/alert.ts`, `src/engine/space-weather.ts`, `src/engine/space-events.ts`).
 - LUMA: guia por regras, sem IA generativa (`src/engine/guide.ts`); objetivos (`src/engine/objectives.ts`).
 - Interação: seleção por toque e teclado, painel contextual com ações validadas pelo motor (`src/render/picking.ts`, `src/ui/context-panel.ts`).
+- Tripulação na cena (D-20): navegação contornando as estruturas, locomoção com inércia e passo lunar, animação por clipes do GLB (`src/render/crew-nav.ts`, `src/render/crew-gait.ts`, `src/render/crew-rig.ts`).
+- Câmera (D-21): planos de visão geral, astronauta, rover e equipamentos; acompanhamento que desvia de estruturas e do chão (`src/render/director.ts`). Com acompanhamento ligado, as ordens não trocam a câmera.
+- Ordem em espera (D-21): o aviso de ordem e o painel dizem por que a tarefa espera (radiação, ordem de abrigo, bateria) e quanto falta (`radiationHoursLeft` em `src/engine/space-weather.ts`).
+- Som (D-21): sinais estilizados sintetizados no navegador, sem arquivos de áudio, com botão de silenciar salvo no navegador (`src/ui/audio.ts`).
+- Celular deitado: barra de sistemas em coluna e painéis com altura total (`src/ui/styles.css`, consulta `orientation: landscape` e `max-height: 520px`).
 - Idiomas: inglês por padrão e português do Brasil (`src/i18n.ts`). Modo escola (`src/school.ts`).
 - **Vitória:** alcançável jogando. Com o plano de referência (gelo, painéis e antena) pela interface, a partida chega a 708 h com 3 de 3 vidas e mostra a tela "Mission accomplished". Derrota: "A base foi perdida" (`src/main.ts`, `outcomeOf` em `src/engine/game.ts`).
 
@@ -109,6 +114,7 @@ O plano de referência nos testes (`tests/engine/partida.test.ts`), com o Sol e 
 - **Desempenho móvel:** não medido em aparelho físico. Emulação com CPU limitada mostrou carga fria de até 1870 ms de long task e quadro de 2816,6 ms (`docs/PERFORMANCE_VALIDATION.md`). Ainda aberto (AST-PERF-01 e 02).
 - **Auditoria de 15/11:** os achados foram registrados a partir de uma versão auditada. Reproduzir no código atual antes de corrigir ou encerrar (`docs/PLANO_AJUSTES_AUDITORIA.md`). Houve edições externas e HMR durante a auditoria, e nem tudo foi reverificado.
 - **Dependências:** `npm audit` aponta 3 problemas em `vitest` 3.2.7 e `tinypool`, só de desenvolvimento, fora do build. A correção indicada é vitest 5, uma mudança maior. Não reverificado nesta data.
+- **Velocidade do rover:** a missão de gelo (6 h) dá ~1,7 s de jogo em 1× para cada trecho de ~22 m; o rover anda a 13–20 m/s. Mudar exige decisão do autor (backlog, D-F).
 - **Ilustrativo marcado:** horizonte, relevo e algumas partes da luz da cena são medidos; o que é regra de jogo ou arte está marcado no código e na tela, conforme `docs/data-sources.md`, seção 5.
 
 

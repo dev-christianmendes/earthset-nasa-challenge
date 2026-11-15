@@ -253,10 +253,27 @@ function cable(points: Array<[number, number]>): void {
   tube.receiveShadow = true;
   base.add(tube);
 }
-cable([[-5.5, -4], [-7.5, -4], [-9, -2], [-9, 6]]);
-cable([[-7.5, -4], [-12.5, -4], [-12.5, 6]]);
-cable([[-9, -4], [-16, -4], [-16, 6]]);
 cable([[-5.5, -4], [-2, -3], [-1.6, -1]]);
+
+// Cabos do campo solar: só existem para painéis montados. Tronco da unidade de energia até cada coluna
+// e um ramal por painel, ao longo da coluna (leve deslocamento por linha, como um feixe de cabos).
+function cableMesh(points: Array<[number, number]>): THREE.Mesh {
+  const pts = points.map(([x, z]) => new THREE.Vector3(x, surfaceHeight(x, z) + 0.06, z));
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(8, pts.length * 10), 0.05, 5, false), cableMat);
+  tube.receiveShadow = true;
+  tube.visible = false;
+  base.add(tube);
+  return tube;
+}
+const FIELD_TRUNK_Z = POWER_UNIT.z;
+const fieldColumns = [...new Set(PANEL_SLOTS.map((s) => s.x))];
+/** Tronco até cada coluna (índice = coluna). */
+const columnTrunks = fieldColumns.map((x) => cableMesh([[POWER_UNIT.x, FIELD_TRUNK_Z], [(POWER_UNIT.x + x) / 2, FIELD_TRUNK_Z], [x, FIELD_TRUNK_Z]]));
+/** Ramal de cada vaga: do tronco ao painel. */
+const slotCables = PANEL_SLOTS.map((slot, i) => {
+  const dx = 0.12 * (Math.floor(i / fieldColumns.length) - 1.5);
+  return cableMesh([[slot.x + dx, FIELD_TRUNK_Z], [slot.x + dx, (FIELD_TRUNK_Z + slot.z) / 2], [slot.x + dx, slot.z]]);
+});
 cable([[10, 4.5], [12.5, 3.5], [14, 3]]);
 cable([[1.7, 4], [2.5, 7], [-1, 9]]);
 
@@ -301,7 +318,6 @@ const handles = {
   lamp: [] as THREE.MeshStandardMaterial[],
   padLight: [] as THREE.MeshStandardMaterial[],
   engineGlow: [] as THREE.MeshStandardMaterial[],
-  panelCells: [] as THREE.MeshStandardMaterial[][],
   yoke: null as THREE.Object3D | null,
   dish: null as THREE.Object3D | null,
   antennaLight: new THREE.MeshStandardMaterial({ color: 0xe47767, emissive: 0xe47767, emissiveIntensity: 2 }),
@@ -408,7 +424,7 @@ export function loadBaseLayoutModels(): Promise<unknown> {
       attachFirst(unit, ['v4/solar_array_v4', 'solar_panel']).then((m) => {
         if (!m) return;
         const own = ownMaterial(m, 'panel_cell');
-        handles.panelCells.push(own ? [own] : []);
+        unit.userData.cells = own ? [own] : [];
       }),
     ),
   ];
@@ -420,8 +436,11 @@ export function loadBaseLayoutModels(): Promise<unknown> {
 export interface BaseView {
   readonly t: number;
   readonly panels: number;
-  /** Painel em montagem (vaga) e progresso 0..1, durante a fase de operação da missão de painel. */
-  readonly building: { readonly slot: number; readonly k: number } | null;
+  /**
+   * Painel da missão em andamento: `k` = montagem (0..1) na operação; depois fica montado e desligado
+   * (`connected: false`) na volta e na entrega, até o motor concluir a tarefa e contar o painel.
+   */
+  readonly building: { readonly slot: number; readonly k: number; readonly connected: boolean } | null;
   readonly batteryPct: number;
   readonly anyCritical: boolean;
   readonly greenhouseOn: boolean;
@@ -473,8 +492,12 @@ export function updateBase(v: BaseView): void {
       unit.visible = false;
       unit.userData.installed = false;
     }
+    // Células acesas só em painel ligado (contado pelo motor); o painel recém-montado fica apagado até a conclusão.
+    for (const m of (unit.userData.cells as THREE.MeshStandardMaterial[] | undefined) ?? []) m.emissiveIntensity = installed ? v.panelGlow : 0;
+    // Ramal aparece quando o painel está montado e sendo ligado, e fica enquanto ele existir.
+    slotCables[i].visible = installed || (!!v.building && v.building.slot === i && v.building.k >= 1);
   });
-  for (const cells of handles.panelCells) for (const m of cells) m.emissiveIntensity = v.panelGlow;
+  columnTrunks.forEach((trunk, c) => (trunk.visible = PANEL_SLOTS.some((slot, i) => slot.x === fieldColumns[c] && slotCables[i].visible)));
   // Caixas de painéis guardados: uma a menos a cada painel instalado ou em montagem.
   const stored = MAX_PANELS - v.panels - (v.building ? 1 : 0);
   storedCrates.forEach((c, i) => (c.visible = i < stored));

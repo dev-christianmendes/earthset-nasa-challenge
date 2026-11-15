@@ -18,7 +18,7 @@ import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
 import { attachModel, loadGltf, loadModel } from './assets';
 import { VERTICAL_EXAGGERATION, surfaceHeight } from './terrain-height';
-import { ANTENNA_WORK, AIRLOCK, DOCK, ICE_PROCESSOR, ICE_ROUTE, PANEL_SLOTS, type Spot } from './layout';
+import { ANTENNA_WORK, AIRLOCK, DOCK, ICE_PROCESSOR, ICE_ROUTE, ICE_SITE, PANEL_SLOTS, type Spot } from './layout';
 import { base, loadBaseLayoutModels, updateBase } from './base-layout';
 import { updateCrop } from './crop';
 import { astronomicalSky, updateSky } from './sky';
@@ -233,13 +233,61 @@ const rover = {
 };
 scene.add(robot);
 // Carga visível: caixa de gelo (azul) ou painel (placa) sobre o rover durante a volta ou a ida.
-const cargoIce = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.9), new THREE.MeshStandardMaterial({ color: 0x9fd8ff, emissive: 0x2f5f8f, emissiveIntensity: 0.6, roughness: 0.3 }));
+// Carga da missão de gelo: regolito com gelo (escuro, ~5,6% de água em massa em Cabeus, LCROSS), não um bloco de gelo.
+// Um monte que cresce na escavação e some na descarga. Ver docs/data-sources.md (extração de água).
+const regolithMat = new THREE.MeshStandardMaterial({ color: 0x5d5a55, roughness: 1 });
+const cargoIce = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), regolithMat);
+cargoIce.scale.set(0.95, 0.55, 0.95);
+/** Grãos de gelo à vista no monte (brilho frio discreto). */
+const cargoFrost = new THREE.Mesh(new THREE.SphereGeometry(0.51, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xcfe6f5, roughness: 0.6, transparent: true, opacity: 0.18, depthWrite: false }));
+cargoIce.add(cargoFrost);
 const cargoPanel = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 1.0), new THREE.MeshStandardMaterial({ color: 0x3f6fb0, metalness: 0.5, roughness: 0.3 }));
 for (const c of [cargoIce, cargoPanel]) {
   c.position.set(-0.3, 1.55, 0);
   c.castShadow = true;
   c.visible = false;
   robot.add(c);
+}
+
+// ---------- Local do gelo e processamento ----------
+// Sequência apoiada em pesquisa (docs/data-sources.md): broca rotativa tipo TRIDENT/PRIME-1 traz o regolito com gelo,
+// o rover leva ao processador, que aquece o material (conceito RESOLVE: ~150 °C) e recaptura o vapor numa armadilha fria.
+// O aquecimento e a armadilha fria são conceitos testados em laboratório, ainda não operados na Lua: a tela diz isso.
+
+/** Pilha de material escavado ao lado do furo: cresce na escavação e permanece no local (consequência visível). */
+const spoilPile = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x4f4c48, roughness: 1 }));
+spoilPile.receiveShadow = true;
+spoilPile.visible = false;
+scene.add(spoilPile);
+/** Brilho de aquecimento dentro do processador durante a descarga. */
+const heaterLight = new THREE.PointLight(0xff8a3d, 0, 5, 2);
+heaterLight.position.set(ICE_PROCESSOR.x, surfaceHeight(ICE_PROCESSOR.x, ICE_PROCESSOR.z) + 1.2, ICE_PROCESSOR.z);
+scene.add(heaterLight);
+let spoilVolume = 0;
+let lastDigK = 0;
+
+function updateIceSite(drilling: boolean, digK: number, deliverK: number, t: number): void {
+  // A pilha cresce com o que foi escavado (cada viagem soma) e não diminui na partida.
+  if (drilling && digK > lastDigK) spoilVolume = Math.min(6, spoilVolume + (digK - lastDigK));
+  lastDigK = drilling ? digK : 0;
+  if (spoilVolume > 0.01) {
+    const r = 0.45 + 0.35 * Math.cbrt(spoilVolume);
+    const px = ICE_SITE.x + 2.1;
+    const pz = ICE_SITE.z + 1.4;
+    spoilPile.visible = true;
+    spoilPile.position.set(px, surfaceHeight(px, pz) - 0.05, pz);
+    spoilPile.scale.set(r, 0.45 * r, r);
+  }
+  // Processador: aquece na primeira metade da descarga (material entrando), esfria na segunda.
+  heaterLight.intensity = deliverK < 0 ? 0 : (deliverK < 0.85 ? 6 : 6 * (1 - (deliverK - 0.85) / 0.15)) * (0.85 + 0.15 * Math.sin(t * 9));
+}
+
+/** Nova partida: o local do gelo volta intocado. */
+function resetIceSite(): void {
+  spoilVolume = 0;
+  lastDigK = 0;
+  spoilPile.visible = false;
+  heaterLight.intensity = 0;
 }
 
 // ---------- Poeira (balística, sem ar: arcos parabólicos e queda limpa, sem nuvem) ----------
@@ -697,8 +745,12 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     emitDust(robot.position.x + front.x, robot.position.y + 0.1, robot.position.z + front.z, 4, 1.1, 1.8);
   }
   updateDust(dt);
-  // Carga: gelo na volta e na entrega; painel na ida.
-  cargoIce.visible = view.working && view.kind === 'ice' && (view.phase === 'return' || (view.phase === 'deliver' && view.k < 0.5));
+  // Carga de regolito: enche durante a escavação, vai cheia na volta, esvazia na descarga do processador.
+  const iceTask = view.working && view.kind === 'ice';
+  const load = !iceTask ? 0 : view.phase === 'operate' ? view.k : view.phase === 'return' ? 1 : view.phase === 'deliver' ? Math.max(0, 1 - view.k * 2) : 0;
+  cargoIce.visible = load > 0.02;
+  cargoIce.scale.set(0.95, 0.55 * Math.max(0.05, load), 0.95);
+  updateIceSite(drilling, view.phase === 'operate' ? view.k : 0, iceTask && view.phase === 'deliver' ? view.k : -1, t);
   cargoPanel.visible = view.working && view.kind === 'panel' && (view.phase === 'prep' || view.phase === 'travel');
   robotBodyMat.emissiveIntensity = view.working ? 0.6 : 0.15;
   if (rover.bodyMat) rover.bodyMat.emissiveIntensity = view.working ? 0.35 : 0.05;
@@ -714,7 +766,11 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   updateBase({
     t,
     panels: state.installation.panels,
-    building: view.working && view.kind === 'panel' && view.phase === 'operate' ? { slot: state.installation.panels, k: view.k } : null,
+    // Montagem na operação; montado e desligado na volta e na entrega (DT-11); ligado só quando o motor conclui.
+    building:
+      view.working && view.kind === 'panel' && (view.phase === 'operate' || view.phase === 'return' || view.phase === 'deliver')
+        ? { slot: state.installation.panels, k: view.phase === 'operate' ? view.k : 1, connected: false }
+        : null,
     batteryPct,
     anyCritical: batteryPct < 20 || state.vitals.air < 30 || state.vitals.water < 20 || state.vitals.food < 20,
     greenhouseOn: state.crewOrder === 'auto' && isGreenhouseOn(state.vitals, state.installation),
@@ -736,6 +792,7 @@ export function resetScenePresentation(): void {
   setRover(DOCK.x, DOCK.z, Math.PI / 2);
   lastClockHour = -1;
   simRate = simRateRaw = 1;
+  resetIceSite();
   for (const m of crew) {
     Object.assign(m.walker, createWalker(m.home.x, m.home.z, Math.PI / 2));
     m.destKey = '';

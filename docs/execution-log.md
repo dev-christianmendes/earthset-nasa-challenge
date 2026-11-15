@@ -913,3 +913,17 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Limitações:** a câmera de acompanhamento (`director.ts`) atravessa a parede do habitat quando o astronauta passa rente a ele; o rover não é obstáculo dinâmico (só a garagem); o relevo é tratado como plano sob os pés (sem IK); abaixo de 10 fps o jogo inteiro (motor e cena, ambos limitados a 0,1 s por quadro) desacelera junto, sem dessincronizar. A independência do FPS da locomoção foi verificada por teste (30, 60 e 144 fps), não em aparelho lento real.
 - **Git:** sem commit.
 
+
+## 15/11/2026 · Auditoria integrada de gameplay, câmera, interface e som (D-21)
+
+- **Ambiente:** Linux, Chromium do Playwright 1.63 com GPU (Vulkan), ~60 fps; servidor Vite na porta 5187. Desktop 1280×800; celular Pixel 7 em 915×412, 412×915 e 667×375, com toque real (`tap`).
+- **Latência (interface real, sonda por quadro, 3 repetições):** astronauta: aviso em 0–5 ms, giro em 15–221 ms, saída em 565–771 ms, trabalho em 7,3–7,6 s (preparo 0,25 h + trecho 6,5 h). Rover (gelo): fase em 182–213 ms, movimento em 485–530 ms. Pior quadro: 17 ms. **Reproduzido:** na hora 1, o rover fica em `prep` por ~21 s porque há radiação histórica nas horas 0–24 (`space-weather.json`); o painel mostrava "6 s em 1×". Corrigido com aviso e painel que dizem a espera (`radiationHoursLeft`, 3 testes). Confirmado que o rover sai sozinho na hora 24.
+- **Câmera:** reproduzido o acompanhamento atravessando o habitat (gravação da calibração). Primeira correção (só aproximar) ainda atravessava rente à parede; a segunda (subir e olhar por cima) passou na gravação. Reproduzido também: a ordem de calibrar trocava a câmera para o campo solar e perdia o astronauta; corrigido.
+- **Painéis (DT-11):** reproduzido o painel sumindo na volta do rover (horas 64→65→69); corrigido e regravado. Cabos fixos para vagas vazias substituídos por cabos por painel montado.
+- **Extração de água:** pesquisa (fontes em `docs/data-sources.md`, seção 4b); carga de regolito, pilha de escavação, aquecimento no processador; gravação nas fases operar, voltar e entregar; água +12 só na conclusão.
+- **Celular:** reproduzida a LUMA cobrindo Base, Rover e Tripulação em 915×412; corrigido. Toque abre os painéis certos e confirma a ordem nos três tamanhos; sem rolagem horizontal; nenhum botão visível abaixo de 40 px.
+- **Som:** não havia áudio. Novo `src/ui/audio.ts` (Web Audio, sem arquivos). Verificado por contagem de osciladores: nada antes do gesto; seleção 1, ordem 2; mudo não cria; preferência sobrevive à recarga. Não verificado: a escuta humana dos sons.
+- **Fluxo integrado (desktop e celular deitado):** astronauta → acompanhar → calibrar (trabalho no campo solar) → rover → painel (2→3) → gelo (água 8,8→19,6) → astronauta volta. Sem erros de página.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run` 254 de 254; `npm run build` passou; `npm audit --omit=dev` 0 vulnerabilidades.
+- **Não feito:** passos e sons por equipamento (UX-01), câmera por teclado (UX-02), painel recolhível no celular em pé (UX-03), velocidade do rover (decisão D-F), medição em aparelho físico.
+- **Git:** sem commit.

@@ -149,3 +149,13 @@ Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'`
 - **Decisão do autor:** aumentar os trechos para caber um passo lunar de ~2 m/s em 1×. Valores pela rota real (`src/render/crew-nav.ts`) a ~1,8 m/s: estufa 6,5 h, antena 7 h, campo solar 11 h por trecho. 2× e 4× continuam como avanço rápido (time-lapse).
 - **Arquitetura:** o motor só diz a fase e a fração da tarefa. A cena separa navegação (grafo de visibilidade em volta das pegadas, curvas arredondadas, porta da câmara), locomoção (aceleração limitada, chegada desacelerada, giro amortecido, inclinação) e animação (um mixer por astronauta; caminhada e corrida com tempo controlado pela fase da passada, pé apoiado sem deslizar; voo balístico na gravidade lunar; poses com transição e pesos que somam 1).
 - **Equilíbrio:** as tarefas ficam mais longas e o tempo exposto à radiação cresce. Os 239 testes de motor, inclusive as partidas completas, continuam passando sem outros ajustes.
+
+## D-21. Auditoria integrada: espera explicada, câmera sem obstrução, instalação persistente, extração fundamentada e som (15/11/2026, noite)
+
+- **Gargalo das tarefas:** medido pela interface real. A confirmação aparece em ≤ 5 ms, o astronauta vira em 15–221 ms e sai em 565–771 ms (fronteira de 0,25 h, DT-02, e preparo de 0,25 h), sem quadros acima de 17 ms. O atraso de segundos reproduzido é o **evento de radiação histórico das horas 0 a 24** (DONKI): uma ordem dada no começo fica parada, e a tela dizia "6 s em 1×" sem contar a espera. **Decisão:** não mudar dado nem regra; o aviso e o painel passam a dizer por que a tarefa espera e quanto falta.
+- **Câmera:** o acompanhamento só transladava a câmera e atravessava o habitat. Agora aproxima, ou sobe e olha por cima, quando uma estrutura tapa o alvo, usando as pegadas da navegação com altura (sem raycast em malhas) e nunca desce abaixo do relevo. Com acompanhamento ligado, uma ordem não troca a câmera para o local.
+- **Painéis:** o painel em montagem sumia na volta do rover (DT-11). Agora fica montado e apagado até o motor contar o painel; os cabos do campo solar existem só para painéis montados (tronco por coluna e um ramal por painel).
+- **Extração de água:** a carga deixou de ser um bloco de gelo azul e virou regolito com gelo; pilha de material escavado fica no local; o processador aquece na descarga. A tela diz que o aquecimento com armadilha fria é ideia testada em laboratório, ainda não usada na Lua. Números do motor sem mudança. Fontes em `docs/data-sources.md`.
+- **Som:** sintetizado com Web Audio, sem arquivos (nada a licenciar). Estilizado e declarado como rádio, traje e estrutura, não som do ambiente lunar.
+- **Celular deitado:** a LUMA cobria Base, Rover e Tripulação; a barra passa a coluna à esquerda.
+

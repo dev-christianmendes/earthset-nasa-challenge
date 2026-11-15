@@ -45,6 +45,8 @@ export interface ContextInfo {
   speed: number;
   /** Horas até a próxima tempestade avisada pela antena (null: sem aviso). */
   alert: AlertView;
+  /** Horas de jogo até a radiação atual passar (0 sem radiação). */
+  radiationLeft: number;
 }
 
 export interface ContextHandlers {
@@ -75,7 +77,7 @@ let radiationNow = false;
 /** Evento de radiação em curso, qualquer que seja a decisão do jogador. */
 let eventNow = false;
 let speedNow = 1;
-let world: ContextInfo = { radiation: false, lit: true, speed: 1, alert: { level: 'normal', episode: null, evidence: null, precursor: null, recoveryLeft: 0, lagRange: null } };
+let world: ContextInfo = { radiation: false, lit: true, speed: 1, alert: { level: 'normal', episode: null, evidence: null, precursor: null, recoveryLeft: 0, lagRange: null }, radiationLeft: 0 };
 
 const TOOL_FOR: Partial<Record<SelectableId, Tool>> = {
   habitat: 'crew',
@@ -210,7 +212,8 @@ function agentProgress(index: number, who: string): HTMLElement {
     const agent = s.agents[index];
     box.hidden = agent.task === null;
     if (!agent.task) return;
-    text.textContent = t('agent.doing', { who, task: `${t(`task.${agent.task.kind}`)} · ${t(`agent.status.${agentStatus(agent, sheltered)}`)}` });
+    const resume = sheltered && radiationNow && world.radiationLeft > 0 ? ` · ${t('agent.wait.radiation', { s: Math.max(1, Math.round(world.radiationLeft / speedNow)) })}` : '';
+    text.textContent = t('agent.doing', { who, task: `${t(`task.${agent.task.kind}`)} · ${t(`agent.status.${agentStatus(agent, sheltered)}`)}${resume}` });
     cancel.hidden = agent.task.phase === 'back' || sheltered;
   });
   return box;
@@ -304,7 +307,11 @@ function crewView(state: GameState, index: number): View {
       const swap = make('button', 'ctx-link', t('ctx.otherCrew', { who: t(`ctx.crew${other}`) }));
       swap.type = 'button';
       swap.addEventListener('click', () => handlers.select(other === 0 ? 'crew0' : 'crew1'));
-      return [status, heading(t('agent.assign')), tasks, agentProgress(index, who), swap];
+      // Acompanhar com a câmera, como no rover (a câmera desvia sozinha de estruturas: director.ts).
+      const follow = make('button', 'ctx-link', t('ctx.crew.follow'));
+      follow.type = 'button';
+      follow.addEventListener('click', () => handlers.focus(index === 0 ? 'crew0' : 'crew1'));
+      return [status, heading(t('agent.assign')), tasks, agentProgress(index, who), follow, swap];
     },
   };
 }
@@ -313,6 +320,7 @@ const ROVER_KINDS: readonly TaskKind[] = ['ice', 'panel', 'antenna'];
 const PHASE_INDEX: Record<MissionPhase, number> = { prep: 0, travel: 1, operate: 2, return: 3, deliver: 4 };
 
 function phaseLabel(phase: MissionPhase, kind: TaskKind): string {
+  if (phase === 'return' && kind === 'ice') return t('phase.return.ice');
   return phase === 'operate' || phase === 'deliver' ? t(`phase.${phase}.${kind}`) : t(`phase.${phase}`);
 }
 
@@ -347,7 +355,11 @@ function missionSteps(): HTMLElement {
     const waiting = radiationNow || s.vitals.battery <= 0;
     label.classList.toggle('waiting', waiting);
     label.textContent = waitText(s) ?? (waiting ? t(radiationNow ? 'phase.wait.radiation' : 'phase.wait.battery') : phaseLabel(phase, task.kind));
-    eta.textContent = t('ctx.rover.eta', { h: Math.ceil(task.hoursLeft), s: Math.max(1, Math.round(task.hoursLeft / speedNow)), speed: speedNow });
+    // Esperando: diz quanto falta para começar, não só a duração da tarefa (antes parecia que andaria em segundos).
+    const h = Math.ceil(task.hoursLeft);
+    if (waiting && radiationNow) eta.textContent = t('ctx.wait.radiation', { s: Math.max(1, Math.round(world.radiationLeft / speedNow)), speed: speedNow, h });
+    else if (waiting) eta.textContent = t('ctx.wait.battery', { h });
+    else eta.textContent = t('ctx.rover.eta', { h, s: Math.max(1, Math.round(task.hoursLeft / speedNow)), speed: speedNow });
   });
   return box;
 }

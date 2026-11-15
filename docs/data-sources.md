@@ -63,11 +63,24 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 | **NASA DONKI** (tempestades solares) | Em uso (seção 3; GST e SEP) | Eventos históricos de outubro/novembro de 2024 formam um cenário, não previsão para a missão. O endpoint `api.nasa.gov/DONKI/FLR` respondeu 404 na consulta de teste e não entra na tabela. |
 | **LOLA / PGDA** (relevo) | Em uso (seções 2 e 4) | O raster bruto grande fica fora do git (`.gitignore`); só as tabelas derivadas entram na aplicação. |
 
+## 4b. Extração de água lunar (base da missão de gelo, D-21)
+
+| Fonte | Status | Como entrou no jogo |
+|---|---|---|
+| Colaprete et al. (2010), *Science* 330, 463–468, "Detection of Water in the LCROSS Ejecta Plume" ([PDF](https://www.chem.uci.edu/~unicorn/old/H2A/handouts/PDFs/LCROSSPaper.pdf); [AAAS](https://www.aaas.org/news/science-lcross-impact-ejects-minerals-and-frozen-water-crater-moon)) | **Medido** (impacto em Cabeus, 2009): 5,6 ± 2,9% de gelo em massa no regolito do local | A carga é regolito escuro com gelo, não bloco de gelo; o texto diz "poucos % de água" |
+| Li et al. (2018), *PNAS* 115(36), 8907–8912, "Direct evidence of surface exposed water ice in the lunar polar regions" ([PMC](https://pmc.ncbi.nlm.nih.gov/articles/6130389)) | **Medido** (M3/Chandrayaan-1): gelo exposto em manchas, em regiões sombreadas, mais no polo sul | Local de gelo em terreno baixo e sombreado, marcado como ilustrativo (o gelo não está medido neste recorte) |
+| NASA PRIME-1 / TRIDENT no IM-2 Athena, 2025 ([NASA](https://www.nasa.gov/missions/artemis/clps/nasas-lunar-drill-technology-passes-tests-on-the-moon/); [resultados, NTRS](https://ntrs.nasa.gov/api/citations/20260003150/downloads/MSolo%20PRIME-1%20overview%20and%20results%20-%20LSSW.pdf)) | **Demonstração parcial**: o módulo tombou; a broca ligou, estendeu e girou, mas não perfurou o solo | Broca rotativa que desce e gira na escavação; poeira balística sem nuvem |
+| VIPER ([Planetary Society](https://www.planetary.org/space-missions/viper)) | **Missão planejada**: cancelada em 2024, retomada com entrega prevista para o fim de 2027 | Só referência: nada no jogo é apresentado como resultado do VIPER |
+| RESOLVE e mineração térmica: aquecimento a ~150 °C e armadilha fria ([NTRS 20110012191](https://ntrs.nasa.gov/api/citations/20110012191/downloads/20110012191.pdf); [NASA STRG, UTEP](https://www.nasa.gov/directorates/stmd/space-tech-research-grants/advanced-thermal-mining-approach-for-extraction-transportation-and-condensation-of-lunar-ice/)) | **Laboratório e protótipo**: nenhum sistema operado na Lua | Processador brilha (aquecimento) na descarga; a tela diz "ideia testada em laboratório, ainda não usada na Lua" |
+
+Os +12 de água por viagem e as 6 h da missão continuam regra de jogo (`src/engine/robot.ts`), não derivados dessas fontes.
+
 ## 5. O que é ilustrativo (lista de conferência)
 
 - A implantação da base é uma escolha do jogo sobre o DEM LOLA; o observador é derivado desse ponto. A antiga aproximação regional −89,5°/0° foi substituída em DT-16.
 - Robô, tempos de tarefa, consumo e equilíbrio de bateria (`src/engine/robot.ts`, `src/main.ts`): regras de jogo, documentadas em `docs/regras-recursos.md`.
 - Recursos (energia, ar, água, comida): regras de jogo, sem fonte científica própria.
+- Sons (`src/ui/audio.ts`): estilizados. No vácuo o som não se propaga pelo ambiente; os sinais representam rádio, traje e vibração da estrutura.
 - Locomoção da tripulação (`src/render/crew-gait.ts`): a gravidade lunar de **1,62 m/s²** vem da [NASA Moon Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html) (gravidade de superfície 1,62 m/s²). O resto é ilustrativo: passo saltado de ~2 m/s, troca andar→saltar pelo número de Froude (~0,5, pernas de 0,9 m, ≈ 0,85 m/s na Lua), voo de 0,26 a 0,51 s com subida de alguns centímetros (g·t²/8), aceleração de 1,5 m/s². Pegadas das estruturas (`src/render/crew-nav.ts`) medidas nos modelos da cena, não em planta real.
 
 ## 3. Clima espacial (C2, NASA DONKI)

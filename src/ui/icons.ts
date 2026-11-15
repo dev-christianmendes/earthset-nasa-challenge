@@ -25,6 +25,8 @@ const P: Record<string, string> = {
   compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
   rocket: '<path d="M12 2c3 2.5 4.5 6 4.5 10v4h-9v-4C7.5 8 9 4.5 12 2zM7.5 13 4 16v3h3.5M16.5 13 20 16v3h-3.5M10 20h4"/><circle cx="12" cy="9" r="1.6"/>',
   chart: '<path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/>',
+  sound: '<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+  soundOff: '<path d="M4 9v6h4l5 4V5L8 9zM17 9l5 6M22 9l-5 6"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
 };
 
