@@ -2,6 +2,7 @@
 // DT-02: o mesmo cenário, avançado em passos de tamanhos diferentes, deve dar o mesmo resultado.
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch, outcomeOf, type GameState } from '../../src/engine/game';
+import { MATCH_HOURS } from '../../src/engine/clock';
 import type { Installation } from '../../src/engine/resources';
 import { MAX_PANELS, type TaskKind } from '../../src/engine/robot';
 import { isSunlit, type SunTable } from '../../src/engine/sun';
@@ -45,11 +46,13 @@ function plan(g: GameState): GameState {
   return s;
 }
 
-function fullMatch(dt: number): GameState {
+/** Partida com o plano; decide quando a hora cai em múltiplos de `every` (nos passos em que isso acontece). */
+function fullMatch(dt: number, every: number): GameState {
   let g = createGame({ installation: INST });
   let guard = 0;
   while (outcomeOf(g) === 'playing' && guard++ < 200000) {
-    g = plan(g);
+    const onGrid = Math.abs(g.clock.hour / every - Math.round(g.clock.hour / every)) < 1e-6;
+    if (onGrid) g = plan(g);
     g = advance(g, dt, SUNLIT);
   }
   return g;
@@ -75,13 +78,26 @@ describe('DT-02 · partição do tempo', () => {
     });
   }
 
-  it('partida completa com o Sol real: 1 h e 0,25 h dão o mesmo resultado (vitória, corações, painéis)', () => {
-    const hourly = fullMatch(1);
-    const quarter = fullMatch(0.25);
-    expect(outcomeOf(hourly)).toBe('won');
-    expect(outcomeOf(quarter)).toBe(outcomeOf(hourly));
-    expect(quarter.hearts).toBe(hourly.hearts);
-    expect(quarter.installation.panels).toBe(hourly.installation.panels);
-    expect(quarter.vitals.water).toBeCloseTo(hourly.vitals.water, 3);
-  }, 60000);
+  it('partida completa com o Sol real: decisões na mesma hora dão o mesmo resultado em passos de 0,05, 0,25, 0,5 e 1 h', () => {
+    const results = [0.05, 0.25, 0.5, 1].map((dt) => fullMatch(dt, 0.25));
+    for (const g of results) {
+      expect(outcomeOf(g)).toBe('won');
+      expect(g.hearts).toBe(results[0].hearts);
+      expect(g.installation.panels).toBe(results[0].installation.panels);
+      expect(g.vitals.water).toBeCloseTo(results[0].vitals.water, 6);
+    }
+  }, 120000);
+
+  it('partida completa com o plano: 6 h de cadência de decisões dá o mesmo resultado que decidir a cada 6 h em passos de 0,25 h', () => {
+    const a = fullMatch(0.25, 6);
+    const b = fullMatch(6, 6);
+    expect(a.hearts).toBe(b.hearts);
+    expect(a.vitals.water).toBeCloseTo(b.vitals.water, 6);
+  }, 120000);
+
+  it('fim da partida com passos de 0,4 h (máximo do navegador) chega à vitória em 708 h, sem travar', () => {
+    const g = fullMatch(0.4, 0.4);
+    expect(outcomeOf(g)).toBe('won');
+    expect(g.clock.hour).toBe(MATCH_HOURS);
+  }, 120000);
 });

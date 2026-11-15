@@ -62,6 +62,8 @@ export interface GameState {
   readonly hearts: number;
   /** Horas seguidas com algum recurso vital zerado. */
   readonly vitalZeroHours: number;
+  /** Horas já recebidas por advance() e ainda não integradas (fração do passo fixo, DT-02). */
+  readonly pendingHours: number;
   /** Tripulação: exposição à radiação (D-05). */
   readonly crew: CrewState;
   /** Cultivo da estufa: crescimento, desgaste e cuidados (D-18). */
@@ -112,6 +114,7 @@ export function createGame(options: NewGameOptions): GameState {
     robot: createRobot(),
     hearts: MAX_HEARTS,
     vitalZeroHours: 0,
+    pendingHours: 0,
     crew: createCrew(),
     crop: createCrop(),
     agents: createAgents(),
@@ -213,6 +216,8 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
  * é repartido entre chamadas (6 h de uma vez = seis de 1 h = 24 de 0,25 h).
  */
 export const SUBSTEP_HOURS = 0.25;
+/** Tolerância para fechar a partida na hora 708 (erro de ponto flutuante). */
+const END_SNAP_HOURS = 1e-6;
 
 /** Luz e clima: valor fixo ou função da hora de jogo (usada pelo laço de tela e pelos testes de partida). */
 export type SunlitAt = boolean | ((hour: number) => boolean);
@@ -225,14 +230,27 @@ export function advance(state: GameState, dtHours: number, sunlit: SunlitAt, wea
   }
   const sunAt = typeof sunlit === 'function' ? sunlit : () => sunlit;
   const wxAt = typeof weather === 'function' ? weather : () => weather;
+  // Integração sempre em passos fixos de SUBSTEP_HOURS, do início da partida: o tamanho da chamada não muda o resultado (DT-02).
+  // O tempo que sobra (menos de um passo) fica em pendingHours e entra na próxima chamada.
   let current = state;
-  let left = Math.min(dtHours, MATCH_HOURS - state.clock.hour);
-  while (left > 1e-9 && outcomeOf(current) === 'playing') {
-    const h = Math.min(SUBSTEP_HOURS, left);
-    current = advanceStep(current, h, sunAt(current.clock.hour), wxAt(current.clock.hour));
-    left -= h;
+  let total = state.pendingHours + dtHours;
+  const EPS = 1e-9;
+  while (outcomeOf(current) === 'playing') {
+    const toEnd = MATCH_HOURS - current.clock.hour;
+    if (total >= SUBSTEP_HOURS - EPS && toEnd >= SUBSTEP_HOURS - EPS) {
+      current = advanceStep(current, SUBSTEP_HOURS, sunAt(current.clock.hour), wxAt(current.clock.hour));
+      total -= SUBSTEP_HOURS;
+    } else if (toEnd > EPS && total >= toEnd - EPS) {
+      current = advanceStep(current, toEnd, sunAt(current.clock.hour), wxAt(current.clock.hour));
+      total -= toEnd;
+    } else {
+      break;
+    }
   }
-  return current;
+  if (current.clock.hour > MATCH_HOURS - END_SNAP_HOURS && current.clock.hour < MATCH_HOURS) {
+    current = { ...current, clock: createClock(MATCH_HOURS) };
+  }
+  return { ...current, pendingHours: outcomeOf(current) === 'playing' ? Math.max(0, total) : 0 };
 }
 
 function advanceStep(state: GameState, step: number, sunlit: boolean, weather: SpaceWeatherSample): GameState {
@@ -312,6 +330,7 @@ function advanceStep(state: GameState, step: number, sunlit: boolean, weather: S
     robot: progress.robot,
     hearts,
     vitalZeroHours,
+    pendingHours: state.pendingHours,
     crew: crewStep.crew,
     crop,
     agents,

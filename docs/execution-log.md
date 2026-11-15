@@ -869,3 +869,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Backlog:** DT-02 segue parcial, com o achado descrito.
 - **Git:** sem commit.
 
+## 15/11/2026 · DT-02, correções no motor (integração em grade e fim da partida)
+
+- **Causa 1 (fim da partida):** a soma de passos de ponto flutuante parava em 707,9999999999768. Com passos de 0,4 h, a partida ficava "playing" para sempre (20 000 chamadas sem terminar). No navegador, a tela ficaria em 708/708 sem tela de fim. Corrigido: `advance` fixa o relógio em 708 quando faltam menos de 1e-6 hora.
+- **Causa 2 (dependência do passo):** `advance` subdividia cada chamada em passos de 0,25 h a partir da própria chamada. Chamadas de 0,05 h geravam passos de 0,05 h, e o resultado mudava (água 97,912 contra 98,010 com as mesmas decisões). Corrigido: passos fixos de 0,25 h da grade global; o tempo que sobra vai para `pendingHours` no estado.
+- **Testes:** `rover-seguro.test.ts` usava avanços de 0,1 e 0,2 h, menores que o passo fixo. Trocados por 0,25 h (mesma intenção, agora alinhada à grade). `tests/engine/particao-tempo.test.ts` reescrito com os critérios corretos (decisões nas mesmas horas) e com o fim da partida em 0,4 h.
+- **Achado em aberto:** a decisão do jogador ainda depende do quadro (até 0,4 h). Ver decisão pendente em `docs/backlog.md`, DT-02.
+- **Comandos:** `npm run typecheck` (0); `npx vitest run` (26 arquivos, 239 testes); `npm run build` (0); fronteira do motor limpa.
+- **Git:** sem commit.
+

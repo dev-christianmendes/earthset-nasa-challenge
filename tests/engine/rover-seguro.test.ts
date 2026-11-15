@@ -27,7 +27,7 @@ const progress = (s: GameState): number => 1 - s.robot.queue[0]!.hoursLeft / TAS
 
 describe('rover em modo seguro', () => {
   it('longe da base (ida ou operação), a radiação faz o rover voltar', () => {
-    const g = run(withTask('ice', 0.5), 0.1, RAD);
+    const g = run(withTask('ice', 0.5), 0.25, RAD);
     expect(g.robot.safe).not.toBeNull();
     expect(safeStatus(g.robot, g.vitals.battery)).toBe('returning');
   });
@@ -51,7 +51,7 @@ describe('rover em modo seguro', () => {
   it('ao fim do evento, recomeça a ida da base e perde o que já tinha andado', () => {
     const antes = withTask('ice', 0.5);
     let g = run(antes, 4, RAD);
-    g = run(g, 0.1, CALM);
+    g = run(g, 0.25, CALM);
     expect(g.robot.safe).toBeNull();
     expect(missionPhase(g.robot.queue[0]!)).toBe('travel');
     expect(progress(g)).toBeLessThan(0.15);
@@ -62,7 +62,7 @@ describe('rover em modo seguro', () => {
   });
 
   it('já na volta para casa, o rover termina o trajeto mesmo com radiação (não entra em modo seguro)', () => {
-    const g = run(withTask('ice', 0.8), 0.2, RAD);
+    const g = run(withTask('ice', 0.8), 0.25, RAD);
     expect(g.robot.safe).toBeNull();
     expect(progress(g)).toBeGreaterThan(0.8);
   });
@@ -91,7 +91,7 @@ describe('rover em modo seguro', () => {
     let g = run(withTask('ice', 0.5), 0.5, RAD);
     const r = dispatch(g, { type: 'CANCEL_TASK', index: 0 });
     if (!r.ok) throw new Error(r.reason);
-    g = run(r.state, 0.1, RAD);
+    g = run(r.state, 0.25, RAD);
     expect(g.robot.safe).toBeNull();
   });
 
