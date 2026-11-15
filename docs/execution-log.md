@@ -888,3 +888,17 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Testes:** `npm run typecheck` (0); `npx vitest run` (26 arquivos, 239 testes). Teclado (14 etapas) passa. Vitória pelo jogador automático: ver entrada seguinte.
 - **Git:** sem commit.
 
+## 15/11/2026 · U-05, cartões e ícones do HUD (parcial)
+
+- **Desktop (1366×768):** quatro cartões com ícone, valor e barra; barra de ferramentas com ícones (`.scratch-agent/u05/hud_desk.png`).
+- **Celular (390×844):** `src/ui/styles.css` oculta os ícones dos cartões (`.chip [data-icon] { display: none }`). Testei exibi-los a 14 px: ficam fora do cartão e a linha passa da largura do painel. Revertido. Ver decisão em `docs/backlog.md`, U-05.
+- **Git:** sem alteração de código nesta etapa; `styles.css` igual ao commit.
+
+## 15/11/2026 · U-05, ícones dos cartões no celular (concluído)
+
+- **Escolha do autor:** ícone acima do valor no celular.
+- **CSS (`src/ui/styles.css`, até 760 px):** cartões em coluna, ícone de 14 px acima do valor e barra; cartão do capítulo (`.toast`) em `top: 118px`, abaixo do HUD mais alto.
+- **Verificação:** capturas em 390×844 mostram os quatro ícones e o cartão do capítulo sem sobreposição; desktop sem mudança.
+- **Build:** `npm run build` (0).
+- **Git:** sem commit.
+
