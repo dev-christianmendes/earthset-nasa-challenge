@@ -861,3 +861,11 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Backlog:** DT-01 concluído e retirado da lista.
 - **Git:** sem commit.
 
+## 15/11/2026 · DT-02, partição do tempo
+
+- **Teste novo:** `tests/engine/particao-tempo.test.ts` (4 casos). Três cenários de bateria (cheia, baixa, zero) em 48 h com passos de 1 h, 0,25 h e 6 h: água, bateria, corações e fila iguais. Partida completa com o plano de referência e o Sol real: 1 h e 0,25 h dão vitória, 3 corações, 12 painéis e água igual (diferença < 1e-3).
+- **Achado:** com passos de 6 h, a partida completa termina com água 99,04 contra 100 em 1 h. O resultado (vitória, corações, painéis) é o mesmo. A diferença vem de o plano só reagir a cada passo. Não é mudança de regra, mas precisa de decisão.
+- **Comandos:** `npm run typecheck` (0); `npx vitest run` (26 arquivos, 237 testes).
+- **Backlog:** DT-02 segue parcial, com o achado descrito.
+- **Git:** sem commit.
+
