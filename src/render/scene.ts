@@ -12,7 +12,7 @@ import type { SpaceWeatherSample } from '../engine/space-weather';
 import { isWorking, type TaskKind } from '../engine/robot';
 import { safeDistance } from '../engine/safe-mode';
 import { missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
-import { sampleAt } from '../engine/sun';
+import { sunPositionAt } from '../engine/sun';
 import { bodyAt, direction } from '../astronomy/sky';
 import { SKY } from '../data/sky';
 import { SUN } from '../data/sun';
@@ -644,7 +644,7 @@ const AXIS_Y = new THREE.Vector3(0, 1, 0);
 
 export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true, longExposure = true): RoverView {
   // Sol na grade polar LOLA (0° = −z); convergência geográfica corrigida no pipeline.
-  const { az, el } = sampleAt(SUN, state.clock.hour, state.installation.site);
+  const { az, el } = sunPositionAt(SUN, state.clock.hour, state.installation.site);
   const dir = sunDir.fromArray(direction(az, el));
   sun.position.copy(dir).multiplyScalar(1200);
   sun.target.position.set(0, 0, 0);

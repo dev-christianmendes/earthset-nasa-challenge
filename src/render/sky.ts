@@ -5,7 +5,7 @@ import { BODY_IDS, angularRadius, bodyAt, direction, equatorial, sampleIndex, st
 import { SKY } from '../data/sky';
 import { SUN } from '../data/sun';
 import { TERRAIN } from '../data/terrain';
-import { sampleAt } from '../engine/sun';
+import { sunPositionAt } from '../engine/sun';
 import type { Site } from '../engine/resources';
 
 const DISTANCE = 700;
@@ -107,12 +107,12 @@ let lastSite: Site | null = null;
 export function updateSky(hour: number, lit: boolean, site: Site, longExposure = true, pixelRatio = 1): void {
   skyExposure.value = longExposure ? 36 : lit ? 0.06 : 1.5;
   pointPixelRatio.value = pixelRatio;
+  const solar = sunPositionAt(SUN, hour, site);
+  solarDisc.position.fromArray(direction(solar.az, solar.el)).multiplyScalar(DISTANCE);
   const h = sampleIndex(SKY, hour);
   if (h === lastSample && site === lastSite) return;
   lastSample = h; lastSite = site;
   horizonUniform.value = [...TERRAIN.sites[site].horizon_deg];
-  const solar = sampleAt(SUN, hour, site);
-  solarDisc.position.fromArray(direction(solar.az, solar.el)).multiplyScalar(DISTANCE);
   solarDisc.scale.setScalar(angularRadius(bodyAt(SKY, 'sun', hour).diameter_arcsec, DISTANCE));
   const sample = bodyAt(SKY, 'earth', hour);
   const d = new THREE.Vector3().fromArray(direction(sample.az, sample.el));

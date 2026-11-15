@@ -761,3 +761,14 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não alterado:** `docs/data-sources.md`, `docs/execution-log.md` (exceto esta entrada), `docs/DECISOES.md`, `docs/EARTHSET_VALIDATION_ROADMAP.md`, `docs/SCENE_SKY_REVIEW.md`, `docs/ORIENTACOES_AUDITORIA_V5.md` e o `README.md`. Os arquivos de astronomia tinham edições de outra sessão em andamento.
 - **Achado fora do escopo:** `data-pipeline/fetch_sun.py`, linha 14, diz que o arquivo grava a tabela do jogo; o código grava só o legado. Não corrigido (regra: sem alteração de código).
 - **Pendências de decisão:** listadas em `docs/backlog.md`, seção 6 (histórico do git, Dependabot vitest 5, PDF no README, caminhos do PLANO_V4, reescrita da arquitetura).
+
+## 15/11/2026 · AST-VIS-02 (direção solar interpolada, parcial)
+
+- **Causa confirmada:** `sampleAt` usa `floor(hora)`; disco e luz do Sol ficavam parados por ~1 s e depois saltavam ~0,508°.
+- **Ajuste:** `sunPositionAt` em `src/engine/sun.ts` interpola az/el entre amostras horárias (wrap de 360° pelo arco curto). Usado só em `src/render/scene.ts` (luz) e `src/render/sky.ts` (disco solar, atualizado a cada quadro antes do retorno antecipado). Energia, iluminação e partida continuam pela amostra da hora.
+- **Testes:** `tests/engine/sun.test.ts`, 5 casos novos (hora inteira, meio da hora, wrap 360°, fim da tabela e hora inválida, continuidade na tabela real com passos de 0,05 h).
+- **Comandos:** `npm run typecheck` (exit 0, após remover import não usado em `scene.ts`); `npx vitest run` (24 arquivos, 225 testes, todos passando); `npm run build` (exit 0).
+- **Não verificado no navegador:** a mudança é de movimento contínuo, e uma captura estática não a mostra. Falta conferir em 1× com captura de sequência.
+- **Pendências do item:** horizonte, transição binária de intensidade (`sun.intensity = lit ? 3.4 : 0`) e política de sombras sob FPS baixo (`main.ts:frame`).
+- **Git:** nenhum commit ou push nesta etapa.
+

@@ -21,7 +21,9 @@ Reprodução: `python3 -B -u scripts/e2e-sky-visibility.py 5192` contra Vite nes
 
 Capturas desktop/celular e JSON em `.scratch-agent/sky-visibility/{before,after}/`, ignorados pelo git. O primeiro ajuste de brilho chegou a apenas 73 pixels desktop e falhou no critério de legibilidade (mínimo 100 no campo fixado); foi revisto antes da aprovação final. Não se baixou o critério para aprovar o teste.
 
-## AST-VIS-02 — Medium — direção solar em degraus, confirmado, ajuste pendente
+## AST-VIS-02 — Medium — direção solar em degraus, confirmado; direção interpolada em 15/11
+
+Ajuste feito: `sunPositionAt` interpola az/el entre amostras horárias (wrap de 360° pelo arco curto) e alimenta só o disco e a luz (`src/render/scene.ts`, `src/render/sky.ts`). Energia e iluminação continuam pela amostra da hora, então a partida não muda. Testes em `tests/engine/sun.test.ts`. Não verificado no navegador nesta etapa; a mudança é de movimento contínuo.
 
 **Causa principal:** `src/engine/sun.ts:sampleAt` usa `Math.floor(hour/step_hours)` e `step_hours=1`. `src/render/scene.ts:updateScene` aplica essa mesma posição diretamente à luz. `src/render/sky.ts:updateSky` também mantém o céu até mudar a amostra inteira. Não há interpolação temporal entre as efemérides.
 

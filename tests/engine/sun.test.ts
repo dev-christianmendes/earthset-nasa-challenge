@@ -1,6 +1,6 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 import { describe, expect, it } from 'vitest';
-import { isSunlit, sampleAt, type SunTable } from '../../src/engine/sun';
+import { isSunlit, sampleAt, sunPositionAt, type SunTable } from '../../src/engine/sun';
 import type { TerrainTable } from '../../src/engine/terrain';
 import sunJson from '../../src/data/sun-south-pole.json';
 import terrainJson from '../../src/data/terrain-sites.json';
@@ -80,3 +80,43 @@ describe('tabela real (JPL Horizons)', () => {
     expect(count('rim')).toBe(0);
   });
 });
+
+describe('posição do Sol interpolada (AST-VIS-02)', () => {
+  it('em horas inteiras coincide com a amostra da hora', () => {
+    for (const h of [0, 1, 2, 100, 707, 708]) {
+      expect(sunPositionAt(REAL, h)).toEqual(sampleAt(REAL, h));
+    }
+  });
+
+  it('no meio da hora fica entre as duas amostras', () => {
+    const p = sunPositionAt(SYNTHETIC, 1.5);
+    expect(p.el).toBeCloseTo((1.3 + 1.7) / 2, 10);
+    expect(p.az).toBeCloseTo(15, 10);
+  });
+
+  it('cruza 360° pelo arco mais curto', () => {
+    const table: SunTable = { ...SYNTHETIC, samples: [{ az: 359, el: 0 }, { az: 1, el: 0 }, { az: 2, el: 0 }, { az: 3, el: 0 }] };
+    expect(sunPositionAt(table, 0.5).az).toBeCloseTo(0, 10);
+    expect(sunPositionAt(table, 0.25).az).toBeCloseTo(359.5, 10);
+  });
+
+  it('para no último ponto e rejeita hora inválida', () => {
+    expect(sunPositionAt(SYNTHETIC, 99)).toEqual({ az: 30, el: -0.2 });
+    expect(() => sunPositionAt(SYNTHETIC, -1)).toThrow(RangeError);
+    expect(() => sunPositionAt(SYNTHETIC, Number.NaN)).toThrow(RangeError);
+  });
+
+  it('na tabela real a direção muda de forma contínua, sem salto de meio grau dentro da hora', () => {
+    let worst = 0;
+    let prev = sunPositionAt(REAL, 0);
+    for (let h = 0.05; h <= 707; h += 0.05) {
+      const p = sunPositionAt(REAL, h);
+      const dAz = Math.abs(((p.az - prev.az + 540) % 360) - 180);
+      worst = Math.max(worst, dAz, Math.abs(p.el - prev.el));
+      prev = p;
+    }
+    // Uma hora inteira move o Sol cerca de 0,51°; passos de 0,05 h devem ficar bem abaixo disso.
+    expect(worst).toBeLessThan(0.05);
+  });
+});
+
