@@ -3,7 +3,7 @@
 // e curvas arredondadas. Só matemática 2D (x, z), sem three.js, para ser testada no Vitest.
 // Distâncias em metros da cena. Pegadas e folgas são escolha de apresentação (ilustrativas).
 import type { AgentTaskKind } from '../engine/astronaut';
-import { ANTENNA, ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, ICE_PROCESSOR, LANDING_PAD, LIGHT_TOWERS, PANEL_SLOTS, POWER_UNIT, STORAGE, TANKS, type Spot } from './layout';
+import { ANTENNA, ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, GREENHOUSE_DOOR, GREENHOUSE_LENGTH, ICE_PROCESSOR, LANDING_PAD, LIGHT_TOWERS, PANEL_SLOTS, POWER_UNIT, STORAGE, TANKS, type Spot } from './layout';
 
 export interface Point {
   readonly x: number;
@@ -25,7 +25,10 @@ const circle = (name: string, c: Spot, r: number): Obstacle => ({ kind: 'circle'
 export const OBSTACLES: readonly Obstacle[] = [
   rect('habitat', -1.75, 1.75, -7.2, 7.2),
   rect('airlock', 1.2, AIRLOCK.x + 0.9, -1.0, 1.0),
-  circle('greenhouse', GREENHOUSE, 2.6),
+  // Módulo da estufa (D-25): casco de raio 1,7, degraus da porta de serviço a leste e plataforma de caixas ao sul.
+  rect('greenhouse', GREENHOUSE.x - 1.8, GREENHOUSE.x + 1.8, GREENHOUSE.z - GREENHOUSE_LENGTH / 2, GREENHOUSE.z + GREENHOUSE_LENGTH / 2 + 0.05),
+  rect('gh_stairs', GREENHOUSE.x + 1.8, GREENHOUSE.x + 2.8, GREENHOUSE.z - 0.75, GREENHOUSE.z + 0.75),
+  rect('gh_crates', GREENHOUSE.x - 1.3, GREENHOUSE.x + 1.3, GREENHOUSE.z + GREENHOUSE_LENGTH / 2, GREENHOUSE.z + GREENHOUSE_LENGTH / 2 + 1.5),
   around('antenna', ANTENNA, 1.15, 0.95),
   around('power', POWER_UNIT, 1.1, 1.1),
   rect('processor', 8, 12.05, ICE_PROCESSOR.z - 0.85, ICE_PROCESSOR.z + 0.85),
@@ -306,10 +309,10 @@ export const CREW_HOMES: readonly Spot[] = [
   { x: 5.6, z: 1.4 },
   { x: 6.2, z: -1.2 },
 ];
-/** Postos de trabalho na estufa, um por astronauta: lado nordeste do domo, rotas de comprimento parecido. */
+/** Postos de trabalho na estufa, um por astronauta: de cada lado dos degraus da porta de serviço, a leste (D-25). */
 export const GH_WORK_SPOTS: readonly Spot[] = [
-  { x: GREENHOUSE.x + 3.25 * Math.cos(-1.13), z: GREENHOUSE.z + 3.25 * Math.sin(-1.13) },
-  { x: GREENHOUSE.x + 3.25 * Math.cos(-0.52), z: GREENHOUSE.z + 3.25 * Math.sin(-0.52) },
+  { x: GREENHOUSE.x + 3.2, z: GREENHOUSE.z - 1.0 },
+  { x: GREENHOUSE.x + 3.2, z: GREENHOUSE.z + 1.0 },
 ];
 /** Ponto de trabalho no campo solar (primeira coluna, lado norte) e para onde o astronauta olha. */
 export const PANEL_FIELD_WORK: Spot = { x: -7.2, z: -8 };
@@ -331,5 +334,5 @@ export function workSpot(i: number, kind: AgentTaskKind): Spot {
 /** Para onde o astronauta olha enquanto trabalha. */
 export function siteFocus(kind: AgentTaskKind): Spot {
   const site = SITE_OF[kind];
-  return site === 'panels' ? PANEL_FIELD_FOCUS : site === 'antenna' ? ANTENNA : GREENHOUSE;
+  return site === 'panels' ? PANEL_FIELD_FOCUS : site === 'antenna' ? ANTENNA : GREENHOUSE_DOOR;
 }

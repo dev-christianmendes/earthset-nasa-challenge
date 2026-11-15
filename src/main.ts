@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { ACTION_HOURS, advance, createGame, dispatch, outcomeOf, type GameAction, type GameState } from './engine/game';
 import type { GreenhouseMode, Installation } from './engine/resources';
 import type { TaskKind } from './engine/robot';
-import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
+import { ICE_HELP_HOURS, ICE_WATER_PER_TRIP, MAX_PANELS, MAX_QUEUE, TASK_HOURS } from './engine/robot';
 import { createClock, MATCH_HOURS } from './engine/clock';
 import { isSunlit } from './engine/sun';
 import { radiationHoursLeft, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
@@ -19,8 +19,9 @@ import { lumaAdvice, lumaEvents, type LumaAction } from './engine/guide';
 import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
-import { camera, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, requestCrewWave, crewAnimationState, roverWorldState, updateScene } from './render/scene';
-import { antenna, greenhouse, habitat, powerUnit, processor, storage } from './render/base-layout';
+import { camera, controls, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, requestCrewWave, setCrewStepHandler, crewAnimationState, roverWorldState, updateScene } from './render/scene';
+import { antenna, base, greenhouse, habitat, powerUnit, processor, storage } from './render/base-layout';
+import { surfaceHeight } from './render/terrain-height';
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
 import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
 import { warningAhead } from './engine/facilities';
@@ -29,7 +30,9 @@ import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updat
 import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
 import { initLuma, pushLumaEvents, relabelLuma, resetLuma, updateLuma } from './ui/luma';
 import { currentScreen, loadSettings, popScreen, pushScreen, saveSettings, showScreen, type ScreenId } from './ui/screens';
-import { initAudio, isMuted, play, setLoop, setMuted } from './ui/audio';
+import { getVolume, initAudio, isMuted, play, setLoop, setMuted, setVolume } from './ui/audio';
+import { soundCues } from './engine/sound-events';
+import { isGreenhouseOn } from './engine/resources';
 import { mountIcons } from './ui/icons';
 import { coachEvent, mountSquad, mountTags, placeTags, relabelCoach, relabelSquad, renderSquad, startCoach, type SquadId } from './ui/squad';
 import { mountHorizonPanel } from './ui/horizon-panel';
@@ -39,7 +42,7 @@ import { bodyAt, type BodyId } from './astronomy/sky';
 import { SKY } from './data/sky';
 import { apparentSunDirection } from './render/sky';
 import { sampleAt } from './engine/sun';
-import { getLang, t } from './i18n';
+import { getLang, setI18nDefaults, t } from './i18n';
 
 /** Base inicial (equilíbrio do motor, docs/regras-recursos.md). A patente vem do modo (D-17). */
 const BASE: Omit<Installation, 'rank'> = { site: 'peak', panels: 2, batteryCapacity: 1000, greenhouse: 'surplus' };
@@ -79,11 +82,16 @@ const alertNow = (): AlertView =>
     reach: game.robot.antennaInstalled ? warningAhead(game.antennaTuneLeft) : null,
     sheltered: crewSheltered(game.crew, game.crewOrder),
   });
+// Horas e água das missões nos textos fixos do HTML (painel lateral do rover): vêm do motor, não ficam para trás.
+setI18nDefaults({ w: ICE_WATER_PER_TRIP, help: Math.round(ICE_HELP_HOURS), iceH: Math.round(TASK_HOURS.ice), antennaH: Math.round(TASK_HOURS.antenna), panelH: Math.round(TASK_HOURS.panel) });
+
 const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], alert: alertNow(), radiationLeft: radiationHoursLeft(WEATHER, game.clock.hour), water: waterForecast() });
 
 // ---------- Previsão da água (ROV-04) ----------
 // Simular 48 h custa ~3,6 ms: guarda o resultado e só recalcula quando muda algo que a altera
 // (hora inteira, fila do rover, tarefas da tripulação, ordem de abrigo, água arredondada).
+/** Instante (relógio da página) até o qual o tanque está enchendo, para o som de borbulho. */
+let fillUntil = 0;
 let forecastKey = '';
 const forecastCache = new Map<string, WaterForecast>();
 function forecastStateKey(): string {
@@ -437,6 +445,13 @@ for (const box of [setIntro, setMotion, setExplain, setQualityBox]) {
   });
 }
 applySettings();
+const setVolumeInput = document.getElementById('set-volume') as HTMLInputElement;
+setVolumeInput.value = String(Math.round(getVolume() * 100));
+setVolumeInput.addEventListener('input', () => {
+  setVolume(Number(setVolumeInput.value) / 100);
+  play('select');
+});
+setCrewStepHandler((gain) => play('step', gain));
 
 // ---------- Fluxo da missão ----------
 
@@ -595,13 +610,17 @@ function frame(now: number): void {
     radiationBefore = radiationNow;
     if (events.length) {
       pushLumaEvents(events, game.clock.hour, now);
-      if (events.some((e) => e.id === 'radiation-start' || e.id === 'heart')) play('alert');
-      else if (events.some((e) => e.id.startsWith('done-') || e.id.startsWith('agent-'))) play('complete');
+      if (events.some((e) => e.id === 'radiation-start')) play('alert');
+      else if (events.some((e) => e.id.startsWith('chapter-'))) play('complete');
       const chapter = events.find((e) => e.id.startsWith('chapter-'));
       if (chapter) showToast(t('toast.chapter', { n: chapter.vars.n }), t(`chapter.${chapter.vars.n}`));
       if (currentTool() === 'missions') renderNow(now);
     }
     visualTime += seconds * 1000;
+    // Um som por conclusão e por alerta de recurso (src/engine/sound-events.ts); sobrepostos entram em fila curta.
+    const cues = soundCues(prev, game);
+    cues.forEach((cue, i) => window.setTimeout(() => play(cue), i * 260));
+    if (game.vitals.water - prev.vitals.water > 0.005) fillUntil = now + 450;
   }
   last = now;
   // A cena anda no relógio visual (parado na pausa); no menu e na introdução, no relógio real.
@@ -610,6 +629,13 @@ function frame(now: number): void {
   // Sons contínuos estilizados: motor do rover em deslocamento e broca na escavação (só com o jogo correndo).
   setLoop('rover', active && roverView.moving);
   setLoop('drill', active && roverView.working && roverView.kind === 'ice' && roverView.phase === 'operate');
+  setLoop('servo', active && roverView.working && roverView.kind === 'panel' && roverView.phase === 'operate');
+  setLoop('arc', active && roverView.working && roverView.kind === 'antenna' && roverView.phase === 'operate');
+  setLoop('heater', active && roverView.working && roverView.kind === 'ice' && roverView.phase === 'deliver');
+  const ghOn = game.crewOrder === 'auto' && isGreenhouseOn(game.vitals, game.installation);
+  setLoop('fan', active && ghOn);
+  setLoop('pump', active && ghOn && game.crop.irrigation !== 'low');
+  setLoop('fill', active && now < fillUntil);
   updateHighlight(now / 1000);
   if (cinematicRunning()) updateCinematic(now);
   else updateDirector(now);
@@ -714,6 +740,53 @@ function maybeAutostart(): void {
     act: (action: GameAction) => act(action),
     hour: () => game.clock.hour,
     state: () => game,
+    /** Relatório de assentamento (dev): para cada grupo da base, o ponto mais baixo do modelo contra o relevo sob a pegada. */
+    groundReport(): Array<{ name: string; base: number; terrainMin: number; terrainMax: number; buried: number; gap: number }> {
+      const out: Array<{ name: string; base: number; terrainMin: number; terrainMax: number; buried: number; gap: number }> = [];
+      base.updateMatrixWorld(true);
+      for (const group of base.children) {
+        if (!(group instanceof THREE.Group) || !group.name) continue;
+        const box = new THREE.Box3();
+        group.traverse((n) => {
+          if (n instanceof THREE.Mesh && n.visible && n.geometry && !n.userData.persistent) {
+            n.geometry.computeBoundingBox();
+            if (n.geometry.boundingBox) box.union(n.geometry.boundingBox.clone().applyMatrix4(n.matrixWorld));
+          }
+        });
+        if (box.isEmpty()) continue;
+        let tMin = Infinity;
+        let tMax = -Infinity;
+        for (let i = 0; i <= 4; i++) {
+          for (let j = 0; j <= 4; j++) {
+            const h = surfaceHeight(box.min.x + ((box.max.x - box.min.x) * i) / 4, box.min.z + ((box.max.z - box.min.z) * j) / 4);
+            tMin = Math.min(tMin, h);
+            tMax = Math.max(tMax, h);
+          }
+        }
+        const r = (v: number) => Math.round(v * 100) / 100;
+        out.push({ name: group.name, base: r(box.min.y), terrainMin: r(tMin), terrainMax: r(tMax), buried: r(Math.max(0, tMax - box.min.y)), gap: r(Math.max(0, box.min.y - tMin)) });
+      }
+      return out;
+    },
+    /** Altera o estado só para verificar telas (dev): mescla campos de primeiro nível e de `crop`/`vitals`/`robot`. */
+    patch(partial: Record<string, unknown>): void {
+      const next = { ...game } as Record<string, unknown>;
+      for (const [key, value] of Object.entries(partial)) {
+        const current = (game as unknown as Record<string, unknown>)[key];
+        next[key] = value && typeof value === 'object' && !Array.isArray(value) && current && typeof current === 'object' ? { ...(current as object), ...(value as object) } : value;
+      }
+      game = next as unknown as GameState;
+    },
+    /** Posiciona a câmera de verificação (dev): desliga a direção e esconde o HUD. */
+    view(cx: number, cy: number, cz: number, tx: number, ty: number, tz: number): void {
+      setDirectorEnabled(false);
+      camera.position.set(cx, cy, cz);
+      controls.target.set(tx, ty, tz);
+      controls.update();
+      ui.hud.hidden = true;
+    },
+    /** Áudio real do jogo, para a verificação dos sons (dev). */
+    audio: { play, setLoop, setVolume, getVolume, setMuted, isMuted },
     radiation: () => weatherNow().radiation,
     screenOf(id: SelectableId): [number, number] | null {
       const fixed: Partial<Record<SelectableId, THREE.Object3D>> = { rover: robot, greenhouse, habitat, antenna, processor, storage, panels: powerUnit };

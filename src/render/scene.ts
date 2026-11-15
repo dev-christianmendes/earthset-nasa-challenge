@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GameState } from '../engine/game';
 import { isGreenhouseOn } from '../engine/resources';
 import { phaseFraction, type AgentTaskKind } from '../engine/astronaut';
-import { calibrationFactor } from '../engine/facilities';
+import { TUNE_HOURS, calibrationFactor } from '../engine/facilities';
 import type { SpaceWeatherSample } from '../engine/space-weather';
 import { isWorking, type TaskKind } from '../engine/robot';
 import { safeDistance } from '../engine/safe-mode';
@@ -17,9 +17,9 @@ import { SKY } from '../data/sky';
 import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
 import { attachModel, loadGltf, loadModel } from './assets';
-import { VERTICAL_EXAGGERATION, surfaceHeight } from './terrain-height';
-import { AIRLOCK, DOCK, ICE_PROCESSOR, ICE_SITE, type Spot } from './layout';
-import { base, loadBaseLayoutModels, updateBase } from './base-layout';
+import { LEVELED_HEIGHTS, surfaceHeight } from './terrain-height';
+import { AIRLOCK, DOCK, GREENHOUSE_DOOR, ICE_PROCESSOR, ICE_SITE, PANEL_SLOTS, type Spot } from './layout';
+import { antenna, base, loadBaseLayoutModels, updateBase } from './base-layout';
 import { updateCrop } from './crop';
 import { astronomicalSky, updateSky } from './sky';
 import { CREW_HOMES, ICE_HELPER, PANEL_FIELD_WORK, pathBetween, sampleInto, siteFocus, workSpot } from './crew-nav';
@@ -137,7 +137,7 @@ function moonGroundMaterial(): THREE.MeshStandardMaterial {
 }
 
 function buildTerrain(): THREE.BufferGeometry {
-  const { n, size_m, heights_m } = TERRAIN_MESH;
+  const { n, size_m } = TERRAIN_MESH;
   const step = size_m / (n - 1);
   const half = size_m / 2;
   const positions = new Float32Array(n * n * 3);
@@ -145,7 +145,8 @@ function buildTerrain(): THREE.BufferGeometry {
   const colors = new Float32Array(n * n * 3);
   let minH = Infinity;
   let maxH = -Infinity;
-  for (const h of heights_m) {
+  // Alturas já com exagero e plataforma da base (terrain-height.ts): o mesmo valor que os objetos usam para pousar.
+  for (const h of LEVELED_HEIGHTS) {
     minH = Math.min(minH, h);
     maxH = Math.max(maxH, h);
   }
@@ -153,12 +154,12 @@ function buildTerrain(): THREE.BufferGeometry {
     for (let i = 0; i < n; i++) {
       const k = j * n + i;
       positions[3 * k] = -half + i * step;
-      positions[3 * k + 1] = heights_m[k] * VERTICAL_EXAGGERATION;
+      positions[3 * k + 1] = LEVELED_HEIGHTS[k];
       positions[3 * k + 2] = half - j * step;
       uvs[2 * k] = i / (n - 1);
       uvs[2 * k + 1] = j / (n - 1);
       // Tom decorativo: partes altas um pouco mais claras (a geometria medida não muda).
-      const t = (heights_m[k] - minH) / Math.max(1e-6, maxH - minH);
+      const t = (LEVELED_HEIGHTS[k] - minH) / Math.max(1e-6, maxH - minH);
       const grain = 0.93 + 0.07 * Math.sin(k * 12.9898) * Math.cos(k * 0.37);
       const shade = (0.82 + 0.18 * t) * grain;
       colors[3 * k] = shade;
@@ -289,6 +290,50 @@ function resetIceSite(): void {
   lastDigK = 0;
   spoilPile.visible = false;
   heaterLight.intensity = 0;
+}
+
+// ---------- Faíscas (reparo da antena e ligação do painel) ----------
+// Mesma física da poeira: arcos balísticos na gravidade lunar, sem ar. Brilho âmbar, rápidas.
+
+const SPARK_MAX = 120;
+const sparkPos = new Float32Array(SPARK_MAX * 3);
+const sparkVel = new Float32Array(SPARK_MAX * 3);
+const sparkLife = new Float32Array(SPARK_MAX);
+const sparkGeo = new THREE.BufferGeometry();
+sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+const sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial({ color: 0xffd27a, size: 0.09, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending }));
+sparks.frustumCulled = false;
+scene.add(sparks);
+let sparkCursor = 0;
+for (let i = 0; i < SPARK_MAX; i++) sparkPos[3 * i + 1] = -999;
+
+function emitSparks(x: number, y: number, z: number, n: number): void {
+  for (let k = 0; k < n; k++) {
+    const i = sparkCursor;
+    sparkCursor = (sparkCursor + 1) % SPARK_MAX;
+    const a = Math.random() * Math.PI * 2;
+    const s = 0.6 + Math.random() * 2.2;
+    sparkPos.set([x, y, z], 3 * i);
+    sparkVel.set([Math.cos(a) * s, 0.8 + Math.random() * 2.2, Math.sin(a) * s], 3 * i);
+    sparkLife[i] = 0.5 + Math.random() * 0.6;
+  }
+}
+
+function updateSparks(dt: number): void {
+  if (dt <= 0) return;
+  for (let i = 0; i < SPARK_MAX; i++) {
+    if (sparkLife[i] <= 0) continue;
+    sparkLife[i] -= dt;
+    sparkVel[3 * i + 1] -= LUNAR_G * dt;
+    const x = (sparkPos[3 * i] += sparkVel[3 * i] * dt);
+    const z = (sparkPos[3 * i + 2] += sparkVel[3 * i + 2] * dt);
+    sparkPos[3 * i + 1] += sparkVel[3 * i + 1] * dt;
+    if (sparkLife[i] <= 0 || sparkPos[3 * i + 1] < surfaceHeight(x, z)) {
+      sparkLife[i] = 0;
+      sparkPos[3 * i + 1] = -999;
+    }
+  }
+  sparkGeo.attributes.position.needsUpdate = true;
 }
 
 // ---------- Poeira (balística, sem ar: arcos parabólicos e queda limpa, sem nuvem) ----------
@@ -491,10 +536,13 @@ interface CrewMember {
   pose: PoseClip;
   /** Aceno pedido pela introdução (cinematic.ts). */
   cineWave: boolean;
+  /** Apoios já avisados ao som e segundos até poder avisar de novo (evita chuva de passos em 4×). */
+  lastSteps: number;
+  stepCooldown: number;
 }
 
 function member(home: Spot, heading: number): CrewMember {
-  return { walker: createWalker(home.x, home.z, heading), rig: null, home, destKey: '', driveKind: '', pose: 'idle', cineWave: false };
+  return { walker: createWalker(home.x, home.z, heading), rig: null, home, destKey: '', driveKind: '', pose: 'idle', cineWave: false, lastSteps: 0, stepCooldown: 0 };
 }
 
 const crew: CrewMember[] = CREW_HOMES.map((home) => member(home, Math.PI / 2));
@@ -536,6 +584,35 @@ function arrived(w: Walker): boolean {
 
 function aligned(w: Walker, heading: number): boolean {
   return Math.abs(Math.atan2(Math.sin(heading - w.heading), Math.cos(heading - w.heading))) < 0.3;
+}
+
+/**
+ * Passos para o som (UX-01): cada apoio de pé vira um aviso, com volume pela velocidade, mais baixo no passo saltado
+ * (gravidade lunar: pouso macio) e pela distância da câmera. Em 4× a taxa de avisos é limitada.
+ */
+let stepHandler: ((gain: number) => void) | null = null;
+export function setCrewStepHandler(handler: ((gain: number) => void) | null): void {
+  stepHandler = handler;
+}
+function reportSteps(m: CrewMember, dt: number): void {
+  const w = m.walker;
+  m.stepCooldown = Math.max(0, m.stepCooldown - dt);
+  if (w.steps === m.lastSteps) return;
+  const fresh = w.steps - m.lastSteps;
+  m.lastSteps = w.steps;
+  if (!stepHandler || fresh <= 0 || m.stepCooldown > 0 || !m.rig?.holder.visible) return;
+  m.stepCooldown = 0.14;
+  const near = Math.min(1, Math.max(0.12, 1 - camera.position.distanceTo(m.rig.holder.position) / 55));
+  const speed = Math.min(1, w.speed / (2.2 * simRate));
+  stepHandler(near * (0.35 + 0.65 * speed) * (1 - 0.3 * w.hopWeight));
+}
+
+/** Alguém trabalhando ou chegando à porta de serviço da estufa: a porta abre (e fecha quando ele sai). */
+function crewAtGreenhouseDoor(): boolean {
+  return crew.some((m) => {
+    const d = Math.hypot(m.walker.x - GREENHOUSE_DOOR.x, m.walker.z - GREENHOUSE_DOOR.z);
+    return d < 3.8 && (m.pose !== 'idle' || m.walker.speed > 0.2);
+  });
 }
 
 /** Posição do rover no mundo (só para verificação em desenvolvimento). */
@@ -636,6 +713,7 @@ function updateCrew(state: GameState, t: number, dt: number, view: RoverView, ra
     }
     stepWalker(w, dt, drive, simRate, face);
     stepGait(w, dt, simRate, m.rig?.walkGait ?? null, m.rig?.runGait ?? null);
+    reportSteps(m, dt);
     if (pose === 'idle' && arrived(w) && ((t < crewWaveUntil && !shelter) || m.cineWave)) pose = 'wave';
     m.pose = pose;
     if (m.rig) {
@@ -739,6 +817,17 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     emitDust(robot.position.x + front.x, robot.position.y + 0.1, robot.position.z + front.z, 4, 1.1, 1.8);
   }
   updateDust(dt);
+  // Faíscas: solda da antena na operação e ligação do painel à rede (fim da montagem e entrega).
+  if (dt > 0 && view.working) {
+    if (view.kind === 'antenna' && view.phase === 'operate' && Math.random() < 0.45) {
+      emitSparks(antenna.position.x + (Math.random() - 0.5) * 0.9, antenna.position.y + 2.2 + Math.random() * 0.9, antenna.position.z + 0.2, 2);
+    }
+    if (view.kind === 'panel' && ((view.phase === 'operate' && view.k > 0.7) || view.phase === 'deliver') && Math.random() < 0.3) {
+      const slot = PANEL_SLOTS[Math.min(state.installation.panels, PANEL_SLOTS.length - 1)];
+      emitSparks(slot.x + (Math.random() - 0.5) * 0.4, surfaceHeight(slot.x, slot.z) + 0.15, slot.z + (Math.random() - 0.5) * 0.4, 2);
+    }
+  }
+  updateSparks(dt);
   // Carga de regolito: enche durante a escavação, vai cheia na volta, esvazia na descarga do processador.
   const iceTask = view.working && view.kind === 'ice';
   const load = !iceTask ? 0 : view.phase === 'operate' ? view.k : view.phase === 'return' ? 1 : view.phase === 'deliver' ? Math.max(0, 1 - view.k * 2) : 0;
@@ -769,8 +858,17 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     anyCritical: batteryPct < 20 || state.vitals.air < 30 || state.vitals.water < 20 || state.vitals.food < 20,
     greenhouseOn: state.crewOrder === 'auto' && isGreenhouseOn(state.vitals, state.installation),
     greenhouseVisible: state.installation.greenhouse !== 'off',
+    greenhouseWear: state.crop.wear,
+    greenhouseReady: state.crop.growth >= 100,
+    harvests: state.crop.harvests,
+    greenhouseLighting: state.crop.lighting,
+    greenhouseDoorOpen: crewAtGreenhouseDoor(),
     antennaOnline: state.robot.antennaInstalled,
     antennaRepairing: view.working && view.kind === 'antenna' && (view.phase === 'operate' || view.phase === 'deliver'),
+    antennaFixed: view.working && view.kind === 'antenna' && ((view.phase === 'operate' && view.k > 0.85) || view.phase === 'return' || view.phase === 'deliver'),
+    antennaTune: Math.min(1, state.antennaTuneLeft / TUNE_HOURS),
+    waterLevel: state.vitals.water,
+    airLevel: state.vitals.air,
     processing: view.working && view.kind === 'ice' && view.phase === 'deliver',
     iceActive: state.robot.queue.some((q) => q.kind === 'ice'),
     panelGlow: 0.6 * calibrationFactor(state.calibrationLeft) * (lit ? 1 : 0.25),
@@ -787,11 +885,15 @@ export function resetScenePresentation(): void {
   lastClockHour = -1;
   simRate = simRateRaw = 1;
   resetIceSite();
+  sparkLife.fill(0);
+  for (let i = 0; i < SPARK_MAX; i++) sparkPos[3 * i + 1] = -999;
   for (const m of crew) {
     Object.assign(m.walker, createWalker(m.home.x, m.home.z, Math.PI / 2));
     m.destKey = '';
     m.driveKind = '';
     m.pose = 'idle';
+    m.lastSteps = 0;
+    m.stepCooldown = 0;
     m.rig?.update(m.walker, 'idle', surfaceHeight(m.walker.x, m.walker.z), 0);
   }
   for (let i = 0; i < DUST_MAX; i++) {

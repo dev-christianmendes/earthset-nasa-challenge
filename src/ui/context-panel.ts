@@ -331,9 +331,9 @@ function phaseLabel(phase: MissionPhase, kind: TaskKind): string {
 
 function missionDetail(kind: TaskKind, state: GameState): string {
   // Horas e água vêm do motor (TASK_HOURS, ICE_HELP_HOURS): o texto não fica para trás quando a regra muda.
-  const h = Math.round(TASK_HOURS[kind]);
-  if (kind === 'panel') return t('mission.panel.count', { h, n: state.installation.panels, max: MAX_PANELS });
-  return t(`mission.${kind}.time`, { h, help: Math.round(ICE_HELP_HOURS) });
+  const hours = Math.round(TASK_HOURS[kind]);
+  if (kind === 'panel') return t('mission.panel.count', { panelH: hours, n: state.installation.panels, max: MAX_PANELS });
+  return t(`mission.${kind}.time`, { iceH: hours, antennaH: hours, help: Math.round(ICE_HELP_HOURS) });
 }
 
 /** Etapas da missão em andamento: cinco barras (preparo, ida, operação, volta, entrega) e o texto da etapa. */

@@ -15,8 +15,14 @@ export interface Spot {
 export const HABITAT: Spot = { x: 0, z: 0, rot: Math.PI / 2 };
 /** Câmara de descompressão (porta): onde a tripulação entra e sai. */
 export const AIRLOCK: Spot = { x: 4.2, z: 0 };
-/** Ciência e vida: estufa ao sul do habitat. */
-export const GREENHOUSE: Spot = { x: -1, z: 11 };
+/**
+ * Ciência e vida: módulo da estufa acoplado ao colar sul do habitat (D-25). Centro do módulo de 6 m: o colar do habitat
+ * termina em z = 7,21 e a face de acoplamento da estufa fica 3,0 m antes do centro. Mesmo eixo (x = 0) e mesma altura.
+ */
+export const GREENHOUSE: Spot = { x: 0, z: 10.21 };
+/** Comprimento do módulo da estufa (m) e porta de serviço no flanco leste, para a navegação e a câmera. */
+export const GREENHOUSE_LENGTH = 6;
+export const GREENHOUSE_DOOR: Spot = { x: GREENHOUSE.x + 1.75, z: GREENHOUSE.z };
 /** Energia: campo solar a oeste, no terreno mais alto. 12 vagas (3 colunas × 4 linhas). */
 export const PANEL_SLOTS: readonly Spot[] = (() => {
   const out: Spot[] = [];
@@ -58,7 +64,7 @@ export const ICE_ROUTE: readonly Spot[] = [DOCK, { x: 17, z: -4 }, { x: 24, z: -
 export const CLEAR_ZONES: ReadonlyArray<readonly [number, number, number]> = [
   [0, 0, 11],
   [-12.5, 0, 10],
-  [-1, 11, 6],
+  [0, 10.2, 7],
   [11, 0, 9],
   [12.5, -12, 4],
   [0.5, -11, 4],

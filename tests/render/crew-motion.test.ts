@@ -223,3 +223,26 @@ describe('passada lunar', () => {
     expect(maxLift).toBeLessThan(0.08);
   });
 });
+
+describe('passos', () => {
+  it('conta dois apoios por ciclo da passada, e nenhum parado', () => {
+    const w = createWalker(0, 0, 0);
+    w.speed = 1;
+    w.moveWeight = 1;
+    const p = syntheticRun();
+    const start = w.steps;
+    let turns = 0;
+    let last = w.phase;
+    for (let i = 0; i < 1200; i++) {
+      stepGait(w, 0.005, 1, null, p);
+      if (w.phase < last) turns++;
+      last = w.phase;
+    }
+    // Entre voltas completas, o número de apoios é 2 por volta (±1 pela volta em andamento).
+    expect(Math.abs(w.steps - start - 2 * turns)).toBeLessThanOrEqual(1);
+    expect(turns).toBeGreaterThan(0);
+    const still = createWalker(0, 0, 0);
+    for (let i = 0; i < 200; i++) stepGait(still, 0.005, 1, null, p);
+    expect(still.steps).toBe(0);
+  });
+});

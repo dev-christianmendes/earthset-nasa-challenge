@@ -110,6 +110,8 @@ export interface Walker {
   targetSpeed: number;
   /** Fase do ciclo da passada (0 a 1, 0 = pé esquerdo apoia). */
   phase: number;
+  /** Apoios de pé contados até agora (dois por ciclo). O som dos passos lê a diferença entre quadros. */
+  steps: number;
   /** Pesos suavizados: deslocamento (0 parado a 1 andando) e salto (0 caminhada a 1 passo saltado). */
   moveWeight: number;
   hopWeight: number;
@@ -120,7 +122,7 @@ export interface Walker {
 }
 
 export function createWalker(x: number, z: number, heading = 0): Walker {
-  return { x, z, heading, yawRate: 0, speed: 0, accel: 0, path: null, s: 0, prevTarget: 0, targetSpeed: 0, phase: 0, moveWeight: 0, hopWeight: 0, lift: 0, pitch: 0, roll: 0 };
+  return { x, z, heading, yawRate: 0, speed: 0, accel: 0, path: null, s: 0, prevTarget: 0, targetSpeed: 0, phase: 0, steps: 0, moveWeight: 0, hopWeight: 0, lift: 0, pitch: 0, roll: 0 };
 }
 
 /**
@@ -263,7 +265,10 @@ export function stepGait(w: Walker, dt: number, rate: number, walk: GaitProfile 
   const rw = walk ? phaseRate(walk, w.phase, ground, tFlight) : 0;
   const rr = run ? phaseRate(run, w.phase, ground, tFlight) : 0;
   const rateMix = walk && run ? rw * (1 - w.hopWeight) + rr * w.hopWeight : walk ? rw : rr;
-  w.phase = (w.phase + rateMix * dt) % 1;
+  const advanced = w.phase + rateMix * dt;
+  // Cada meio ciclo é um apoio (pé esquerdo em 0, direito em 0,5): conta só quando está de fato andando.
+  if (w.moveWeight > 0.3) w.steps += Math.floor(advanced * 2) - Math.floor(w.phase * 2);
+  w.phase = advanced % 1;
   // Voo: parábola h = g·t²/8 no ápice (t = duração do voo sem time-lapse); some quando a passada some.
   let lift = 0;
   if (run && w.hopWeight > 0) {

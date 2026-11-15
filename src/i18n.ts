@@ -118,8 +118,8 @@ const DICT: Record<string, Record<Lang, string>> = {
     pt: 'Sol no morro: {lit} de {total} h acima do horizonte medido. Horizonte: LRO LOLA. Sol: JPL Horizons.',
   },
   'note': {
-    en: 'Sun and terrain: real data (NASA/JPL Horizons, LRO LOLA). Space weather: 9 Oct 2024 scenario (NASA DONKI). Terrain vertical exaggeration 2×. Rover and greenhouse are illustrative.',
-    pt: 'Sol e relevo: dados reais (NASA/JPL Horizons e LRO LOLA). Clima: cenário de 09/10/2024 (NASA DONKI). Relevo com exagero vertical de 2×. Rover e estufa são ilustrativos.',
+    en: 'Sun and terrain: real data (NASA/JPL Horizons, LRO LOLA). Space weather: 9 Oct 2024 scenario (NASA DONKI). Terrain vertical exaggeration 2×; the base site is leveled. Rover and greenhouse are illustrative.',
+    pt: 'Sol e relevo: dados reais (NASA/JPL Horizons e LRO LOLA). Clima: cenário de 09/10/2024 (NASA DONKI). Relevo com exagero vertical de 2×; a área da base é aplainada. Rover e estufa são ilustrativos.',
   },
   'reason.match-over': { en: 'The match is over.', pt: 'A partida já terminou.' },
   'reason.invalid-mode': { en: 'Invalid greenhouse mode.', pt: 'Modo da estufa inválido.' },
@@ -262,12 +262,13 @@ const DICT: Record<string, Record<Lang, string>> = {
   'sky.body.mars': { en: 'Mars', pt: 'Marte' },
   'sky.body.jupiter': { en: 'Jupiter', pt: 'Júpiter' },
   'sky.body.saturn': { en: 'Saturn', pt: 'Saturno' },
-  'science.fine': { en: 'Illustrative: rover, greenhouse, consumption rates, ice site position and terrain height exaggeration (2×).', pt: 'Ilustrativo: rover, estufa, taxas de consumo, posição do gelo e exagero vertical do relevo (2×).' },
+  'science.fine': { en: 'Illustrative: rover, greenhouse, consumption rates, ice site position, terrain height exaggeration (2×) and the leveled base site.', pt: 'Ilustrativo: rover, estufa, taxas de consumo, posição do gelo, exagero vertical do relevo (2×) e a área da base aplainada.' },
   'settings.title': { en: 'Settings', pt: 'Configurações' },
   'settings.intro': { en: 'Play the intro before each new mission', pt: 'Mostrar a introdução a cada nova missão' },
   'settings.motion': { en: 'Reduce motion (no camera flights)', pt: 'Reduzir movimento (sem voos de câmera)' },
   'settings.explain': { en: 'Show explanations next to resources', pt: 'Mostrar explicações junto aos recursos' },
   'settings.quality': { en: 'High quality shadows', pt: 'Sombras em alta qualidade' },
+  'settings.volume': { en: 'Sound volume', pt: 'Volume do som' },
   'settings.lang': { en: 'Language', pt: 'Idioma' },
   'credits.title': { en: 'Credits & sources', pt: 'Créditos e fontes' },
   'credits.data': { en: 'Scientific data', pt: 'Dados científicos' },
@@ -302,13 +303,13 @@ const DICT: Record<string, Record<Lang, string>> = {
   'mission.launch': { en: 'Launch', pt: 'Iniciar' },
   'mission.ice': { en: 'Lunar ice extraction', pt: 'Extração de gelo lunar' },
   'mission.ice.p': { en: 'Drill icy regolith (a few % water), haul it and heat it at the processor to trap the vapor. Lab-tested idea, not yet run on the Moon. +{w} water.', pt: 'Perfurar regolito com gelo (poucos % de água), levar e aquecer no processador para prender o vapor. Ideia testada em laboratório, ainda não usada na Lua. +{w} de água.' },
-  'mission.ice.time': { en: '{h} h · {help} h with an astronaut helping', pt: '{h} h · {help} h com ajuda de um astronauta' },
+  'mission.ice.time': { en: '{iceH} h · {help} h with an astronaut helping', pt: '{iceH} h · {help} h com ajuda de um astronauta' },
   'mission.panel': { en: 'Solar array installation', pt: 'Instalação de painel solar' },
   'mission.panel.p': { en: 'Carry a stored array to the energy field and connect it. +1 panel.', pt: 'Levar um painel guardado ao campo de energia e conectá-lo. +1 painel.' },
-  'mission.panel.count': { en: '{h} h · {n} of {max} installed', pt: '{h} h · {n} de {max} instalados' },
+  'mission.panel.count': { en: '{panelH} h · {n} of {max} installed', pt: '{panelH} h · {n} de {max} instalados' },
   'mission.antenna': { en: 'Antenna repair', pt: 'Reparo da antena' },
   'mission.antenna.p': { en: 'Repair the dish. It receives NASA notices of flares and CMEs, which sometimes come before radiation.', pt: 'Reparar a antena. Ela recebe os avisos da NASA de erupções e CMEs, que às vezes vêm antes da radiação.' },
-  'mission.antenna.time': { en: '{h} h', pt: '{h} h' },
+  'mission.antenna.time': { en: '{antennaH} h', pt: '{antennaH} h' },
   'queue.empty': { en: 'No operations. The rover is in the garage.', pt: 'Nenhuma operação. O rover está na garagem.' },
   'queue.next': { en: 'Queued', pt: 'Na fila' },
   'phase.prep': { en: 'Preparing', pt: 'Preparando' },
@@ -618,11 +619,20 @@ export function loadLang(): Lang {
 }
 
 /** Texto da chave no idioma atual, com {variáveis} substituídas. Chave ausente devolve a própria chave. */
+/**
+ * Valores padrão de textos que vêm de constantes do motor (horas e água das missões). Os textos fixos do HTML são
+ * traduzidos sem variáveis; sem isto, mostravam `{w}` e `{h}` literais. Quem passa uma variável explícita ganha.
+ */
+const DEFAULT_VARS: Record<string, string | number> = {};
+export function setI18nDefaults(vars: Record<string, string | number>): void {
+  Object.assign(DEFAULT_VARS, vars);
+}
+
 export function t(key: string, vars: Record<string, string | number> = {}): string {
   const entry = DICT[key];
   if (!entry) return key;
   let text = entry[current];
-  for (const [name, value] of Object.entries(vars)) {
+  for (const [name, value] of Object.entries({ ...DEFAULT_VARS, ...vars })) {
     text = text.split(`{${name}}`).join(String(value));
   }
   return text;

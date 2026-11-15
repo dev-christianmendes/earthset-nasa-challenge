@@ -182,3 +182,18 @@ Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'`
 - **Onde aparece:** faixa no painel do rover, cartão do rover na barra da equipe, rótulo em cada missão que causaria o risco e o aviso da ordem. Missão arriscada continua permitida.
 - **Custo:** ~3,6 ms por previsão; o resultado é guardado e só recalculado quando muda hora, fila, tarefas da tripulação, ordem de abrigo ou água.
 
+## D-25. Estufa acoplada, antena e tanques com estado visível, sons por equipamento (15/11/2026, noite)
+
+- **Estufa:** a cúpula solta (boca do túnel apontando para longe do habitat, só um cabo no chão) foi trocada por um módulo cilíndrico acoplado coaxialmente ao colar sul do habitat (mesmo eixo e mesma altura, face de acoplamento em z = 7,21): casco inferior opaco, abóbada de vidro com nervuras, 10 leitos (96 plantas), porta de serviço e escada a leste, ventiladores e farol de status. O modelo foi gerado em Blender por script (`build_v4.py`, 440 kB). Contrato de nós entre modelo e código: `bed_*` (com `length` nos extras), `fan_*`, `service_door`, `glass_dust`/`dust_film`, `status_light`, `grow_light`.
+- **Consequências visíveis e persistentes:** desgaste vira poeira no vidro, ventiladores lentos e luz falhando; manutenção limpa tudo; cada colheita soma uma caixa na plataforma (até 12), assentada no relevo e construída no código porque o terreno ao sul fica ~1,4 m acima da origem do modelo; a porta abre quando alguém trabalha ali; as plantas saem dos leitos do modelo (com o layout antigo como reserva).
+- **Antena:** peças de dano (pétala, cabo solto, queimadura) até o reparo, faíscas na solda e anel de ajuste que esmaece com o ajuste restante. **Tanques:** barras de nível de água (dois tanques de 50 cada) e de ar; o de ar passa a vermelho piscando abaixo de 30.
+- **Sons:** sintetizados (Web Audio), sem arquivos nem licenças, por equipamento: passos (volume pela velocidade, mais macio no passo saltado e pela distância da câmera), painel, antena, gelo, colheita, manutenção, inspeção, calibração, ajuste, alerta por recurso (energia, água, ar, comida) e sons contínuos (motor, broca, servo, arco, ventilador, bomba, aquecedor, enchimento). Eventos vêm de uma função pura do motor. Volume com controle e silenciar, salvos no navegador.
+
+## D-26. Plataforma aplainada na base (15/11/2026, noite)
+
+- **Problema:** a área da base tinha 8,5 m de desnível e 11° de inclinação média (22° no máximo, com exagero ×2): o habitat afundava de um lado, o rover e os astronautas andavam de lado e as sombras do relevo cobriam a base. Uma primeira versão, com ~4° de inclinação, ainda deixava as peças grandes enterradas até 0,9 m no lado alto, porque cada peça é assentada no ponto mais baixo da pegada. Duas plataformas separadas (base e módulo de pouso) se atrapalhavam, pois as rampas se sobrepunham.
+- **Decisão:** uma plataforma única, horizontal em 31 m de raio em volta de (3, −11) e em rampa até 100 m, cobrindo habitat, estufa, campo solar, garagem, processador, tanques, antena, depósito, módulo de pouso e local do gelo. A inclinação regional volta aos poucos ao longo da rampa. Fora de 100 m, o relevo medido não muda (teste).
+- **Altura única:** a malha desenhada e `surfaceHeight` leem as mesmas alturas e interpolam pelos mesmos triângulos (antes, bilinear contra triangulada: diferença de alguns centímetros nas encostas).
+- **Ciência:** só o desenho muda. Sol, horizonte e clima vêm de tabelas próprias e não usam a malha. A tela e `docs/data-sources.md` dizem que a base é aplainada, junto do exagero vertical.
+- **Resultado medido:** inclinação média na base 11° → 0,1° (máxima 1,6°); enterramento máximo por objeto 0,94 m → 0,04 m; a rampa chega a no máximo a inclinação do relevo natural.
+

@@ -10,6 +10,7 @@ import {
   CLEAR_ZONES,
   DOCK,
   GREENHOUSE,
+  GREENHOUSE_LENGTH,
   HABITAT,
   ICE_PROCESSOR,
   ICE_ROUTE,
@@ -109,7 +110,11 @@ const grey = mat(0x6f7782, { metalness: 0.5 });
 const dark = mat(0x2a2e35);
 // Comprimento no eixo x do modelo: a rotação do ponto (π/2) o deixa ao longo da crista (z).
 habitat.add(box(12, 3.2, 3.4, white, 2.2));
-greenhouse.add(new THREE.Mesh(new THREE.SphereGeometry(2.6, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat(0x9fe8b0, { transparent: true, opacity: 0.35, roughness: 0.1 })));
+// Provisório (só se o GLB não carregar): casco cilíndrico do módulo, eixo ao longo de z, a 2,75 m da base do habitat.
+const ghProvisional = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, GREENHOUSE_LENGTH, 24, 1, true), mat(0x9fe8b0, { transparent: true, opacity: 0.35, roughness: 0.1 }));
+ghProvisional.rotation.x = Math.PI / 2;
+ghProvisional.position.y = 2.75;
+greenhouse.add(ghProvisional);
 powerUnit.add(box(2.4, 1.4, 1.4, grey));
 processor.add(box(3.6, 2, 1.8, grey));
 tanks.add(box(3, 1.8, 1.6, white));
@@ -120,7 +125,8 @@ for (const t of towers) t.add(box(0.2, 4, 0.2, grey));
 for (const u of panelUnits) u.add(box(2, 0.08, 1.2, mat(0x3f7fd0, { metalness: 0.5, roughness: 0.25 }), 1.2));
 
 place(habitat, HABITAT, 6);
-place(greenhouse, GREENHOUSE, 2.4);
+// A estufa se acopla ao colar do habitat: mesma altura de base, não a do relevo sob ela (D-25).
+greenhouse.position.set(GREENHOUSE.x, habitat.position.y, GREENHOUSE.z);
 place(antenna, ANTENNA, 1.4);
 place(powerUnit, POWER_UNIT, 1.2);
 place(processor, ICE_PROCESSOR, 2);
@@ -275,7 +281,6 @@ const slotCables = PANEL_SLOTS.map((slot, i) => {
   return cableMesh([[slot.x + dx, FIELD_TRUNK_Z], [slot.x + dx, (FIELD_TRUNK_Z + slot.z) / 2], [slot.x + dx, slot.z]]);
 });
 cable([[10, 4.5], [12.5, 3.5], [14, 3]]);
-cable([[1.7, 4], [2.5, 7], [-1, 9]]);
 
 // ---------- Trilhas do rover (marcas no regolito) ----------
 
@@ -318,8 +323,20 @@ const handles = {
   lamp: [] as THREE.MeshStandardMaterial[],
   padLight: [] as THREE.MeshStandardMaterial[],
   engineGlow: [] as THREE.MeshStandardMaterial[],
+  /** Estufa (PER-02): poeira no vidro pelo desgaste, ventiladores, farol de status e porta de serviço. */
+  dust: null as THREE.MeshStandardMaterial | null,
+  fans: [] as THREE.Object3D[],
+  ghStatus: null as THREE.MeshStandardMaterial | null,
+  ghDoor: null as THREE.Object3D | null,
   yoke: null as THREE.Object3D | null,
   dish: null as THREE.Object3D | null,
+  /** Peças de dano da antena (PER-01): visíveis só até o reparo. */
+  damage: [] as THREE.Object3D[],
+  damageCable: null as THREE.Object3D | null,
+  tuneRing: null as THREE.Object3D | null,
+  tuneGlow: null as THREE.MeshStandardMaterial | null,
+  /** Medidores de nível dos tanques (PER-03): barras com origem na base, escala em y de 0 a 1. */
+  gauges: [] as Array<{ node: THREE.Object3D; mat: THREE.MeshStandardMaterial | null; kind: 'water' | 'air'; index: number }>,
   antennaLight: new THREE.MeshStandardMaterial({ color: 0xe47767, emissive: 0xe47767, emissiveIntensity: 2 }),
 };
 
@@ -335,6 +352,39 @@ for (const x of [-5, 5]) {
   a.position.set(x, 4.1, 0);
   habitat.add(a);
   alertLights.push(a);
+}
+
+let lastBaseT = -1;
+/** Ganchos chamados quando o modelo da estufa carrega (as plantas se ligam aos leitos do modelo: crop.ts). */
+export const greenhouseModelHooks: Array<(model: THREE.Object3D) => void> = [];
+
+// Plataforma de carga ao sul da estufa, assentada no relevo, com uma caixa por colheita (consequência persistente).
+const HARVEST_MAX = 12;
+const harvestPad = new THREE.Group();
+harvestPad.name = 'harvest-pad';
+{
+  const px = GREENHOUSE.x;
+  const pz = GREENHOUSE.z + GREENHOUSE_LENGTH / 2 + 0.85;
+  const slab = box(2.6, 0.14, 1.3, mat(0x3b4048, { metalness: 0.4 }), 0.07);
+  const stripe = box(2.6, 0.145, 0.06, mat(0xf3a847), 0.0725);
+  stripe.position.z = -0.6;
+  harvestPad.add(slab, stripe);
+  harvestPad.position.set(px, groundFor(px, pz, 1.2), pz);
+  base.add(harvestPad);
+}
+const harvestCrates: THREE.Object3D[] = [];
+function buildHarvestCrates(source: THREE.Object3D): void {
+  for (const c of harvestCrates) harvestPad.remove(c);
+  harvestCrates.length = 0;
+  for (let i = 0; i < HARVEST_MAX; i++) {
+    const crate = source.clone(true);
+    crate.scale.setScalar(0.42);
+    crate.position.set(-0.87 + (i % 4) * 0.58, 0.14 + Math.floor(i / 4) * 0.23, 0);
+    crate.rotation.y = Math.PI / 2;
+    crate.visible = false;
+    harvestPad.add(crate);
+    harvestCrates.push(crate);
+  }
 }
 
 /** Painéis guardados no depósito (caixas): um por painel ainda não instalado. */
@@ -371,12 +421,30 @@ export function loadBaseLayoutModels(): Promise<unknown> {
       // O habitat antigo era alinhado em x; o v4 também: a rotação do ponto o põe ao longo da crista.
     }),
     attachFirst(greenhouse, ['v4/greenhouse_v4', 'greenhouse']).then((m) => {
-      if (m) handles.growLight = materialsNamed(m, 'grow_light');
+      if (!m) return;
+      handles.growLight = materialsNamed(m, 'grow_light');
+      handles.dust = ownMaterial(m, 'dust_film');
+      if (handles.dust) {
+        handles.dust.transparent = true;
+        handles.dust.depthWrite = false;
+        handles.dust.opacity = 0;
+      }
+      m.traverse((n) => {
+        if (/^fan_\d+$/.test(n.name)) handles.fans.push(n);
+      });
+      handles.ghStatus = ownMaterial(m, 'status_light');
+      handles.ghDoor = m.getObjectByName('service_door') ?? null;
+      for (const hook of greenhouseModelHooks) hook(m);
     }),
+    loadModel('v4/crate_v4').then((m) => buildHarvestCrates(m)).catch(() => undefined),
     attachFirst(antenna, ['v4/antenna_v4', 'antenna']).then((m) => {
       if (!m) return;
       handles.yoke = m.getObjectByName('yoke') ?? null;
       handles.dish = m.getObjectByName('dish') ?? null;
+      handles.damage = ['damage_petal', 'damage_cable', 'damage_scorch'].map((n) => m.getObjectByName(n)).filter((o): o is THREE.Object3D => !!o);
+      handles.damageCable = m.getObjectByName('damage_cable') ?? null;
+      handles.tuneRing = m.getObjectByName('tune_ring') ?? null;
+      handles.tuneGlow = ownMaterial(m, 'tune_glow');
       antennaStatus.position.set(0, 0.6, 0.9);
     }),
     attachFirst(powerUnit, ['v4/power_unit_v4']).then((m) => {
@@ -385,7 +453,15 @@ export function loadBaseLayoutModels(): Promise<unknown> {
     attachFirst(processor, ['v4/ice_processor_v4']).then((m) => {
       if (m) handles.screen.push(...materialsNamed(m, 'screen'));
     }),
-    attachFirst(tanks, ['v4/tanks_v4']),
+    attachFirst(tanks, ['v4/tanks_v4']).then((m) => {
+      if (!m) return;
+      const water = ownMaterial(m, 'gauge_water');
+      const air = ownMaterial(m, 'gauge_air');
+      handles.gauges = [0, 1, 2].flatMap((i) => {
+        const node = m.getObjectByName(`gauge_fill_${i}`);
+        return node ? [{ node, mat: i === 2 ? air : water, kind: i === 2 ? ('air' as const) : ('water' as const), index: i }] : [];
+      });
+    }),
     attachFirst(pad, ['v4/landing_pad_v4']).then((m) => {
       if (m) handles.padLight = materialsNamed(m, 'pad_light');
     }),
@@ -434,6 +510,12 @@ export function loadBaseLayoutModels(): Promise<unknown> {
 // ---------- Atualização ----------
 
 export interface BaseView {
+  /** Estufa (PER-02): desgaste 0 a 100, cultura pronta, colheitas feitas, cuidado de luz e porta de serviço aberta. */
+  readonly greenhouseWear: number;
+  readonly greenhouseReady: boolean;
+  readonly harvests: number;
+  readonly greenhouseLighting: 'low' | 'normal' | 'high';
+  readonly greenhouseDoorOpen: boolean;
   readonly t: number;
   readonly panels: number;
   /**
@@ -448,6 +530,13 @@ export interface BaseView {
   readonly antennaOnline: boolean;
   /** Antena em reparo (fase de operação da missão). */
   readonly antennaRepairing: boolean;
+  /** Reparo já feito à vista (fim da operação, volta e entrega): as peças de dano somem antes de o motor concluir. */
+  readonly antennaFixed: boolean;
+  /** Ajuste da antena restante, de 0 (sem ajuste) a 1 (recém-ajustada). */
+  readonly antennaTune: number;
+  /** Água e ar (0 a 100) para os medidores dos tanques. */
+  readonly waterLevel: number;
+  readonly airLevel: number;
   readonly processing: boolean;
   readonly iceActive: boolean;
   readonly panelGlow: number;
@@ -521,7 +610,31 @@ export function updateBase(v: BaseView): void {
 
   // Estufa: luz de cultivo quando está produzindo.
   greenhouse.visible = true;
-  for (const m of handles.growLight) m.emissiveIntensity = v.greenhouseOn ? 2.4 + 0.3 * Math.sin(t * 1.5) : v.greenhouseVisible ? 0.15 : 0;
+  const wear = Math.min(100, Math.max(0, v.greenhouseWear));
+  const lightLevel = v.greenhouseLighting === 'high' ? 3.4 : v.greenhouseLighting === 'low' ? 1.5 : 2.4;
+  // Desgaste alto: a luz falha de vez em quando (queda curta), sinal de que pede manutenção.
+  const lightDip = wear > 70 && Math.sin(t * 31) + Math.sin(t * 5.3) > 1.55 ? 0.3 : 1;
+  for (const m of handles.growLight) m.emissiveIntensity = v.greenhouseOn ? (lightLevel + 0.3 * Math.sin(t * 1.5)) * lightDip : v.greenhouseVisible ? 0.15 : 0;
+  // Poeira no vidro sobe com o desgaste e some na manutenção (consequência persistente da ação).
+  if (handles.dust) handles.dust.opacity = 0.62 * Math.pow(wear / 100, 1.15);
+  // Ventiladores giram com a estufa ligada, mais devagar e falhando com o desgaste.
+  const dt = lastBaseT >= 0 ? Math.min(0.1, Math.max(0, t - lastBaseT)) : 0;
+  lastBaseT = t;
+  const fanSpeed = v.greenhouseOn ? 5.5 * (1 - 0.6 * (wear / 100)) * (wear > 85 && Math.sin(t * 3) > 0.6 ? 0.2 : 1) : 0;
+  for (const fan of handles.fans) fan.rotation.y += fanSpeed * dt;
+  // Farol de status: verde (bem), âmbar (desgaste), vermelho piscando (muito desgastado), azul-petróleo (pronta para colher).
+  if (handles.ghStatus) {
+    const critical = wear >= 85;
+    const warn = wear >= 60;
+    const hex = !v.greenhouseOn ? 0x3a4a52 : critical ? 0xe47767 : warn ? 0xf3a847 : v.greenhouseReady ? 0x56e0cf : 0x6fe39a;
+    handles.ghStatus.color.setHex(hex);
+    handles.ghStatus.emissive.setHex(hex);
+    handles.ghStatus.emissiveIntensity = !v.greenhouseOn ? 0.2 : critical ? (Math.sin(t * 8) > 0 ? 3 : 0.3) : v.greenhouseReady ? 2 + Math.sin(t * 4) : 2;
+  }
+  // Porta de serviço abre quando alguém trabalha ali.
+  if (handles.ghDoor) handles.ghDoor.rotation.y += ((v.greenhouseDoorOpen ? -1.6 : 0) - handles.ghDoor.rotation.y) * 0.12;
+  // Caixas de colheita na plataforma: uma por colheita feita (até 12).
+  for (let i = 0; i < harvestCrates.length; i++) harvestCrates[i].visible = i < v.harvests;
 
   // Antena: apontada para baixo e luz vermelha até o reparo; depois orienta para a Terra e fica verde.
   const dishTarget = v.antennaOnline ? v.earthEl : -35;
@@ -534,6 +647,27 @@ export function updateBase(v: BaseView): void {
   handles.antennaLight.color.setHex(v.antennaOnline ? 0x6fe39a : 0xe47767);
   handles.antennaLight.emissive.setHex(v.antennaOnline ? 0x6fe39a : 0xe47767);
   handles.antennaLight.emissiveIntensity = v.antennaRepairing ? (Math.sin(t * 12) > 0 ? 3 : 0.2) : 2;
+  // Dano à vista até o reparo; o cabo solto balança. Anel de ajuste acende e esmaece com o ajuste restante.
+  const fixedLook = v.antennaOnline || v.antennaFixed;
+  for (const o of handles.damage) o.visible = !fixedLook;
+  if (handles.damageCable && !fixedLook) {
+    handles.damageCable.rotation.z = 0.22 * Math.sin(t * 1.7);
+    handles.damageCable.rotation.x = 0.1 * Math.sin(t * 1.1 + 1);
+  }
+  if (handles.tuneRing) handles.tuneRing.visible = v.antennaOnline && v.antennaTune > 0;
+  if (handles.tuneGlow) handles.tuneGlow.emissiveIntensity = 0.5 + 2.5 * v.antennaTune * (0.85 + 0.15 * Math.sin(t * 3));
+
+  // Tanques (PER-03): dois de água (50 cada) e um de ar; barra sobe e desce suave, e pisca quando está baixa.
+  for (const g of handles.gauges) {
+    const target = g.kind === 'air' ? v.airLevel / 100 : Math.min(1, Math.max(0, (v.waterLevel - 50 * g.index) / 50));
+    g.node.scale.y += (Math.max(0.002, target) - g.node.scale.y) * 0.08;
+    if (!g.mat) continue;
+    const low = g.kind === 'air' ? v.airLevel < 30 : v.waterLevel < 20 && g.index === 0;
+    const base = g.kind === 'air' ? 0x56b9a4 : 0x62b8ff;
+    g.mat.color.setHex(low ? 0xe47767 : base);
+    g.mat.emissive.setHex(low ? 0xe47767 : base);
+    g.mat.emissiveIntensity = low ? (Math.sin(t * 6) > 0 ? 2.4 : 0.5) : 1.5;
+  }
 
   // Processador de gelo: tela acesa e pulsando durante a entrega (aquecimento e condensação).
   for (const m of handles.screen) m.emissiveIntensity = v.processing ? 2 + Math.sin(t * 5) : 0.5;
@@ -553,7 +687,7 @@ export function setLanderAltitude(h: number): void {
 
 /** Ponto central de cada área, para a câmera. */
 export const FOCUS = {
-  greenhouse: new THREE.Vector3(GREENHOUSE.x, surfaceHeight(GREENHOUSE.x, GREENHOUSE.z) + 1.2, GREENHOUSE.z),
+  greenhouse: new THREE.Vector3(GREENHOUSE.x, habitat.position.y + 2.2, GREENHOUSE.z),
   habitat: new THREE.Vector3(HABITAT.x, surfaceHeight(HABITAT.x, HABITAT.z) + 2, HABITAT.z),
   energy: new THREE.Vector3(-12.5, surfaceHeight(-12.5, 0) + 1, 0),
   logistics: new THREE.Vector3(11, surfaceHeight(11, 0) + 1, 0),

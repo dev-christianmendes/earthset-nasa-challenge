@@ -29,6 +29,8 @@ Direção visual: Cinematic Scientific Sci-Fi (D-11). Política de fontes: D-15.
 | Ativo | Arquivo | Origem | Licença | Em uso |
 |---|---|---|---|---|
 | Habitat modular, rover 6 rodas, módulo de pouso, plataforma, processador de gelo, tanques, unidade de energia, torre de luz, caixas, antena articulada, painel solar, estufa, pedras | `public/models/v4/*.glb` (14) | Próprio: `assets-src/blender/build_v4.py` | do projeto | sim |
+| Estufa (módulo cilíndrico acoplado ao colar sul do habitat, 10 leitos, porta de serviço, ventiladores), medidores de nível dos tanques e peças de dano e ajuste da antena (D-25) | `greenhouse_v4.glb` (440 kB), `tanks_v4.glb`, `antenna_v4.glb` | Próprio, regerados por `build_v4.py` (`blender -b --factory-startup -P assets-src/blender/build_v4.py -- public/models/v4 greenhouse tanks antenna`) | do projeto | sim |
+| Sons (Web Audio, sintetizados em `src/ui/audio.ts`) | nenhum arquivo | Próprio, gerado em tempo de execução | sem terceiros, nada a atribuir | sim |
 | Astronauta (traje, capacete, mochila sobre manequim; clipes idle, walk, run, work, wave e outros) | `public/models/ext/astronaut.glb` | Quaternius, Universal Animation Library 1 e 2 (`assets-src/external/quaternius-universal-animation-library*/`) + `build_ext_astronaut.py` | CC0 1.0 | sim |
 | Módulos, túneis, landers, caixas, pedras, rover e caminhão | `public/models/ext/*.glb` | KayKit Space Base Bits (Kay Lousberg) e Quaternius via poly.pizza (`SOURCE.md` em cada pasta) | CC0 1.0 | não (alternativas) |
 

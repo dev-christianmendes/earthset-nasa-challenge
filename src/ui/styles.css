@@ -413,11 +413,12 @@ button.ghost { background: transparent; }
 @media (orientation: landscape) and (max-height: 520px) {
   .topbar { top: 6px; left: 6px; right: 6px; padding: 4px 8px; }
   .toast { top: 58px; }
-  .toolbar { left: 6px; top: 60px; bottom: 6px; transform: none; flex-direction: column; justify-content: space-between; padding: 4px; gap: 2px; overflow-y: auto; animation: none; }
+  /* Em larguras de até 760 px as regras do celular em pé também valem: zera o que elas definem (right, top, left). */
+  .toolbar { left: 6px; right: auto; width: auto; top: 60px; bottom: 6px; transform: none; flex-direction: column; justify-content: space-between; padding: 4px; gap: 2px; overflow-y: auto; animation: none; }
   .toolbar button { min-width: 48px; min-height: 40px; flex: 1; padding: 2px 4px; }
   .toolbar button small { display: none; }
-  .luma { left: 66px; bottom: 6px; width: min(320px, 40vw); padding: 8px 10px; font-size: 13px; }
-  .side, .ctx { top: 60px; bottom: 6px; right: 6px; width: min(340px, 44vw); max-height: none; }
+  .luma { left: 66px; right: auto; bottom: 6px; width: min(320px, 40vw); padding: 8px 10px; font-size: 13px; }
+  .side, .ctx { top: 60px; bottom: 6px; left: auto; right: 6px; width: min(340px, 44vw); max-height: none; }
   .side:not([hidden]) ~ .luma { display: none; }
 }
 
@@ -473,13 +474,25 @@ button.ghost { background: transparent; }
   .side:not([hidden]) ~ .coach, .ctx:not([hidden]) ~ .coach { top: 160px; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  .squad { top: 60px; left: 66px; width: auto; max-width: calc(56vw - 72px); flex-direction: row; gap: 4px; }
+  .squad { top: 60px; left: 66px; right: auto; width: auto; max-width: calc(56vw - 72px); flex-direction: row; gap: 4px; }
   .squad-card { flex: 1; grid-template-columns: 1fr; gap: 0; min-height: 42px; padding: 4px 7px 7px; }
   .squad-icon { display: none; }
   .squad-text small { font-size: 10.5px; }
   .toast { top: 112px; }
-  .coach { left: 66px; transform: none; bottom: 6px; width: min(380px, calc(56vw - 72px)); padding: 8px 10px; }
+  .coach { left: 66px; right: auto; transform: none; top: auto; bottom: 6px; width: min(380px, calc(56vw - 72px)); padding: 8px 10px; }
   .coach p { font-size: 12.5px; margin: 4px 0 6px; }
+  /* O capítulo já aparece em aviso no início de cada um; sem o selo, o topo cabe em 667 a 900 px. */
+  .tb-left { display: none; }
+  .topbar { grid-template-columns: 1fr auto; }
+  .alert-chip { max-width: 130px; font-size: 11px; }
+  /* Topo em uma linha também em larguras de até 760 px (as regras do celular em pé o empilhariam em duas). */
+  .tb-center { flex-direction: row; align-items: center; gap: 8px; }
+  .res { flex: 1; justify-content: flex-start; gap: 4px; }
+  .chip { flex: none; flex-direction: row; align-items: center; gap: 4px; padding: 3px 7px; }
+  .chip > div { width: auto; }
+  /* Primeiros passos e LUMA ocupam o mesmo canto: durante a orientação a LUMA informativa se esconde; alerta continua e fica por cima. */
+  .coach:not([hidden]) ~ .luma:not(.warning):not(.critical) { display: none; }
+  .luma.warning, .luma.critical { z-index: 8; }
 }
 
 /* ROV-04: aviso de água no painel do rover e nos botões de missão. */

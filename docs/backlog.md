@@ -77,7 +77,7 @@ Concluídos e fora desta lista: DT-01 (teste do rover verificado: `npm run typec
 
 ## 6a. Auditoria integrada de gameplay, câmera, interface e som (pedido do autor, 15/11)
 
-Já entregue (D-20, D-21; não repetir): locomoção e navegação da tripulação, espera explicada na ordem, câmera de acompanhamento sem obstrução, painel persistente e cabos por painel (DT-11), carga de regolito e aquecimento no processador, celular deitado, som sintetizado com silenciar. Abaixo, só o que falta. Ordem: P0 → P1 → P2.
+Já entregue (D-20 a D-26; não repetir): módulo da estufa e sons por equipamento (D-25), plataforma aplainada (D-26), locomoção e navegação da tripulação, espera explicada na ordem, câmera de acompanhamento sem obstrução, painel persistente e cabos por painel (DT-11), carga de regolito e aquecimento no processador, celular deitado, som sintetizado com silenciar. Abaixo, só o que falta. Ordem: P0 → P1 → P2.
 
 **Medição e latência**
 - [ ] **INS-01 · P1** Instrumentação de latência no repositório (hoje as sondas Playwright ficaram fora dele): marcas de comando, resposta visual, início do movimento e execução no gancho de desenvolvimento, e um script de medição versionado. **Aceite:** relatório reproduzível em 1×, 2× e 4×, para astronauta e rover.
@@ -93,17 +93,16 @@ Já entregue (D-20, D-21; não repetir): locomoção e navegação da tripulaç�
 - [ ] **CAM-03 · P2 · Low** Medir a transição astronauta ↔ rover (duração, interrupção pelo jogador) e ajustar se passar de ~1 s.
 
 **Interações persistentes**
-- [ ] **PER-01 · P1 · Medium** Antena com estado visível: quebrada → em reparo → operando, sincronizado com o motor.
-- [ ] **PER-02 · P1 · Medium** Estufa: desgaste, manutenção e colheita com consequência visível e persistente (plantas, luzes, peças).
-- [ ] **PER-03 · P1 · Medium** Armazenamento de água: nível dos tanques visível e ligado a `vitals.water`, subindo ao fim do processamento (etapa ARMAZENAR).
 - [ ] **PER-04 · P2 · Low** Etapas explícitas por missão no painel (transportar, posicionar, instalar, conectar, operando), ligadas às fases de `src/engine/mission.ts`.
 
 **Extração de água**
 - [ ] **ICE-01 · P2 · Medium** Indicador de progresso na cena, armadilha fria visível no processador e limites de energia da missão comunicados na tela. Sem números novos sem fonte.
 
 **Som**
-- [ ] **UX-01 · P2 · Medium** Passos do astronauta, sons de instalação, de cada equipamento e de alerta de energia e recursos. **Aceite:** ligados aos eventos, sem arquivo sem licença registrada.
-- [ ] **SND-02 · P2 · Low** Controle de volume (hoje só silenciar), salvo no navegador.
+
+**Persistência e extração: pendências depois de D-25**
+- [ ] **PER-05 · P2 · Low** Irrigação visível (calhas e bomba) por nível de cuidado e antena com sinal de dados no prato quando online. Hoje a luz de cultivo segue o cuidado, mas a irrigação só tem som.
+- [ ] **PER-06 · P2 · Low** Medir o assentamento dos objetos também em partida longa (instalação de painéis, novas vagas) e anotar no relatório de verificação; hoje coberto por teste de pegadas e relatório de dev.
 
 **Rover (trajetória, D-22; feito: rota planejada, arcos de raio mínimo, perfil de velocidade, inclinação no relevo)**
 - [ ] **ROV-01 · P2 · Medium** Manobra de chegada: alinhar a caçamba ao processador (ré curta) e parar de lado para o painel; hoje chega de frente pelo fim da rota.
