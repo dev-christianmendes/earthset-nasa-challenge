@@ -61,6 +61,8 @@ const LIT: boolean[] = Array.from({ length: MATCH_HOURS + 1 }, (_, h) => isSunli
 setLightMap(LIT);
 const sunlit = (hour: number): boolean => LIT[Math.min(MATCH_HOURS, Math.max(0, Math.floor(hour)))];
 const weatherNow = (): SpaceWeatherSample => weatherAt(WEATHER, game.clock.hour);
+/** Clima por hora de jogo, para o passo interno do motor (advance). */
+const weatherAtHour = (hour: number): SpaceWeatherSample => weatherAt(WEATHER, hour);
 /** Clima para a tela: "radiação" aqui significa trabalho parado; se o jogador decidiu ficar fora, o trabalho continua. */
 const weatherForView = (): SpaceWeatherSample => {
   const w = weatherNow();
@@ -253,8 +255,10 @@ function inspectSky(id: BodyId): void {
   const sample = id === 'sun' ? sampleAt(SUN, game.clock.hour, game.installation.site) : bodyAt(SKY, id, game.clock.hour);
   lookAtSky(sample.az, sample.el);
 }
-const updateSkyPanel = mountSkyPanel(document.getElementById('sky-panel') as HTMLElement, inspectSky);
-const updateMenuSky = mountSkyPanel(document.getElementById('science-sky') as HTMLElement, inspectSky);
+// Enquadramento do céu acima do horizonte; não representa um corpo ou posição inventada.
+const inspectStarField = (): void => lookAtSky(0, 45);
+const updateSkyPanel = mountSkyPanel(document.getElementById('sky-panel') as HTMLElement, inspectSky, inspectStarField);
+const updateMenuSky = mountSkyPanel(document.getElementById('science-sky') as HTMLElement, inspectSky, inspectStarField);
 
 // ---------- Telas ----------
 
@@ -429,9 +433,8 @@ function frame(now: number): void {
   const active = !captureFrozen && started && !paused && !ended && screen === null && outcomeOf(game) === 'playing';
   if (active && last !== null) {
     const seconds = Math.min(Math.max(0, (now - last) / 1000), MAX_FRAME_SECONDS);
-    const weather = weatherNow();
     const prev = game;
-    game = advance(game, seconds * SPEEDS[speedIndex], sunlit(game.clock.hour), weather);
+    game = advance(game, seconds * SPEEDS[speedIndex], sunlit, weatherAtHour);
     const radiationNow = weatherNow().radiation;
     const events = lumaEvents(prev, game, radiationBefore, radiationNow);
     radiationBefore = radiationNow;
@@ -588,7 +591,7 @@ function maybeAutostart(): void {
   const step = (hours: number) => {
     for (let h = 0; h < hours; h += 0.25) {
       const prev = game;
-      game = advance(game, 0.25, sunlit(game.clock.hour), weatherNow());
+      game = advance(game, 0.25, sunlit, weatherAtHour);
       pushLumaEvents(lumaEvents(prev, game), game.clock.hour, performance.now());
     }
   };

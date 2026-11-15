@@ -909,8 +909,8 @@
   "radiation_episodes": [
     {
       "id": "EP-01",
-      "start_hour": -6,
-      "end_hour": 23,
+      "start_hour": -5,
+      "end_hour": 24,
       "before_window_start": true,
       "sep_ids": [
         "2024-10-09T03:50:00-SEP-001",
@@ -927,8 +927,8 @@
     },
     {
       "id": "EP-02",
-      "start_hour": 415,
-      "end_hour": 444,
+      "start_hour": 416,
+      "end_hour": 445,
       "before_window_start": false,
       "sep_ids": [
         "2024-10-26T16:45:00-SEP-001",
@@ -943,8 +943,8 @@
     },
     {
       "id": "EP-03",
-      "start_hour": 455,
-      "end_hour": 479,
+      "start_hour": 456,
+      "end_hour": 480,
       "before_window_start": false,
       "sep_ids": [
         "2024-10-28T08:57:00-SEP-001"

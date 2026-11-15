@@ -98,7 +98,7 @@
     },
     {
       "kp": 0.0,
-      "radiation": false
+      "radiation": true
     },
     {
       "kp": 0.0,
@@ -1666,6 +1666,10 @@
     },
     {
       "kp": 0.0,
+      "radiation": false
+    },
+    {
+      "kp": 0.0,
       "radiation": true
     },
     {
@@ -1919,10 +1923,6 @@
     {
       "kp": 0.0,
       "radiation": true
-    },
-    {
-      "kp": 0.0,
-      "radiation": false
     },
     {
       "kp": 0.0,

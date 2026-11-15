@@ -75,14 +75,16 @@ export function alertAt(catalog: SpaceEventCatalog, hour: number, input: AlertIn
   const active = episodeAt(catalog, hour);
   if (active) {
     const seps = sepsOf(catalog, active);
-    const evidence = [...seps].reverse().find((s) => s.hour <= hour) ?? seps[0] ?? null;
+    // Só evidência já registrada: nunca um SEP com horário posterior à hora atual (E02).
+    const evidence = [...seps].reverse().find((s) => s.hour <= hour) ?? null;
     return { ...NONE, level: input.sheltered ? 'shelter' : 'alert', episode: active, evidence };
   }
 
   const ended = catalog.radiation_episodes.filter((e) => e.end_hour <= hour && hour < e.end_hour + RECOVERY_HOURS).sort((a, b) => b.end_hour - a.end_hour)[0];
   if (ended) {
     const seps = sepsOf(catalog, ended);
-    return { ...NONE, level: 'recovery', episode: ended, evidence: seps[seps.length - 1] ?? null, recoveryLeft: ended.end_hour + RECOVERY_HOURS - hour };
+    const evidence = [...seps].reverse().find((s) => s.hour <= hour) ?? null;
+    return { ...NONE, level: 'recovery', episode: ended, evidence, recoveryLeft: ended.end_hour + RECOVERY_HOURS - hour };
   }
 
   if (input.reach !== null) {

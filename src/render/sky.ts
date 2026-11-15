@@ -72,20 +72,23 @@ SKY.stars.samples.forEach((star, i) => { magnitudes[i] = star.magnitude; });
 const pointGeometry = new THREE.BufferGeometry();
 pointGeometry.setAttribute('position', new THREE.BufferAttribute(pointPositions, 3));
 pointGeometry.setAttribute('magnitude', new THREE.BufferAttribute(magnitudes, 1));
-const skyExposure = { value: 0.12 };
+// Ganho artístico para leitura do catálogo; não é modelo de sensor ou fluxo energético.
+const skyExposure = { value: 36 };
+const pointPixelRatio = { value: 1 };
 const points = new THREE.Points(pointGeometry, new THREE.ShaderMaterial({
-  uniforms: { horizon: horizonUniform, skyExposure }, transparent: true, depthWrite: false,
-  vertexShader: `attribute float magnitude; varying float flux; varying vec3 skyDirection;
+  uniforms: { horizon: horizonUniform, skyExposure, pointPixelRatio }, transparent: true, depthWrite: false,
+  vertexShader: `uniform float pointPixelRatio; attribute float magnitude; varying float flux; varying vec3 skyDirection;
     void main() { skyDirection = position; flux = pow(10.0, -0.4 * magnitude);
       gl_Position = projectionMatrix * mat4(mat3(viewMatrix)) * vec4(position, 1.0);
       gl_Position.z = gl_Position.w * 0.99999;
-      gl_PointSize = clamp(1.4 + 0.22 * (2.0 - magnitude), 0.8, 2.6);
+      gl_PointSize = clamp(2.4 + 0.28 * (2.0 - magnitude), 1.8, 3.6) * pointPixelRatio;
     }`,
   fragmentShader: horizonShader + `uniform float skyExposure; varying float flux;
     void main() { clipHorizon(); float r = length(gl_PointCoord - vec2(0.5)) * 2.0;
       if (r > 1.0) discard;
       float brightness = min(4.0, flux * skyExposure);
-      gl_FragColor = vec4(vec3(brightness), (1.0-smoothstep(0.35,1.0,r)) * min(1.0, brightness));
+      // O fluxo já está na cor; alpha representa só a cobertura circular do pixel.
+      gl_FragColor = vec4(vec3(brightness), 1.0-smoothstep(0.35,1.0,r));
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`,
@@ -100,9 +103,10 @@ function frame(a: THREE.Vector3, north: THREE.Vector3): THREE.Matrix4 {
 }
 let lastSample = -1;
 let lastSite: Site | null = null;
-/** Long exposure é apresentação opcional no painel Ciência; não altera energia, relógio ou luz. */
-export function updateSky(hour: number, lit: boolean, site: Site, longExposure = false): void {
-  skyExposure.value = longExposure ? 12 : lit ? 0.06 : 1.5;
+/** Exposição longa inicia ativa, com controle em Ciência; não altera energia, relógio ou luz. */
+export function updateSky(hour: number, lit: boolean, site: Site, longExposure = true, pixelRatio = 1): void {
+  skyExposure.value = longExposure ? 36 : lit ? 0.06 : 1.5;
+  pointPixelRatio.value = pixelRatio;
   const h = sampleIndex(SKY, hour);
   if (h === lastSample && site === lastSite) return;
   lastSample = h; lastSite = site;

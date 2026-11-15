@@ -68,7 +68,15 @@ with sync_playwright() as p:
     c = ctx(pg); ok(not c["hidden"] and "panel" in c["title"].lower(), "aba Energy abre os painéis solares", c["title"])
 
     # Abas que continuam laterais
-    pg.click("[data-tool=missions]"); pg.wait_for_timeout(400)
+    pg.click("[data-tool=missions]")
+    # Espera a condição (não um tempo fixo): o painel contextual fecha e o lateral abre no próximo quadro.
+    def settled(js):
+        try:
+            pg.wait_for_function(js, timeout=3000)
+            return True
+        except Exception:
+            return False
+    settled("document.getElementById('ctx').hidden && !document.getElementById('side').hidden")
     ok(ctx(pg)["hidden"] and not pg.evaluate("document.getElementById('side').hidden"), "aba Missions segue como painel lateral")
     ok(errs == [], "sem erros de console", errs[:3])
     pg.screenshot(path=sys.argv[2] if len(sys.argv) > 2 else "/dev/null")

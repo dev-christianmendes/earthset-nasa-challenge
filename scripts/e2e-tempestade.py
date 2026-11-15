@@ -126,8 +126,10 @@ with sync_playwright() as p:
     ok(got, "mudar de ideia e abrigar leva ao estado ABRIGO", chip(pg))
     pg.close()
 
-    # 9. Rover distante da base: modo seguro, espera, recomeço da ida (antena: operação às 413 h, evento às 415 h)
-    pg = open_game(b, "nointro&clockAt=410.5&task=antenna")
+    # 9. Rover distante da base: modo seguro, espera, recomeço da ida.
+    # SEP registrado em 415,75 h; a radiação começa na hora cheia seguinte (416 h, E02). Em 411,5 h o rover
+    # ainda está na ida ou na operação quando a radiação começa, por isso entra em modo seguro.
+    pg = open_game(b, "nointro&clockAt=411.5&task=antenna")
     pg.keyboard.press("3")
     def rover_txt(): return pg.evaluate("document.getElementById('ctx').innerText.replace(/\\s+/g,' ')")
     seen = []; luma_rover = False

@@ -126,7 +126,11 @@ describe('ajustar a antena', () => {
     s = advance(s, total('tune') + 0.01, true, CALM);
     expect(s.agentTasksDone.tune).toBe(1);
     expect(warningAhead(s.antennaTuneLeft)).toBe(WARNING_AHEAD_TUNED);
-    s = advance(s, TUNE_HOURS + 1, true, CALM);
+    // Repõe os recursos a cada hora: a base passiva perderia antes do fim do ajuste.
+    for (let h = 0; h < TUNE_HOURS + 1; h++) {
+      s = advance(s, 1, true, CALM);
+      s = { ...s, vitals: { ...s.vitals, air: 100, water: 100, food: 100, battery: s.installation.batteryCapacity } };
+    }
     expect(warningAhead(s.antennaTuneLeft)).toBe(WARNING_AHEAD_BASE);
   });
 

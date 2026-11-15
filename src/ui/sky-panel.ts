@@ -8,14 +8,16 @@ import { sampleAt } from '../engine/sun';
 import type { Site } from '../engine/resources';
 import { getLang, t } from '../i18n';
 
-let longExposure = false;
+// Padrão de apresentação para tornar o catálogo perceptível durante a partida.
+let longExposure = true;
 export const skyLongExposure = (): boolean => longExposure;
-export function mountSkyPanel(root: HTMLElement, inspect: (id: BodyId) => void): (hour: number, site: Site) => void {
+export function mountSkyPanel(root: HTMLElement, inspect: (id: BodyId) => void, lookUp: () => void): (hour: number, site: Site) => void {
   let signature = '';
   root.addEventListener('change', (event) => {
     if ((event.target as HTMLElement).matches('[data-sky-exposure]')) longExposure = (event.target as HTMLInputElement).checked;
   });
   root.addEventListener('click', (event) => {
+    if ((event.target as HTMLElement).closest('[data-sky-look-up]')) lookUp();
     const id = (event.target as HTMLElement).closest<HTMLElement>('[data-sky-body]')?.dataset.skyBody;
     if (BODY_IDS.includes(id as BodyId)) inspect(id as BodyId);
   });
@@ -36,6 +38,7 @@ export function mountSkyPanel(root: HTMLElement, inspect: (id: BodyId) => void):
       <p class="fine">${t('sky.observer', { lat: SKY.observer.latitude_deg.toFixed(6), lon: SKY.observer.longitude_deg.toFixed(6), alt: SKY.observer.altitude_km.toFixed(6) })}</p>
       <div class="sky-table-wrap"><table class="sky-table"><thead><tr><th>${t('sky.object')}</th><th>${t('sky.direction')}</th><th>${t('sky.scale')}</th><th>${t('sky.view')}</th></tr></thead><tbody>${rows}</tbody></table></div>
       <label class="sky-exposure"><input type="checkbox" data-sky-exposure ${longExposure ? 'checked' : ''}> ${t('sky.exposure')}</label>
+      <button class="sky-look" type="button" data-sky-look-up>${t('sky.lookUp')}</button>
       <p class="fine">${t('sky.limits')}</p>
       <p class="fine">${t(SKY.stars.status === 'available' ? 'sky.catalog' : 'sky.catalogMissing', { n: SKY.stars.samples.length })}</p>
       <p class="fine">${t('sky.light')}</p>

@@ -38,6 +38,7 @@ Só biblioteca padrão do Python 3.10 ou mais novo. Testes: python3 -m unittest 
 from __future__ import annotations
 
 import argparse
+import math
 import json
 import os
 import sys
@@ -68,6 +69,15 @@ def hour_index(moment: datetime) -> int:
     return int((moment - START_UTC).total_seconds() // 3600)
 
 
+def first_full_hour(moment: datetime) -> int:
+    """Primeira hora inteira de jogo que começa em ou depois do instante.
+
+    Regra causal (E02): a radiação de um SEP começa na primeira hora cheia após o registro,
+    nunca antes. Com floor, o jogo mostraria radiação antes da evidência publicada.
+    """
+    return math.ceil((moment - START_UTC).total_seconds() / 3600)
+
+
 def build_samples(gst: list[dict], sep: list[dict]) -> list[dict]:
     """Tabela horária: kp (máximo na hora) e radiação (booleano), para HOURS + 1 pontos."""
     kp = [0.0] * (HOURS + 1)
@@ -84,7 +94,7 @@ def build_samples(gst: list[dict], sep: list[dict]) -> list[dict]:
 
     for event in sep:
         begin = parse_time(event["eventTime"])
-        first = hour_index(begin)
+        first = first_full_hour(begin)
         for offset in range(SEP_DURATION_H):
             idx = first + offset
             if 0 <= idx <= HOURS:
@@ -145,7 +155,7 @@ def alerts_of(record: dict, onset: datetime) -> list[dict]:
 def radiation_episodes(sep_events: list[dict]) -> list[dict]:
     """Une as janelas de 24 h dos SEP que se sobrepõem ou se tocam (regra de jogo)."""
     windows = sorted(
-        (hour_index(parse_time(e["time_utc"])), e["id"]) for e in sep_events
+        (first_full_hour(parse_time(e["time_utc"])), e["id"]) for e in sep_events
     )
     episodes: list[dict] = []
     for begin, event_id in windows:

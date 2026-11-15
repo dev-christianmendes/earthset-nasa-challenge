@@ -208,14 +208,34 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
  * Passa `dtHours` de tempo de jogo. O Sol e o clima espacial vêm do chamador (sunlit, weather).
  * Tempestade reduz a geração dos painéis; radiação para o robô. Para ao fim da partida.
  */
-export function advance(state: GameState, dtHours: number, sunlit: boolean, weather: SpaceWeatherSample = CALM): GameState {
+/**
+ * Passo interno da simulação, em horas de jogo. Fixo: o resultado não depende de como o tempo
+ * é repartido entre chamadas (6 h de uma vez = seis de 1 h = 24 de 0,25 h).
+ */
+export const SUBSTEP_HOURS = 0.25;
+
+/** Luz e clima: valor fixo ou função da hora de jogo (usada pelo laço de tela e pelos testes de partida). */
+export type SunlitAt = boolean | ((hour: number) => boolean);
+export type WeatherAt = SpaceWeatherSample | ((hour: number) => SpaceWeatherSample);
+
+export function advance(state: GameState, dtHours: number, sunlit: SunlitAt, weather: WeatherAt = CALM): GameState {
   if (outcomeOf(state) !== 'playing') return state;
   if (!Number.isFinite(dtHours) || dtHours < 0) {
     throw new RangeError(`horas inválidas: ${dtHours}`);
   }
-  const remaining = MATCH_HOURS - state.clock.hour;
-  const step = Math.min(dtHours, remaining);
-  if (step <= 0) return state;
+  const sunAt = typeof sunlit === 'function' ? sunlit : () => sunlit;
+  const wxAt = typeof weather === 'function' ? weather : () => weather;
+  let current = state;
+  let left = Math.min(dtHours, MATCH_HOURS - state.clock.hour);
+  while (left > 1e-9 && outcomeOf(current) === 'playing') {
+    const h = Math.min(SUBSTEP_HOURS, left);
+    current = advanceStep(current, h, sunAt(current.clock.hour), wxAt(current.clock.hour));
+    left -= h;
+  }
+  return current;
+}
+
+function advanceStep(state: GameState, step: number, sunlit: boolean, weather: SpaceWeatherSample): GameState {
 
   // Radiação de partículas solares para o robô: ele não trabalha enquanto ela durar.
   // Decisão 'outside': o jogador aceita o risco e a equipe continua fora; senão a radiação abriga a todos.
@@ -233,7 +253,8 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
   // Com a tripulação livre, o astronauta ajuda na viagem de gelo (D-06).
-  const helpAvailable = state.crewOrder === 'auto' && crewAvailableForHelp(state.crew, shelterRad);
+  // Ajuda só com um astronauta livre (sem tarefa e descansado): quem está ocupado não ajuda (D-06, E05).
+  const helpAvailable = state.crewOrder === 'auto' && crewAvailableForHelp(state.crew, shelterRad) && state.agents.some(isAvailable);
   const progress = working
     ? progressRobot(robotNow, step, helpAvailable ? ICE_HELP_SPEED : 1)
     : { robot: stepSafeMode(robotNow, step, powered), completed: [] as readonly TaskKind[] };
@@ -248,7 +269,8 @@ export function advance(state: GameState, dtHours: number, sunlit: boolean, weat
   }
   // Astronautas: a tarefa anda no tempo de jogo; radiação ou ordem de abrigo a suspende (eles ficam no abrigo).
   const sheltered = shelterRad || state.crewOrder === 'shelter';
-  let crop = stepCrop(state.crop, step, flow.greenhouseOn);
+  // Sem água, a cultura não cresce (E04): a estufa só trabalha com água no início do passo.
+  let crop = stepCrop(state.crop, step, flow.greenhouseOn && state.vitals.water > 0);
   let agentTasksDone = state.agentTasksDone;
   let calibrationLeft = Math.max(0, state.calibrationLeft - step);
   let antennaTuneLeft = Math.max(0, state.antennaTuneLeft - step);

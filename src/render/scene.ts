@@ -642,7 +642,7 @@ const sunDir = new THREE.Vector3();
 const dustOffset = new THREE.Vector3();
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
 
-export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true, longExposure = false): RoverView {
+export function updateScene(state: GameState, now: number, lit: boolean, weather: SpaceWeatherSample, animate = true, longExposure = true): RoverView {
   // Sol na grade polar LOLA (0° = −z); convergência geográfica corrigida no pipeline.
   const { az, el } = sampleAt(SUN, state.clock.hour, state.installation.site);
   const dir = sunDir.fromArray(direction(az, el));
@@ -651,7 +651,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   sun.intensity = lit ? 3.4 : 0;
   ambient.intensity = lit ? 0.3 : 0.18;
   rim.position.set(-dir.x * 100, 60, -dir.z * 100);
-  updateSky(state.clock.hour, lit, state.installation.site, longExposure);
+  updateSky(state.clock.hour, lit, state.installation.site, longExposure, renderer.getPixelRatio());
   const earthView = bodyAt(SKY, 'earth', state.clock.hour);
 
   const t = now / 1000;

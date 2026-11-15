@@ -101,3 +101,15 @@ export function eventsUntil(catalog: SpaceEventCatalog, hour: number): readonly 
   checkHour(hour);
   return catalog.events.filter((e) => e.hour <= hour);
 }
+
+/** Eventos ligados (notificações e referências) já registrados até a hora `hour`. */
+export function linkedEventsUntil(event: SpaceEvent, hour: number): SpaceEvent['linked_events'] {
+  checkHour(hour);
+  return event.linked_events.filter((l) => l.hour <= hour);
+}
+
+/** Alertas emitidos pela NASA já conhecidos até a hora `hour`. */
+export function alertsUntil(event: SpaceEvent, hour: number): SpaceEvent['alerts'] {
+  checkHour(hour);
+  return event.alerts.filter((a) => a.hour <= hour);
+}

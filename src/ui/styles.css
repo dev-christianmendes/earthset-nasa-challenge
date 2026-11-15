@@ -266,6 +266,7 @@ button.ghost { background: transparent; }
 .sky-table button { padding: 5px; font-size: 10px; }
 .sky-table button:disabled { opacity: 0.45; cursor: default; }
 .sky-exposure { display: flex; align-items: center; gap: 7px; margin: 12px 0; font-size: 12px; }
+.sky-look { padding: 8px 12px; font-size: 12px; margin-bottom: 8px; }
 .sky-sources { font-size: 12px; }
 
 /* ---------- LUMA ---------- */
