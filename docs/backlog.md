@@ -28,7 +28,6 @@ Correspondência da numeração antiga (blocos do backlog anterior): bloco 6 e 7
 - [ ] **U-03** Patentes mudam a linguagem da tela (antigo I2). `src/engine/narrative.ts` não existe. Hoje o modo muda as explicações (`src/engine/modes.ts`). **Decisão:** ainda vale como critério Creativity, ou sai do escopo? Se vale, **aceite:** textos por patente em módulo puro e testado.
 - [ ] **U-04** Diário da base na tela (antigo I3). `src/ui/log-panel.ts` não existe. O histórico da LUMA (E4.9) pode cobrir isso. **Decisão:** é o mesmo item?
 - [~] **U-05** HUD v3 com cartões e ícones (antigo V3.3). `src/ui/icons.ts` existe. Confirmar o que falta em captura.
-- [~] **U-06** Aceno da tripulação ao aviso da antena e animação de colheita (antigo V3.12). **Feito em 15/11:** ao entrar em monitoramento com a antena instalada, a tripulação acena por 3 s (`requestCrewWave` em `src/render/scene.ts`, chamado em `src/main.ts`). **Verificado em captura de perto (15/11):** o clipe `wave` fica ativo na janela de 3 s e os braços aparecem levantados. **Falta:** animação de colheita própria (hoje usa o clipe de trabalho).
 
 ## 3. Arte e modelos
 

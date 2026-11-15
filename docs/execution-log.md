@@ -811,3 +811,19 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Pendente:** animação de colheita própria. A colheita ainda usa o clipe de trabalho.
 - **Git:** sem commit.
 
+## 15/11/2026 · U-06, animação de colheita
+
+- **Clipe:** `harvest` existe em `public/models/ext/astronaut.glb`, mas o mapeamento só reconhecia `work` e `interact`.
+- **Mudança:** o mapeamento passou a reconhecer `harvest`. Quando o astronauta trabalha em colheita (`workKind`, definido em `updateCrew`), toca o clipe `harvest` em vez de `work` (`src/render/scene.ts`).
+- **Verificação em navegador:** com `hour=30`, ordem de colheita na estufa (mesmo fluxo de `scripts/e2e-contexto.py`), `crewState` mostrou `harvest` ativo durante a tarefa. Um quadro (`.scratch-agent/u06/col12_zoom.png`) mostra o astronauta abaixado sobre a estufa. Verificação parcial: um quadro, sem comparação lado a lado com o clipe `work`.
+- **Comandos:** `npm run typecheck` (0), `npm run build` (0), `npx vitest run` (25 arquivos, 233 testes).
+- **Backlog:** U-06 removido, por estar concluído (aceno e colheita).
+- **Git:** sem commit.
+
+## 15/11/2026 · U-06, correção: troca para o clipe harvest revertida
+
+- **Revisão:** a comparação lado a lado (clipe `harvest` contra `work`, no mesmo cenário) não mostrou diferença visível. O clipe `work` já mostrava o astronauta inclinado sobre a estufa. A entrada anterior, que dava a colheita como implementada, estava errada.
+- **Ação:** a mudança em `src/render/scene.ts` (mapeamento de `harvest`, `workKind` e uso do clipe) foi revertida por `git checkout`. Nenhum outro arquivo de código foi alterado nesta correção.
+- **Estado de U-06:** aceno verificado (commit `13f7767`). Colheita usa o clipe `work`, com aparência equivalente à do clipe `harvest` nos quadros comparados.
+- **Git:** nenhum commit.
+
