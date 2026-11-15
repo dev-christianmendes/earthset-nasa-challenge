@@ -82,11 +82,7 @@ Já entregue (D-20, D-21; não repetir): locomoção e navegação da tripulaç�
 **Medição e latência**
 - [ ] **INS-01 · P1** Instrumentação de latência no repositório (hoje as sondas Playwright ficaram fora dele): marcas de comando, resposta visual, início do movimento e execução no gancho de desenvolvimento, e um script de medição versionado. **Aceite:** relatório reproduzível em 1×, 2× e 4×, para astronauta e rover.
 
-**Interface e controles (passo 2)**
-- [ ] **UX-04 · P1 · High** Seletor sempre visível de Astronauta 1, Astronauta 2 e Rover, com o estado de cada um ("trabalhando", "aguardando radiação · 12 s"). **Aceite:** trocar de entidade com um toque, em desktop e celular.
-- [ ] **UX-05 · P1 · High** Indicador de tarefa ativa na cena, sobre o astronauta e o rover (ícone e progresso), acompanhando a entidade. **Aceite:** legível a 1280×800 e 915×412, sem cobrir o personagem.
-- [ ] **UX-06 · P1 · High** Painel contextual enxuto: ações possíveis em destaque, com o resultado esperado; bloqueadas agrupadas com o motivo. **Aceite:** menos itens à vista sem perder ação; teste com toque.
-- [ ] **UX-07 · P1 · Medium** Orientação curta na primeira partida (selecionar, dar ordem, acompanhar, câmera), compreensível por estudantes. **Aceite:** pode ser pulada e não volta depois de concluída.
+**Interface e controles (passo 2)** · entregue em 15/11 (D-23): UX-04 barra da equipe, UX-05 etiquetas na cena, UX-06 painel enxuto, UX-07 primeiros passos.
 - [ ] **UX-08 · P2 · Low** Princípios de UX de jogos de exploração e construção de base, como inspiração e sem copiar interfaces, registrados em `docs/UI_UX_SPECIFICATION.md`.
 - [ ] **UX-09 · P1 · Medium** Contraste, legibilidade, estados de carregamento e mensagens de erro (verificação WCAG AA dos textos do HUD e dos painéis). **Aceite:** medição registrada; correções nos casos abaixo de 4,5:1.
 - [ ] **UX-03 · P1 · Medium** Celular em pé: o painel cobre metade da cena. Painéis recolhíveis por arraste ou aviso claro para girar o aparelho. **Aceite:** teste com toque em 412×915.
@@ -113,7 +109,7 @@ Já entregue (D-20, D-21; não repetir): locomoção e navegação da tripulaç�
 - [ ] **ROV-01 · P2 · Medium** Manobra de chegada: alinhar a caçamba ao processador (ré curta) e parar de lado para o painel; hoje chega de frente pelo fim da rota.
 - [ ] **ROV-02 · P2 · Medium** Rover como obstáculo dinâmico para a tripulação (hoje só a garagem é obstáculo) e a tripulação como obstáculo para o rover.
 - [ ] **ROV-03 · P2 · Low** Rodas com esterçamento visível nas curvas e giro proporcional à velocidade real (hoje giram a ritmo fixo enquanto o rover anda); volta à garagem fora de missão também pela trajetória planejada.
-- [ ] **ROV-04 · P1 · Medium** Equilíbrio percebido: a missão de painel dura ~28 h de jogo e, sem gelo na fila, a água zera por volta da hora 100. Avaliar na interface um aviso de fila (ex.: "a água acaba antes do painel voltar") sem mudar regras.
+- [ ] **ROV-04 · P1 · High** Equilíbrio percebido: a missão de painel dura ~28 h de jogo e, sem gelo na fila, a água zera por volta da hora 100 (reproduzido no fluxo integrado: zero da hora ~108 à ~124, risco de coração). Aviso na interface ao enfileirar ("a água acaba antes de o rover voltar") e/ou ordem sugerida, sem mudar regras.
 
 **Validação**
 - [ ] **VAL-01 · P1** Matriz final integrada (seção 7 do pedido) em desktop e celular depois de UX-04 a UX-07, com evidências. Aparelho físico: ver AST-PERF-02.

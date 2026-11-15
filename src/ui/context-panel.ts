@@ -629,6 +629,22 @@ export function showContext(id: SelectableId | null): void {
   root.hidden = id === null;
 }
 
+/**
+ * Painel enxuto (UX-06): em cada lista de tarefas, as possíveis ficam à vista; as indisponíveis vão para um grupo
+ * recolhido, cada uma com o motivo. Se nenhuma está disponível, o grupo abre sozinho para explicar por quê.
+ */
+function groupBlocked(root: HTMLElement): void {
+  for (const list of root.querySelectorAll<HTMLElement>('.ctx-tasks')) {
+    const blocked = [...list.querySelectorAll<HTMLButtonElement>(':scope > button.ctx-task:disabled')];
+    if (blocked.length === 0) continue;
+    const details = make('details', 'ctx-blocked');
+    const summary = make('summary', undefined, t('ctx.blocked', { n: blocked.length }));
+    details.append(summary, ...blocked);
+    if (!list.querySelector(':scope > button.ctx-task:not(:disabled)')) details.open = true;
+    list.append(details);
+  }
+}
+
 /** Atualiza o painel: reconstrói só quando algo discreto mudou; barras e números mudam no lugar. */
 export function renderContext(state: GameState, info: ContextInfo): void {
   if (!selected) return;
@@ -657,6 +673,7 @@ export function renderContext(state: GameState, info: ContextInfo): void {
     focus.addEventListener('click', () => handlers.focus(id));
     nodes.push(focus);
     body.replaceChildren(...nodes);
+    groupBlocked(body);
   }
   for (const update of updaters) update(state, shelteredNow);
 }

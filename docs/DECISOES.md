@@ -167,3 +167,11 @@ Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'`
 - **Equilíbrio:** a primeira tentativa (~2,4 m/s) derrubou a partida de referência (falta de água e de energia na noite longa). A versão adotada mantém a água por hora: `ICE_WATER_PER_TRIP` 12 → 31 (proporcional a 6 → 15,52 h) e a ajuda do astronauta continua ×1,5. Com isso, os três modos vencem com 3 corações e todas as partidas dos testes passam (259 de 259). Os testes com horas fixas passaram a usar as constantes.
 - **Trajetória** (`src/render/rover-routes.ts`): rota pelo planejador de navegação com a folga do veículo (1,3 m), corredores entre as colunas do campo solar, cantos trocados por arcos de raio mínimo (2,6 m), perfil de velocidade que freia antes das curvas (aceleração lateral limitada) e é esticado para caber exatamente no trecho do motor, chassi inclinado pelo relevo amostrado sob as rodas.
 
+## D-23. Interface do passo 2: equipe sempre visível, tarefa na cena, painel enxuto e primeiros passos (15/11/2026, noite)
+
+- **Equipe (UX-04):** cartões de Astronauta 1, Astronauta 2 e Rover no alto à esquerda (em linha no celular), com o estado em palavras, a barra de progresso e o motivo da espera ("aguardando a radiação passar (~12 s)"). Um toque seleciona; um segundo toque no selecionado acompanha com a câmera (indicador verde).
+- **Tarefa na cena (UX-05):** etiqueta com ícone, anel de progresso e nome da tarefa sobre quem está trabalhando; some quando o personagem está fora da vista ou no abrigo. Camada sem cliques (a regra `#hud > *` reativava cliques e bloquearia a tela; corrigido antes de entregar).
+- **Painel enxuto (UX-06):** tarefas possíveis à vista; as indisponíveis num grupo recolhido com o motivo, aberto sozinho quando nenhuma está disponível.
+- **Primeiros passos (UX-07):** três passos que avançam pelas ações (selecionar → ordenar → câmera), com Pular; não voltam depois de concluídos (`localStorage`).
+- **Princípio:** só lê o estado do motor; nenhuma regra de jogo na interface.
+

@@ -158,6 +158,7 @@ export function goTo(name: Shot, nowMs: number, seconds = 1.4): void {
   controls.maxPolarAngle = THREE.MathUtils.degToRad(84);
   const s = shotFor(name);
   follow = s.follow;
+  followShot = s.follow ? name : null;
   preferredDistance = s.pos.distanceTo(s.target);
   appliedDistance = -1;
   liftAngle = 0;
@@ -218,6 +219,12 @@ export function updateDirector(nowMs: number): void {
 /** Está acompanhando o astronauta ou o rover (o jogador escolheu seguir: ordens não trocam a câmera). */
 export function isFollowing(): boolean {
   return follow !== null;
+}
+
+let followShot: Shot | null = null;
+/** Plano que está sendo acompanhado ('crew', 'crew1' ou 'rover'), ou null. */
+export function followingShot(): Shot | null {
+  return follow ? followShot : null;
 }
 
 /** Para de seguir (por exemplo, ao abrir a visão geral). */

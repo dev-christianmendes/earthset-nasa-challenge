@@ -23,13 +23,14 @@ import { antenna, greenhouse, habitat, powerUnit, processor, storage } from './r
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
 import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
 import { warningAhead } from './engine/facilities';
-import { goTo, isFollowing, lookAtSky, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
+import { followingShot, goTo, isFollowing, lookAtSky, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
 import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updateCinematic } from './render/cinematic';
 import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
 import { initLuma, pushLumaEvents, relabelLuma, resetLuma, updateLuma } from './ui/luma';
 import { currentScreen, loadSettings, popScreen, pushScreen, saveSettings, showScreen, type ScreenId } from './ui/screens';
 import { initAudio, isMuted, play, setLoop, setMuted } from './ui/audio';
 import { mountIcons } from './ui/icons';
+import { coachEvent, mountSquad, mountTags, placeTags, relabelCoach, relabelSquad, renderSquad, startCoach, type SquadId } from './ui/squad';
 import { mountHorizonPanel } from './ui/horizon-panel';
 import { mountSpacePanel } from './ui/space-panel';
 import { mountSkyPanel, skyLongExposure } from './ui/sky-panel';
@@ -104,6 +105,7 @@ function act(action: GameAction): string | null {
   }
   ui.message.textContent = '';
   play('confirm');
+  coachEvent('ordered');
   if (isRunning()) {
     // Com o tempo correndo, a ação vale na próxima fronteira de 0,25 h; o resultado não depende do quadro.
     const at = (Math.floor(grantedHours() / ACTION_HOURS + 1e-9) + 1) * ACTION_HOURS;
@@ -163,7 +165,10 @@ const FOCUS_SHOT: Record<SelectableId, Shot> = {
 };
 
 function selectObject(id: SelectableId | null): void {
-  if (id) play('select');
+  if (id) {
+    play('select');
+    coachEvent('selected');
+  }
   if (id) setTool(null);
   showContext(id);
   setHighlight(id);
@@ -284,6 +289,31 @@ initLuma((action) => {
 
 let hudDueAt = 0;
 let previousAlertLevel = 'normal';
+// ---------- Equipe na tela (UX-04, UX-05) ----------
+
+let squadEntries: ReturnType<typeof renderSquad> | null = null;
+const SHOT_TO_SQUAD: Partial<Record<Shot, SquadId>> = { crew: 'crew0', crew1: 'crew1', rover: 'rover' };
+const squadInfo = () => {
+  const info = contextInfo();
+  const shot = followingShot();
+  return { radiation: info.radiation && game.crewOrder !== 'outside', radiationLeft: info.radiationLeft, speed: info.speed, selected: selectedObject(), following: shot ? SHOT_TO_SQUAD[shot] ?? null : null };
+};
+mountSquad(document.getElementById('squad') as HTMLElement, {
+  select: (id) => selectObject(id),
+  follow: (id) => goTo(id === 'rover' ? 'rover' : id === 'crew0' ? 'crew' : 'crew1', performance.now(), 0.9),
+});
+mountTags(document.getElementById('tags') as HTMLElement);
+const tagVec = new THREE.Vector3();
+/** Ponto da tela (px) acima de um objeto, ou null se escondido, atrás da câmera ou fora da vista. */
+function tagPoint(obj: THREE.Object3D | null, lift: number): readonly [number, number] | null {
+  if (!obj || !obj.visible) return null;
+  obj.getWorldPosition(tagVec);
+  tagVec.y += lift;
+  tagVec.project(camera);
+  if (tagVec.z > 1 || Math.abs(tagVec.x) > 1.05 || Math.abs(tagVec.y) > 1.05) return null;
+  return [((tagVec.x + 1) / 2) * window.innerWidth, ((1 - tagVec.y) / 2) * window.innerHeight];
+}
+
 function renderNow(now: number): void {
   const weather = weatherForView();
   const alert = alertNow();
@@ -292,6 +322,7 @@ function renderNow(now: number): void {
   previousAlertLevel = alert.level;
   renderHud(game, { weather, alert, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
   if (started && selectedObject()) renderContext(game, contextInfo());
+  if (started) squadEntries = renderSquad(game, squadInfo());
   if (started) updateLuma(lumaAdvice(game, alert, MODES[mode].luma), game.clock.hour, now);
   if (started && currentTool() === 'science') {
     updateSpacePanel(game.clock.hour, alert, getLang());
@@ -303,6 +334,8 @@ onLanguage(() => {
   renderer.domElement.setAttribute('aria-label', t('a11y.scene'));
   relabelLuma();
   renderSoundBtn();
+  relabelSquad();
+  relabelCoach();
   showContext(selectedObject());
   renderChapters(document.getElementById('story-chapters') as HTMLElement, null);
   speedBtn.title = t('hud.speed');
@@ -423,6 +456,7 @@ function beginPlay(): void {
   ui.hud.hidden = false;
   started = true;
   showToast(t('toast.chapter', { n: 1 }), t('chapter.1'));
+  startCoach(document.getElementById('coach') as HTMLElement);
   renderNow(performance.now());
   if (MODES[mode].luma === 'full') openPanel('rover');
   // Descoberta: a cena é clicável. Aparece depois do aviso do capítulo.
@@ -541,6 +575,7 @@ function frame(now: number): void {
   updateHighlight(now / 1000);
   if (cinematicRunning()) updateCinematic(now);
   else updateDirector(now);
+  if (started) placeTags(squadEntries, { crew0: tagPoint(crewObject(0), 2.2), crew1: tagPoint(crewObject(1), 2.2), rover: tagPoint(robot, 2.6) });
   if (now >= hudDueAt) {
     if (currentTool() !== null && selectedObject()) selectObject(null);
     if (started) renderNow(now);

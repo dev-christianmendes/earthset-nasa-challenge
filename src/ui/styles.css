@@ -420,3 +420,64 @@ button.ghost { background: transparent; }
   .side, .ctx { top: 60px; bottom: 6px; right: 6px; width: min(340px, 44vw); max-height: none; }
   .side:not([hidden]) ~ .luma { display: none; }
 }
+
+/* Painel enxuto (UX-06): tarefas indisponíveis recolhidas, com o motivo. */
+.ctx-blocked { margin-top: 2px; }
+.ctx-blocked summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 8px 4px; min-height: 40px; display: flex; align-items: center; }
+.ctx-blocked[open] summary { color: var(--text); }
+.ctx-blocked .ctx-task { margin-top: 6px; width: 100%; }
+
+/* ---------- Equipe (UX-04), etiquetas na cena (UX-05) e primeiros passos (UX-07) ---------- */
+.squad { position: absolute; top: 88px; left: 12px; width: 240px; display: flex; flex-direction: column; gap: 6px; z-index: 4; }
+.squad-card { position: relative; display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 8px; min-height: 48px; padding: 7px 10px 9px; text-align: left; background: var(--glass); border: 1px solid var(--line); border-radius: 12px; color: var(--text); overflow: hidden; }
+.squad-card:hover { border-color: var(--line-strong); }
+.squad-card.selected { border-color: var(--solar-amber); box-shadow: 0 0 0 1px rgba(243, 168, 71, 0.35); }
+.squad-card.following::after { content: ""; position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--life-teal); }
+.squad-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: rgba(190, 215, 255, 0.08); color: var(--muted); }
+.squad-icon svg { width: 18px; height: 18px; }
+.squad-card.busy .squad-icon { color: var(--solar-amber); background: rgba(243, 168, 71, 0.12); }
+.squad-text { display: flex; flex-direction: column; min-width: 0; }
+.squad-text b { font-size: 13px; }
+.squad-text small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.squad-card.waiting .squad-text small { color: var(--solar-amber); }
+.squad-meter { position: absolute; left: 10px; right: 10px; bottom: 4px; height: 3px; border-radius: 2px; background: rgba(190, 215, 255, 0.1); }
+.squad-meter i { display: block; height: 100%; width: 0; border-radius: 2px; background: var(--solar-amber); transition: width 0.3s linear; }
+.squad-card.waiting .squad-meter i { background: var(--dim); }
+
+/* #hud > * reativa cliques; a camada de etiquetas precisa deixar passar tudo para a cena e a barra. */
+#hud > .tags { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+#hud > .tags * { pointer-events: none; }
+.scene-tag { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 3px; max-width: 260px; background: var(--glass-strong); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--text); white-space: nowrap; will-change: transform; }
+.scene-tag[hidden] { display: none; }
+.scene-tag.waiting { border-color: rgba(243, 168, 71, 0.6); }
+.tag-label { overflow: hidden; text-overflow: ellipsis; }
+.tag-ring { --p: 0deg; position: relative; width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--solar-amber) var(--p), rgba(190, 215, 255, 0.15) 0); color: var(--text); }
+.tag-ring::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--space-navy); }
+.tag-ring svg { position: relative; width: 13px; height: 13px; }
+
+.coach { position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); width: min(440px, calc(100vw - 24px)); z-index: 7; padding: 12px 14px; background: var(--glass-strong); border: 1px solid rgba(86, 185, 164, 0.5); border-radius: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); }
+.coach[hidden] { display: none; }
+.coach small { color: var(--life-teal); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.coach p { margin: 6px 0 8px; font-size: 14px; line-height: 1.45; }
+.coach-actions { display: flex; justify-content: flex-end; }
+.coach-actions button { min-height: 40px; padding: 6px 14px; }
+
+@media (max-width: 760px) {
+  .squad { top: 104px; left: 8px; right: 8px; width: auto; flex-direction: row; gap: 4px; }
+  .squad-card { flex: 1; grid-template-columns: 1fr; gap: 0; min-height: 44px; padding: 5px 7px 8px; }
+  .squad-icon { display: none; }
+  .squad-text b { font-size: 12px; }
+  .squad-text small { font-size: 10.5px; }
+  .toast { top: 160px; }
+  .coach { bottom: auto; top: 160px; }
+  .side:not([hidden]) ~ .coach, .ctx:not([hidden]) ~ .coach { top: 160px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .squad { top: 60px; left: 66px; width: auto; max-width: calc(56vw - 72px); flex-direction: row; gap: 4px; }
+  .squad-card { flex: 1; grid-template-columns: 1fr; gap: 0; min-height: 42px; padding: 4px 7px 7px; }
+  .squad-icon { display: none; }
+  .squad-text small { font-size: 10.5px; }
+  .toast { top: 112px; }
+  .coach { left: 66px; transform: none; bottom: 6px; width: min(380px, calc(56vw - 72px)); padding: 8px 10px; }
+  .coach p { font-size: 12.5px; margin: 4px 0 6px; }
+}

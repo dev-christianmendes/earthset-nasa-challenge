@@ -937,3 +937,11 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Navegador:** missão de gelo gravada em 1× (ida em curva, escavação, volta, descarga com aquecimento, água 14 → 44); missão de painel acompanhada por posições (contorna o habitat pelo norte, corredor x = −14,2). Achado: sem gelo na fila, a água zera por volta da hora 100 durante a missão de painel (ROV-04).
 - **Git:** sem commit.
 
+## 15/11/2026 · Interface do passo 2 (D-23)
+
+- **Arquivos:** novo `src/ui/squad.ts`; alterados `src/main.ts`, `src/ui/context-panel.ts`, `src/ui/styles.css`, `src/render/director.ts` (`followingShot`), `src/i18n.ts`, `index.html`.
+- **Achado no teste:** a camada de etiquetas capturava os cliques (regra `#hud > * { pointer-events: auto }`); o Playwright não conseguiu clicar na barra. Corrigido com regra específica e reverificado.
+- **Navegador:** capturas em 1280×800, 915×412 (toque) e 412×915 (toque): barra da equipe, etiqueta sobre o astronauta, painel com indisponíveis agrupadas, primeiros passos 2 → 3. Toque abre os painéis certos nos três tamanhos; sem rolagem horizontal; nenhum botão visível abaixo de 40 px. Fluxo integrado (astronauta → calibrar → rover → painel → gelo) sem erros de página; reproduziu ROV-04 (água zero da hora ~108 à ~124 com o painel antes do gelo).
+- **Comandos:** `npm run typecheck` passou; `npx vitest run` 259 de 259; `npm run build` passou.
+- **Pendente:** etiqueta pode passar por trás da barra da equipe no celular deitado; aviso de fila para água (ROV-04).
+
