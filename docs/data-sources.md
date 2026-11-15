@@ -68,6 +68,7 @@ Antigo horizonte ilustrativo (`SITE_HORIZON_DEG`, 0 / 1,2 / 1,6°) foi removido 
 - A implantação da base é uma escolha do jogo sobre o DEM LOLA; o observador é derivado desse ponto. A antiga aproximação regional −89,5°/0° foi substituída em DT-16.
 - Robô, tempos de tarefa, consumo e equilíbrio de bateria (`src/engine/robot.ts`, `src/main.ts`): regras de jogo, documentadas em `docs/regras-recursos.md`.
 - Recursos (energia, ar, água, comida): regras de jogo, sem fonte científica própria.
+- Locomoção da tripulação (`src/render/crew-gait.ts`): a gravidade lunar de **1,62 m/s²** vem da [NASA Moon Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html) (gravidade de superfície 1,62 m/s²). O resto é ilustrativo: passo saltado de ~2 m/s, troca andar→saltar pelo número de Froude (~0,5, pernas de 0,9 m, ≈ 0,85 m/s na Lua), voo de 0,26 a 0,51 s com subida de alguns centímetros (g·t²/8), aceleração de 1,5 m/s². Pegadas das estruturas (`src/render/crew-nav.ts`) medidas nos modelos da cena, não em planta real.
 
 ## 3. Clima espacial (C2, NASA DONKI)
 

@@ -77,7 +77,7 @@ A base passiva perde por volta da hora 117 com qualquer capacidade. O ponto de v
 | Colheita | exige 100 de crescimento; +10 de comida ao fim do trabalho; o cultivo recomeça |
 | Manutenção | exige desgaste de 10 ou mais; custa 15 de energia na hora da ordem; zera o desgaste |
 | Inspeção | sem custo; alivia 20 de desgaste |
-| Tarefa | preparo 0,25 h, ida 1 h (2 h no campo solar), trabalho (2, 3 ou 5 h), volta 1 h, descanso 1 h. Trechos reduzidos em 15/11 a pedido do autor |
+| Tarefa | preparo 0,25 h, ida 6,5 h, trabalho (2, 3 ou 5 h), volta 6,5 h, descanso 1 h. Trechos dimensionados em 15/11 (D-20) para o astronauta percorrer a rota real a ~1,8 m/s em 1× |
 | Limites | uma tarefa de cada tipo por vez; um astronauta livre (sem tarefa e descansado) |
 | Radiação ou abrigo | a tarefa fica suspensa; quem está fora conta como exposto (`crew.ts`) |
 
@@ -88,6 +88,6 @@ A comida passiva da estufa (0,38 por hora, acima) continua. A colheita é um gan
 
 | Item | Regra |
 |---|---|
-| Calibrar painéis | geração × (1 + 0,12 × horas restantes / 120); custa 10 de energia na ordem; ida e volta de 10 h, trabalho de 4 h; só repete com menos de 60 h restantes |
-| Ajustar antena | exige antena instalada; custa 5 de energia; aviso de tempestade em 12 h (antes 6 h) por 150 h; ida e volta de 6 h, trabalho de 3 h; só repete com menos de 75 h restantes |
+| Calibrar painéis | geração × (1 + 0,12 × horas restantes / 120); custa 10 de energia na ordem; ida e volta de 22 h (11 h cada trecho, D-20), trabalho de 4 h; só repete com menos de 60 h restantes |
+| Ajustar antena | exige antena instalada; custa 5 de energia; aviso de tempestade em 12 h (antes 6 h) por 150 h; ida e volta de 14 h (7 h cada trecho, D-20), trabalho de 3 h; só repete com menos de 75 h restantes |
 | Qualquer tarefa de astronauta | uma de cada tipo por vez; abrigo e radiação suspendem; quem está fora conta como exposto |

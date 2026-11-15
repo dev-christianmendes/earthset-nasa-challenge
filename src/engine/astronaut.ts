@@ -30,10 +30,14 @@ export interface AgentState {
 
 /** Horas de jogo (ilustrativas; equilíbrio, não dado científico). */
 export const PREP_HOURS = 0.25;
-/** Cada trecho de ida ou volta até a estufa: 1 h de jogo (1 s a 1×), para a tarefa começar de imediato (pedido do autor, 15/11). */
-export const TRAVEL_HOURS = 1;
-/** Trecho de ida ou volta por tarefa: proporcional ao caminho até o destino (campo solar é o mais longe). */
-export const TRAVEL_HOURS_BY_KIND: Record<AgentTaskKind, number> = { inspect: 1, harvest: 1, maintain: 1, calibrate: 2, tune: 1.5 };
+/**
+ * Cada trecho de ida ou volta até a estufa, em horas de jogo (1 h = 1 s a 1×). Escolhido para o astronauta
+ * percorrer a rota real (~9 a 12 m, contornando o habitat) a ~1,8 m/s, um passo lunar crível (pedido do autor, 15/11:
+ * a 1 h ele cruzava a base a 8–12 m/s). Ilustrativo: equilíbrio e apresentação, não dado científico.
+ */
+export const TRAVEL_HOURS = 6.5;
+/** Trecho por tarefa, proporcional à rota até o posto (antena ~12 m, campo solar ~20 m). Ver src/render/crew-nav.ts. */
+export const TRAVEL_HOURS_BY_KIND: Record<AgentTaskKind, number> = { inspect: TRAVEL_HOURS, harvest: TRAVEL_HOURS, maintain: TRAVEL_HOURS, calibrate: 11, tune: 7 };
 export const REST_HOURS = 1;
 export const WORK_HOURS: Record<AgentTaskKind, number> = { inspect: 2, harvest: 3, maintain: 5, calibrate: 4, tune: 3 };
 /** Custo imediato de energia (unidades da bateria) ao ordenar a tarefa. */

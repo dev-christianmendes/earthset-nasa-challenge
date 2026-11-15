@@ -592,6 +592,9 @@ function maybeAutostart(): void {
     sunDirection: apparentSunDirection,
     crewState: crewAnimationState,
     roverState: roverWorldState,
+    /** Envia uma ação ao motor como o painel faria (verificação da tripulação e do rover). */
+    act: (action: GameAction) => act(action),
+    hour: () => game.clock.hour,
     screenOf(id: SelectableId): [number, number] | null {
       const fixed: Partial<Record<SelectableId, THREE.Object3D>> = { rover: robot, greenhouse, habitat, antenna, processor, storage, panels: powerUnit };
       const object = fixed[id] ?? crewObject(id === 'crew0' ? 0 : 1);

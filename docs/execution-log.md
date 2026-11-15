@@ -902,3 +902,14 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Build:** `npm run build` (0).
 - **Git:** sem commit.
 
+## 15/11/2026 · Locomoção da tripulação (D-20)
+
+- **Diagnóstico:** (1) `smoothCrewTrip` atualizava `member.x/z` mas nunca `node.position`: na ida e na volta o modelo ficava parado e saltava no início do trabalho; (2) velocidade exigida pelo motor de 8 a 12 m/s em 1× (trechos de 1 h); (3) giro instantâneo (`rotation.y = atan2`) em todo quadro; (4) clipe de caminhada acelerado até 3× e corrida a 0,45×, sem relação com o chão (pés deslizando); (5) rotas pela torre de luz `tower_0` e posto da estufa dentro do domo; (6) troca de clipe com `reset().fadeIn` sem garantia de pesos somando 1.
+- **Arquivos novos:** `src/render/crew-nav.ts`, `src/render/crew-gait.ts`, `src/render/crew-rig.ts`, `tests/render/crew-motion.test.ts` (12 testes).
+- **Alterados:** `src/render/scene.ts` (seção da tripulação reescrita; ritmo do jogo estimado pelo relógio), `src/engine/astronaut.ts` (`TRAVEL_HOURS` 6,5; calibrar 11; antena 7), `src/main.ts` (gancho de desenvolvimento `act` e `hour`), `docs/regras-recursos.md`, `docs/data-sources.md`, `docs/DECISOES.md`.
+- **Modelo:** `ext/astronaut.glb` tem 65 ossos e 13 clipes no lugar (sem root motion). Medido: caminhada com pé apoiado a ~0,9 m/s; corrida com ~70% do ciclo em voo e pé a ~5 m/s. Passo lunar = 55% corrida + 45% caminhada na mesma fase.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run` 251 de 251 (27 arquivos); `npm run build` passou.
+- **Navegador (Playwright, GPU, ~43 fps, porta 5187):** inspeção e calibração simultâneas em 1×: velocidade máxima 2,6 m/s, voo até ~3,5 cm, frenagem até 0 no posto, clipe `interact` só depois de alinhado; calibração em 4×: ~7 m/s, chegada e trabalho preservados; ajuste da antena recusado sem antena (regra mantida). Capturas desktop 1280×800 e Pixel 7 com caminhada e colheita. SwiftShader roda a 1 fps e não serve para avaliar movimento.
+- **Limitações:** a câmera de acompanhamento (`director.ts`) atravessa a parede do habitat quando o astronauta passa rente a ele; o rover não é obstáculo dinâmico (só a garagem); o relevo é tratado como plano sob os pés (sem IK); abaixo de 10 fps o jogo inteiro (motor e cena, ambos limitados a 0,1 s por quadro) desacelera junto, sem dessincronizar. A independência do FPS da locomoção foi verificada por teste (30, 60 e 144 fps), não em aparelho lento real.
+- **Git:** sem commit.
+

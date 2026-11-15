@@ -3,7 +3,6 @@
 // Só desenha o estado recebido; regra fica no motor. Fases das missões vêm de src/engine/mission.ts.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { GameState } from '../engine/game';
 import { isGreenhouseOn } from '../engine/resources';
 import { phaseFraction, type AgentTaskKind } from '../engine/astronaut';
@@ -19,10 +18,13 @@ import { SUN } from '../data/sun';
 import { TERRAIN_MESH } from '../data/terrain-mesh';
 import { attachModel, loadGltf, loadModel } from './assets';
 import { VERTICAL_EXAGGERATION, surfaceHeight } from './terrain-height';
-import { ANTENNA, ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, ICE_PROCESSOR, ICE_ROUTE, PANEL_SLOTS, type Spot } from './layout';
+import { ANTENNA_WORK, AIRLOCK, DOCK, ICE_PROCESSOR, ICE_ROUTE, PANEL_SLOTS, type Spot } from './layout';
 import { base, loadBaseLayoutModels, updateBase } from './base-layout';
 import { updateCrop } from './crop';
 import { astronomicalSky, updateSky } from './sky';
+import { CREW_HOMES, ICE_HELPER, PANEL_FIELD_WORK, pathBetween, siteFocus, workSpot } from './crew-nav';
+import { createWalker, LOPE_SPEED, remaining, setPath, stepGait, stepWalker, type Drive, type Walker } from './crew-gait';
+import { CrewRig, type PoseClip } from './crew-rig';
 
 /** Paleta da cena (tokens de docs/VISUAL_DIRECTION.md). */
 export const PALETTE = {
@@ -312,7 +314,10 @@ function along(path: Path, k: number): { x: number; z: number; heading: number }
   return { x: last.x, z: last.z, heading: 0 };
 }
 
-const PROCESSOR_FRONT: Spot = { x: ICE_PROCESSOR.x, z: ICE_PROCESSOR.z - 2.6 };
+/** Velocidade visual máxima do rover nos trechos de missão (unidades por segundo real). */
+const VISUAL_TRIP_SPEED = 40;
+
+const PROCESSOR_FRONT: Spot ={ x: ICE_PROCESSOR.x, z: ICE_PROCESSOR.z - 2.6 };
 
 /** Rotas de ida (garagem → local) por tipo de missão. A volta é a mesma linha ao contrário. */
 function routeFor(kind: TaskKind, panelSlot: number): Path {
@@ -431,93 +436,64 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
 }
 
 // ---------- Tripulação ----------
+// Quatro camadas separadas: o motor diz a fase da tarefa (src/engine/astronaut.ts); crew-nav.ts planeja a rota
+// contornando as estruturas; crew-gait.ts move o corpo com inércia e passada lunar; crew-rig.ts desenha e anima.
 
-type Clip = 'idle' | 'walk' | 'run' | 'work' | 'wave';
-
-interface Crew {
-  mixer: THREE.AnimationMixer | null;
-  actions: Partial<Record<Clip, THREE.AnimationAction>>;
-  current: Clip | '';
-  node: THREE.Object3D | null;
-  x: number;
-  z: number;
-  home: { x: number; z: number };
-  moving: boolean;
-  working: boolean;
-  /** Segundos restantes em que ainda conta como andando (evita piscar entre quadros). */
-  moveTimer: number;
-  /** Velocidade atual em m/s (cadência da caminhada). */
-  speed: number;
-  legs: THREE.Object3D[];
-  arms: THREE.Object3D[];
+interface CrewMember {
+  readonly walker: Walker;
+  rig: CrewRig | null;
+  readonly home: Spot;
+  /** Destino da rota atual (a rota só é refeita quando ele muda). */
+  destKey: string;
+  driveKind: Drive['kind'] | '';
+  pose: PoseClip;
+  /** Aceno pedido pela introdução (cinematic.ts). */
+  cineWave: boolean;
 }
 
-const crew: Crew[] = [
-  { mixer: null, actions: {}, current: '', node: null, x: 5.6, z: 1.4, home: { x: 5.6, z: 1.4 }, moving: false, working: false, moveTimer: 0, speed: 0, legs: [], arms: [] },
-  { mixer: null, actions: {}, current: '', node: null, x: 6.2, z: -1.2, home: { x: 6.2, z: -1.2 }, moving: false, working: false, moveTimer: 0, speed: 0, legs: [], arms: [] },
-];
-const CREW_WALK_SPEED = 1.4;
-/** Velocidade visual máxima nos trechos de ida, volta e rover (unidades por segundo real). */
-const VISUAL_TRIP_SPEED = 40;
-/** Abrigo: dentro do habitat, pela câmara de descompressão. */
-const SHELTER = { x: AIRLOCK.x - 1.2, z: AIRLOCK.z };
+function member(home: Spot, heading: number): CrewMember {
+  return { walker: createWalker(home.x, home.z, heading), rig: null, home, destKey: '', driveKind: '', pose: 'idle', cineWave: false };
+}
 
-/**
- * Leva o astronauta até o destino sem teletransporte: o destino deriva do estado do motor (acompanha pausa
- * e velocidade do jogo) e a velocidade máxima só evita saltos (abrigo, retomada de tarefa).
- */
-/** Ida e volta (D-18): segue o alvo do motor com suavização exponencial; anda enquanto o trecho dura. */
-function smoothCrewTrip(member: Crew, tx: number, tz: number, dt: number): void {
-  const k = Math.min(1, dt * 14);
-  const dx = tx - member.x;
-  const dz = tz - member.z;
-  const dist = Math.hypot(dx, dz);
-  // Passo limitado (ritmo constante, sem saltos quando o quadro atrasa).
-  const step = Math.min(dist * k, VISUAL_TRIP_SPEED * dt);
-  if (dist > 1e-9) {
-    member.x += (dx / dist) * step;
-    member.z += (dz / dist) * step;
+const crew: CrewMember[] = CREW_HOMES.map((home) => member(home, Math.PI / 2));
+/** Abrigo: dentro da câmara de descompressão (a rota entra pela porta). */
+const SHELTER: Spot = { x: AIRLOCK.x - 1.2, z: AIRLOCK.z };
+/** Ritmos próprios (m/s em 1×) fora das tarefas do motor: voltar para casa, ajudar no gelo, correr para o abrigo. */
+const HOME_CRUISE = 1.3;
+const HELPER_CRUISE = 1.6;
+const SHELTER_CRUISE = 2.4;
+
+/** Clipe de cada tarefa (o modelo externo tem todos; sem o clipe, a pose cai para parado). */
+const TASK_POSE: Record<AgentTaskKind, PoseClip> = { inspect: 'interact', harvest: 'harvest', maintain: 'work', calibrate: 'interact', tune: 'interact' };
+
+/** Horas de jogo por segundo real, estimadas pelo relógio (1 em 1×, 4 em 4×): o time-lapse da locomoção. */
+let simRate = 1;
+let simRateRaw = 1;
+let lastClockHour = -1;
+
+function headingTo(from: { x: number; z: number }, to: { x: number; z: number }): number {
+  return Math.atan2(to.x - from.x, to.z - from.z);
+}
+
+/** Leva o astronauta a `dest`, refazendo a rota só quando o destino muda (sem salto: parte da posição atual). */
+function routeTo(m: CrewMember, dest: Spot, drive: Drive): void {
+  const key = `${dest.x.toFixed(2)},${dest.z.toFixed(2)}`;
+  const w = m.walker;
+  if (key !== m.destKey) {
+    setPath(w, pathBetween({ x: w.x, z: w.z }, dest), drive.kind === 'track' ? drive.fraction : 0);
+    m.destKey = key;
+  } else if (drive.kind === 'track' && m.driveKind !== 'track') {
+    w.prevTarget = drive.fraction * (w.path?.length ?? 0);
   }
-  if (dist > 1e-3 && member.node) member.node.rotation.y = Math.atan2(dx, dz);
-  member.moving = true;
-  member.moveTimer = 0.3;
-  member.speed = dt > 0 ? (dist * k) / dt : 0;
+  m.driveKind = drive.kind;
 }
 
-function followCrew(member: Crew, tx: number, tz: number, dt: number, maxSpeed: number): void {
-  const dx = tx - member.x;
-  const dz = tz - member.z;
-  const dist = Math.hypot(dx, dz);
-  const step = Math.min(dist, maxSpeed * dt);
-  if (step > 1e-4) {
-    member.x += (dx / dist) * step;
-    member.z += (dz / dist) * step;
-    member.moveTimer = 0.18;
-    member.speed = dt > 0 ? step / dt : 0;
-    if (member.node) member.node.rotation.y = Math.atan2(dx, dz);
-  } else {
-    member.moveTimer = Math.max(0, member.moveTimer - dt);
-    member.speed = 0;
-  }
-  member.moving = member.moveTimer > 0;
-  if (member.node) {
-    member.node.position.set(member.x, surfaceHeight(member.x, member.z), member.z);
-    // Dentro do habitat (abrigo) o astronauta não aparece.
-    member.node.visible = Math.hypot(member.x - SHELTER.x, member.z - SHELTER.z) > 0.6;
-  }
+function arrived(w: Walker): boolean {
+  return remaining(w) < 0.05 && w.speed < 0.05 * simRate;
 }
 
-function faceTowards(member: Crew, x: number, z: number): void {
-  if (member.node && !member.moving) member.node.rotation.y = Math.atan2(x - member.x, z - member.z);
-}
-
-function playCrewClip(member: Crew, name: Clip): void {
-  if (!member.mixer || member.current === name) return;
-  const next = member.actions[name] ?? (name === 'wave' || name === 'work' ? member.actions.idle : undefined);
-  if (!next) return;
-  next.reset().fadeIn(0.25).play();
-  if (member.current) member.actions[member.current]?.fadeOut(0.25);
-  member.current = name;
+function aligned(w: Walker, heading: number): boolean {
+  return Math.abs(Math.atan2(Math.sin(heading - w.heading), Math.cos(heading - w.heading))) < 0.3;
 }
 
 /** Posição do rover no mundo (só para verificação em desenvolvimento). */
@@ -527,13 +503,33 @@ export function roverWorldState(): { x: number; z: number; heading: number; phas
 }
 
 /** Estado da animação de cada astronauta (só para verificação em desenvolvimento). */
-export function crewAnimationState(): { current: string; x: number; z: number; moving: boolean; hasWave: boolean; waveOpen: boolean; sceneSec: number; waveUntilSec: number }[] {
+export function crewAnimationState(): {
+  current: string;
+  pose: string;
+  x: number;
+  z: number;
+  heading: number;
+  speed: number;
+  lift: number;
+  moving: boolean;
+  remaining: number;
+  hasWave: boolean;
+  waveOpen: boolean;
+  sceneSec: number;
+  waveUntilSec: number;
+}[] {
+  const r2 = (v: number) => Math.round(v * 100) / 100;
   return crew.map((m) => ({
-    current: m.current,
-    x: Math.round(m.x * 100) / 100,
-    z: Math.round(m.z * 100) / 100,
-    moving: m.moving,
-    hasWave: !!m.actions.wave,
+    current: m.rig ? m.rig.dominantClip(m.walker) : '',
+    pose: m.pose,
+    x: r2(m.walker.x),
+    z: r2(m.walker.z),
+    heading: r2(m.walker.heading),
+    speed: r2(m.walker.speed),
+    lift: Math.round(m.walker.lift * 1000) / 1000,
+    moving: m.walker.moveWeight > 0.5,
+    remaining: r2(remaining(m.walker)),
+    hasWave: !!m.rig?.hasWave,
     waveOpen: lastSceneSec < crewWaveUntil,
     sceneSec: lastSceneSec,
     waveUntilSec: crewWaveUntil,
@@ -550,160 +546,101 @@ export function requestCrewWave(seconds: number): void {
   crewWaveRequest = seconds;
 }
 
-function animateCrew(member: Crew, t: number, dt: number): void {
-  if (member.mixer) {
-    const waving = t < crewWaveUntil && !member.moving && !!member.actions.wave;
-    playCrewClip(member, waving ? 'wave' : member.moving ? (member.actions.walk ? 'walk' : 'run') : member.working ? 'work' : 'idle');
-    const cadence = member.moving ? Math.min(3, Math.max(0.6, member.speed / CREW_WALK_SPEED)) : 1;
-    const gait = member.actions.walk ?? member.actions.run;
-    if (gait) gait.timeScale = member.actions.walk ? cadence : 0.45 * cadence;
-    member.mixer.update(dt);
-    return;
-  }
-  const swing = member.moving ? Math.sin(t * 7) * 0.55 : 0;
-  member.legs.forEach((leg, i) => (leg.rotation.x = i === 0 ? swing : -swing));
-  member.arms.forEach((arm, i) => (arm.rotation.x = i === 0 ? -swing : swing));
-}
-
-/** Pontos de trabalho na estufa, um por astronauta (lados diferentes da porta). */
-const GH_WORK_SPOTS: readonly Spot[] = [
-  { x: GREENHOUSE.x + 3.1, z: GREENHOUSE.z - 1.9 },
-  { x: GREENHOUSE.x + 2.4, z: GREENHOUSE.z + 1.7 },
-];
-/** Onde cada tarefa acontece: estufa, campo solar ou antena. */
-type Site = 'greenhouse' | 'panels' | 'antenna';
-const SITE_OF: Record<AgentTaskKind, Site> = { inspect: 'greenhouse', harvest: 'greenhouse', maintain: 'greenhouse', calibrate: 'panels', tune: 'antenna' };
-/** Ponto de trabalho no campo solar (primeira coluna, lado norte) e para onde o astronauta olha. */
-const PANEL_FIELD_WORK: Spot = { x: -7.2, z: -8 };
-const PANEL_FIELD_FOCUS: Spot = { x: PANEL_SLOTS[0].x, z: PANEL_SLOTS[0].z };
-/** Rota de casa até o local da tarefa: contorna o habitat (leste e norte, ou leste e sul). */
-function crewPath(i: number, kind: AgentTaskKind): Path {
-  const home = crew[i].home;
-  const site = SITE_OF[kind];
-  if (site === 'panels') return [home, { x: 6.5, z: -8 }, { x: -2, z: -9 }, PANEL_FIELD_WORK];
-  if (site === 'antenna') return [home, { x: 6.5, z: -7 }, ANTENNA_WORK];
-  return [home, { x: 4.4, z: 5.4 }, GH_WORK_SPOTS[i] ?? GH_WORK_SPOTS[0]];
-}
-/** Alvo para onde o astronauta olha enquanto trabalha. */
-function siteFocus(kind: AgentTaskKind): Spot {
-  const site = SITE_OF[kind];
-  return site === 'panels' ? PANEL_FIELD_FOCUS : site === 'antenna' ? ANTENNA : GREENHOUSE;
-}
-const CREW_FOLLOW_SPEED = 9;
-const CREW_SHELTER_SPEED = 6;
-
 /**
- * Tripulação (D-18): quem tem tarefa anda, trabalha e volta pela fase do motor (src/engine/astronaut.ts);
- * os outros ficam em casa (o ajudante vai ao processador durante a missão de gelo). Radiação ou abrigo: todos vão ao abrigo.
+ * Tripulação (D-18): quem tem tarefa sai, trabalha e volta pela fase do motor; os outros ficam em casa
+ * (o ajudante vai ao processador durante a missão de gelo). Radiação ou abrigo: todos vão ao abrigo.
+ * Sequência visual: parado → preparo (vira para a saída) → deslocamento → frenagem → alinhamento → trabalho → volta.
  */
 function updateCrew(state: GameState, t: number, dt: number, view: RoverView, radiation: boolean): void {
   const shelter = radiation || state.crewOrder === 'shelter';
-  crew.forEach((member, i) => {
-    if (shelter) {
-      followCrew(member, SHELTER.x, SHELTER.z, dt, CREW_SHELTER_SPEED);
-      member.working = false;
-      return;
-    }
+  crew.forEach((m, i) => {
+    const w = m.walker;
+    let face: number | null = null;
+    let pose: PoseClip = 'idle';
+    let drive: Drive;
     const task = state.agents[i]?.task ?? null;
-    if (task) {
-      const out = crewPath(i, task.kind);
-      const spot = out[out.length - 1];
+    if (shelter) {
+      drive = { kind: 'goto', cruise: SHELTER_CRUISE };
+      routeTo(m, SHELTER, drive);
+    } else if (task) {
+      const spot = workSpot(i, task.kind);
       if (task.phase === 'prep') {
-        followCrew(member, member.home.x, member.home.z, dt, CREW_FOLLOW_SPEED);
-        member.working = false;
-        faceTowards(member, spot.x, spot.z);
+        // Preparo: em casa, vira para a saída.
+        drive = { kind: 'goto', cruise: HOME_CRUISE };
+        routeTo(m, m.home, drive);
+        face = headingTo(m.home, spot);
+      } else if (task.phase === 'out') {
+        drive = { kind: 'track', fraction: phaseFraction(task) };
+        routeTo(m, spot, drive);
       } else if (task.phase === 'work') {
-        followCrew(member, spot.x, spot.z, dt, CREW_FOLLOW_SPEED);
-        member.working = !member.moving;
-        const focus = siteFocus(task.kind);
-        faceTowards(member, focus.x, focus.z);
+        // Termina a chegada (se atrasou) no ritmo da viagem, alinha com o equipamento e só então trabalha.
+        drive = { kind: 'goto', cruise: LOPE_SPEED };
+        routeTo(m, spot, drive);
+        face = headingTo(spot, siteFocus(task.kind));
+        if (arrived(w) && aligned(w, face)) pose = TASK_POSE[task.kind];
       } else {
-        // Ida e volta: o motor avança em passos de 0,25 h; a posição suaviza entre eles, sem atraso (1× ou 4×).
-        const p = along(task.phase === 'out' ? out : [...out].reverse(), phaseFraction(task));
-        smoothCrewTrip(member, p.x, p.z, dt);
-        member.working = false;
+        drive = { kind: 'track', fraction: phaseFraction(task) };
+        routeTo(m, m.home, drive);
       }
-      return;
-    }
-    const iceWork = i === 1 && view.kind === 'ice' && view.working && (view.phase === 'return' || view.phase === 'deliver' || view.phase === 'operate');
-    if (iceWork) {
-      followCrew(member, ICE_PROCESSOR.x - 2.2, ICE_PROCESSOR.z - 1, dt, CREW_FOLLOW_SPEED);
-      member.working = !member.moving;
-      faceTowards(member, ICE_PROCESSOR.x, ICE_PROCESSOR.z);
+    } else if (i === 1 && view.kind === 'ice' && view.working && (view.phase === 'return' || view.phase === 'deliver' || view.phase === 'operate')) {
+      drive = { kind: 'goto', cruise: HELPER_CRUISE };
+      routeTo(m, ICE_HELPER, drive);
+      face = headingTo(ICE_HELPER, ICE_PROCESSOR);
+      if (arrived(w) && aligned(w, face)) pose = 'work';
     } else {
-      followCrew(member, member.home.x, member.home.z, dt, CREW_FOLLOW_SPEED);
-      member.working = false;
-      faceTowards(member, robot.position.x, robot.position.z);
+      drive = { kind: 'goto', cruise: HOME_CRUISE };
+      routeTo(m, m.home, drive);
+      face = headingTo(m.home, robot.position);
+    }
+    stepWalker(w, dt, drive, simRate, face);
+    stepGait(w, dt, simRate, m.rig?.walkGait ?? null, m.rig?.runGait ?? null);
+    if (pose === 'idle' && arrived(w) && ((t < crewWaveUntil && !shelter) || m.cineWave)) pose = 'wave';
+    m.pose = pose;
+    if (m.rig) {
+      m.rig.update(w, pose, surfaceHeight(w.x, w.z), dt);
+      // Dentro do habitat (abrigo) o astronauta não aparece.
+      m.rig.holder.visible = Math.hypot(w.x - SHELTER.x, w.z - SHELTER.z) > 0.7;
     }
   });
-  for (const member of crew) animateCrew(member, t, dt);
 }
 
-/** Astronauta: tenta o modelo externo CC0 (ext/astronaut), o Earthset v2, o CC0 OGA e por fim o antigo. */
+/** Astronauta: tenta o modelo externo CC0 (ext/astronaut), o Earthset v2, o CC0 OGA e por fim o antigo sem esqueleto. */
 export function loadCrewModels(): Promise<unknown> {
+  // Monta o grafo de navegação agora, não no primeiro passo de uma tarefa.
+  pathBetween(crew[0].home, PANEL_FIELD_WORK);
   return Promise.all(
-    crew.map(async (member) => {
-      const candidates: Array<{ name: string; scale: number; y: number; fix: boolean }> = [
-        { name: 'ext/astronaut', scale: 1, y: 0, fix: false },
-        { name: 'astronaut_v2', scale: 1.3, y: 0, fix: true },
-        { name: 'astronaut_oga', scale: 1, y: 0.96, fix: false },
+    crew.map(async (m) => {
+      const candidates: Array<{ name: string; scale: number; y: number; matte: boolean }> = [
+        { name: 'ext/astronaut', scale: 1, y: 0, matte: false },
+        { name: 'astronaut_v2', scale: 1.3, y: 0, matte: true },
+        { name: 'astronaut_oga', scale: 1, y: 0.96, matte: false },
       ];
+      let rig: CrewRig | null = null;
       for (const c of candidates) {
         try {
-          const gltf = await loadGltf(c.name);
-          const node = cloneSkinned(gltf.scene);
-          node.traverse((obj) => {
-            obj.castShadow = true;
-            obj.receiveShadow = true;
-            if (c.fix && obj instanceof THREE.Mesh) {
-              const m = (obj.material as THREE.MeshStandardMaterial).clone();
-              m.metalness = 0.05;
-              m.roughness = 0.7;
-              obj.material = m;
-            }
-          });
-          node.position.y = c.y;
-          node.scale.setScalar(c.scale);
-          const holder = new THREE.Group();
-          holder.name = 'astronaut';
-          holder.add(node);
-          scene.add(holder);
-          member.node = holder;
-          const mixer = new THREE.AnimationMixer(node);
-          for (const clip of gltf.animations) {
-            const n = clip.name.toLowerCase();
-            const key: Clip | null = n.includes('wave') ? 'wave' : n.includes('walk') ? 'walk' : n.includes('run') ? 'run' : n.includes('work') || n.includes('interact') ? 'work' : n.includes('idle') || n === 'default' ? 'idle' : null;
-            if (key && !member.actions[key]) member.actions[key] = mixer.clipAction(clip);
-          }
-          member.mixer = mixer;
-          playCrewClip(member, 'idle');
-          return;
+          rig = CrewRig.fromGltf(await loadGltf(c.name), c.scale, c.y, c.matte);
+          break;
         } catch {
           // tenta o próximo
         }
       }
-      const source = await loadModel('astronaut');
-      const node = source.clone(true);
-      node.traverse((obj) => { obj.castShadow = true; obj.receiveShadow = true; });
-      scene.add(node);
-      member.node = node;
-      member.legs = ['leg_L', 'leg_R'].map((n) => node.getObjectByName(n)).filter((o): o is THREE.Object3D => o !== undefined);
-      member.arms = ['arm_L', 'arm_R'].map((n) => node.getObjectByName(n)).filter((o): o is THREE.Object3D => o !== undefined);
+      if (!rig) rig = CrewRig.fromStatic(await loadModel('astronaut'));
+      scene.add(rig.holder);
+      m.rig = rig;
+      rig.update(m.walker, 'idle', surfaceHeight(m.walker.x, m.walker.z), 0);
     }),
   );
 }
 
 /** Objeto do astronauta (para a câmera). */
 export function crewObject(i = 0): THREE.Object3D | null {
-  return crew[i]?.node ?? null;
+  return crew[i]?.rig?.holder ?? null;
 }
 
 /** Faz um astronauta acenar (introdução e momentos da história), se o modelo tiver o clipe. */
 export function crewWave(i: number, on: boolean): void {
-  const member = crew[i];
-  if (!member) return;
-  if (on) playCrewClip(member, 'wave');
-  else member.current = '';
+  const m = crew[i];
+  if (m) m.cineWave = on;
 }
 
 // ---------- Atualização por quadro ----------
@@ -733,6 +670,14 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   }
   const dt = !animate || lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
   lastNow = now;
+  // Ritmo do jogo (horas por segundo real) pelo próprio relógio: a locomoção acompanha 1×, 2× e 4× sem saber do HUD.
+  if (dt > 0 && lastClockHour >= 0) {
+    const dh = state.clock.hour - lastClockHour;
+    // O motor avança em degraus (0,05 h): filtra a taxa bruta e só depois limita, para não enviesar a média.
+    if (dh >= 0 && dh < 2) simRateRaw += (dh / dt - simRateRaw) * Math.min(1, dt / 0.6);
+    simRate = Math.min(4, Math.max(0.5, simRateRaw));
+  }
+  lastClockHour = state.clock.hour;
 
   const view = placeRover(state, t, dt, weather.radiation);
   lastRoverView = view;
@@ -789,11 +734,14 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
 export function resetScenePresentation(): void {
   lastNow = 0;
   setRover(DOCK.x, DOCK.z, Math.PI / 2);
-  for (const member of crew) {
-    member.x = member.home.x;
-    member.z = member.home.z;
-    member.moving = false;
-    member.node?.position.set(member.x, surfaceHeight(member.x, member.z), member.z);
+  lastClockHour = -1;
+  simRate = simRateRaw = 1;
+  for (const m of crew) {
+    Object.assign(m.walker, createWalker(m.home.x, m.home.z, Math.PI / 2));
+    m.destKey = '';
+    m.driveKind = '';
+    m.pose = 'idle';
+    m.rig?.update(m.walker, 'idle', surfaceHeight(m.walker.x, m.walker.z), 0);
   }
   for (let i = 0; i < DUST_MAX; i++) {
     dustLife[i] = 0;
