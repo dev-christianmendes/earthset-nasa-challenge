@@ -1,5 +1,7 @@
 # Arquitetura do Earthset (versão 2, 14/11/2026)
 
+> **Atenção (15/11/2026):** este documento foi escrito em 14/11 como desenho v2 e ainda mistura plano e estado. Estado atual: `docs/PROJECT_STATUS.md`. Pendências: `docs/backlog.md`. Seções marcadas como planejadas não estão implementadas. Uma reescrita como documento de arquitetura implementada é decisão pendente (D-E).
+
 Este documento é a referência de desenho. Todo item do `docs/backlog.md` aponta para um requisito (`R…`) daqui. Se um requisito mudar, muda aqui primeiro.
 
 Prazo de envio: **15/11/2026, 23h59** (meta interna 12h). Evento não lido em todos os guias: ver requisitos **A2** e **A5** em `docs/event-rules.md`.
@@ -83,7 +85,7 @@ Regras de fronteira (já verificadas pelo CI, job `boundary`):
 ### 3.1 `terrain.ts` (C1)
 - Entrada: `terrain-sites.json` (horizonte mínimo por direção de azimute, por site, medido no LOLA).
 - Saída: `isSunlit(site, sunAz, sunEl)`; sombra permanente do site (em crateras) para gelo.
-- Substitui `SITE_HORIZON_DEG` (hoje ilustrativo). A tabela `SUN` continua a mesma.
+- Substituiu `SITE_HORIZON_DEG` (feito na etapa C1). A tabela `SUN` foi regenerada com o observador LOLA (DT-16, 15/11/2026).
 
 ### 3.2 `space-weather.ts` (C2, C3)
 - Entrada: `space-weather.json` (eventos DONKI de um **cenário histórico**: ver decisão D1).
@@ -93,7 +95,7 @@ Regras de fronteira (já verificadas pelo CI, job `boundary`):
   - Radiação (dado de SEP quando houver): reduz comida ou eleva perda de coração.
 - Sem evento: a partida é a mesma de hoje.
 
-### 3.3 `narrative.ts` (I2, I3)
+### 3.3 `narrative.ts` (I2, I3): **não implementado**, ver U-03 e U-04 em `docs/backlog.md`
 - Textos do diário por patente e por evento. Função pura: `logLine(event, rank, lang)`.
 - Não muda regra: só escolhe texto. Patente muda o tom, não o número (R-PAT).
 
@@ -170,14 +172,14 @@ Acessibilidade mínima: contraste de texto AA, botões com `aria-label`, navega�
 
 ## 8. Entrega (fase final)
 
-- **Demo:** vídeo de 30 s ou 7 slides em inglês, roteiro em `docs/demo-script.md`.
-- **References:** `docs/references.md`, com cada fonte de dado, biblioteca e ferramenta de IA.
+- **Demo:** vídeo de 30 s ou 7 slides em inglês, roteiro em `docs/demo-script.md` (ainda não criado; E-05).
+- **References:** `docs/references.md` (ainda não criado; E-06), com cada fonte de dado, biblioteca e ferramenta de IA.
 - **Declaração de IA:** `AI_DISCLOSURE.md`, seção 5, com os modelos confirmados.
 - **Envio:** só com pedido explícito do autor (regra 7).
 
 ---
 
-## 9. Fases e ordem
+## 9. Fases e ordem (plano histórico de 14/11)
 
 | Fase | Conteúdo | Pronto quando |
 |---|---|---|
@@ -205,14 +207,14 @@ Se o prazo apertar, a ordem de corte é: F5 e F4 antes de F3; F3 antes de F2; **
 
 | ID | Requisito | Estado |
 |---|---|---|
-| R-LUMA | Assistente que guia o jogador por regras, sem IA generativa em tempo de jogo | implementado (`guide.ts`), na árvore de trabalho |
-| R-OBJ | Objetivos visíveis com progresso | implementado (`objectives.ts`), na árvore de trabalho |
-| R-CREW | Ordem da tripulação com custo de jogo | implementado, na árvore de trabalho |
-| R-BRIEF | Briefing antes da partida | implementado, na árvore de trabalho |
-| R-VIS3 | Direção Cinematic Scientific Sci-Fi | em andamento (P0 e P1 em `docs/PLANO_CONSOLIDADO.md`) |
-| R-SUN | Sol visível na posição calculada | P0 |
-| R-EARTH | Terra com textura | P0 |
-| R-PERF | Orçamento de desempenho e medição | P0 (medição) |
+| R-LUMA | Assistente que guia o jogador por regras, sem IA generativa em tempo de jogo | implementado (`guide.ts`) |
+| R-OBJ | Objetivos visíveis com progresso | implementado (`objectives.ts`) |
+| R-CREW | Ordem da tripulação com custo de jogo | implementado |
+| R-BRIEF | Briefing antes da partida | implementado |
+| R-VIS3 | Direção Cinematic Scientific Sci-Fi | decidida (D-11); a execução segue `docs/PLANO_V4.md` |
+| R-SUN | Sol visível na posição calculada | feito (V3.5) |
+| R-EARTH | Terra com textura | feito (V3.5) |
+| R-PERF | Orçamento de desempenho e medição | medido em emulação; aparelho físico pendente (AST-PERF-02) |
 | R-SRC | Política de fontes de ativos | decidido (D-15) |
 
 Camadas: inalteradas. O motor recebe apenas `crewOrder` e as funções puras novas (`objectives.ts`, `guide.ts`).

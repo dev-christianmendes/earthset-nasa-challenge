@@ -7,7 +7,7 @@ Projeto: **Earthset · Base no polo sul da Lua**, NASA Space Apps Challenge 2026
 | Ferramenta | Uso | Modelo |
 |---|---|---|
 | **Claude Code** (CLI da Anthropic) | Agente de código e documentação neste repositório. Lê `CLAUDE.md`, que importa `AGENTS.md`. | **Pendente** de confirmação pelo autor. Na sessão de 14/11/2026 apareceu `claude-haiku-5-5`. |
-| **Codex** (OpenAI) | Agente de código a partir de 14/11/2026, para o restante do desenvolvimento. Lê `AGENTS.md` e os documentos de `docs/`, em especial `docs/CONTEXTO_CODEX.md`. | **Pendente**: modelo e provedor a confirmar pelo autor. Ainda sem commits atribuídos. |
+| **Codex** (OpenAI) | Agente de código a partir de 14/11/2026, para o restante do desenvolvimento. Lê `AGENTS.md` e os documentos de `docs/`, em especial `docs/archive/CONTEXTO_CODEX.md` (arquivado em 15/11/2026). | **Pendente**: modelo e provedor a confirmar pelo autor. Ainda sem commits atribuídos. |
 
 Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes.
 
@@ -38,7 +38,7 @@ Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes
 - [ ] Confirmar modelo de Claude Code.
 - [ ] Confirmar modelo e provedor do Codex, e acrescentar à declaração em inglês se for usado no envio.
 - [ ] Preencher a declaração em inglês com os modelos confirmados.
-- [ ] Registro do histórico: commits feitos por outro agente antes do Codex (com trailer próprio) estão no git. Decisão do autor sobre reescrever o histórico (ver `docs/CONTEXTO_CODEX.md`).
+- [ ] Registro do histórico: commits feitos por outro agente antes do Codex (com trailer próprio) estão no git. Decisão do autor sobre reescrever o histórico (ver `docs/archive/CONTEXTO_CODEX.md` (arquivado em 15/11/2026)).
 
 
 ## 6. LUMA (assistente do jogo)

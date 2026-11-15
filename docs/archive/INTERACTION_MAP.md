@@ -1,3 +1,5 @@
+> **Arquivado em 15/11/2026 (higienização documental).** Status de 14/11/2026, antes do D-18/D-19. Superado por `docs/INTERACOES.md` (arquitetura atual das interações). As "lacunas" listadas aqui não foram reconferidas uma a uma.
+
 # Mapa de interações: cada componente
 
 Status: **14/11/2026**, após o movimento do rover ligado à fila do motor e a tela inicial. Cada linha diz o que o jogador faz, o que o motor muda, o que a cena mostra e o que falta. "Lacuna" é o que ainda não existe; não conta como feito.

@@ -1,3 +1,5 @@
+> **Arquivado em 15/11/2026 (higienização documental).** Plano de passagem de contexto de 14/11/2026 (agente anterior). Pendências atuais: `docs/backlog.md`; estado: `docs/PROJECT_STATUS.md`.
+
 # Plano de trabalho para o agente (passagem de contexto)
 
 > **Atenção (14/11/2026):** o agente atual é o Codex. Para contexto e pendências atualizadas, use **`docs/CONTEXTO_CODEX.md`**. Este plano é histórico; as seções 0.1 a 0.10 podem estar desatualizadas.

@@ -1,5 +1,7 @@
 # Arquitetura de renderização
 
+> **Atenção (15/11/2026):** documento de 14/11. A separação em camadas continua válida. Sombras, céu, Sol e Terra mudaram em 15/11: ver `docs/EARTHSET_VALIDATION_ROADMAP.md` e `docs/PROJECT_STATUS.md`.
+
 Status: descreve o que existe hoje e o que está sendo implementado.
 
 ## Camadas (regra do projeto)

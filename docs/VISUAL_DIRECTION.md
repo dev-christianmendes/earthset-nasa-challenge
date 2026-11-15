@@ -71,7 +71,7 @@ Cor nunca é o único indicador de estado: sempre há rótulo ou ícone.
 ### Câmera
 - Órbita em torno da base (já implementada), com enquadramento inicial cinematográfico.
 - Briefing com plano de abertura lento (cinemático).
-- Opcional: seguir o rover (ver `docs/PLANO_CONSOLIDADO.md`, P2).
+- Opcional: seguir o rover (ver `docs/archive/PLANO_CONSOLIDADO.md`, P2; o plano vigente é `docs/PLANO_V4.md`).
 
 ### Interface (HUD)
 - Painel técnico, com hierarquia: recursos (cartões com ícones), objetivos, tripulação e clima.

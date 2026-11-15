@@ -2,7 +2,7 @@
 
 Pedido do autor: mapear os ajustes, acrescentar tarefas ao repositório e preservar a dívida técnica para verificação posterior. Esta etapa só registra o plano; não implementa correções de gameplay, renderização, dados ou testes.
 
-Índice de execução: [backlog, bloco 10](backlog.md). Memória de retomada: [CONTEXTO_CODEX.md](CONTEXTO_CODEX.md). Regras do projeto: [AGENTS.md](../AGENTS.md).
+Índice de execução: [backlog, seção 4](backlog.md). Memória de retomada: [CONTEXTO_CODEX.md (arquivado)](archive/CONTEXTO_CODEX.md). Regras do projeto: [AGENTS.md](../AGENTS.md).
 
 ## Proveniência e estado de referência
 

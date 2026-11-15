@@ -1,5 +1,7 @@
 # Especificação de interface
 
+> **Atenção (15/11/2026):** a seção de estrutura de tela descreve o HUD de 14/11 (painel esquerdo). Desde a Earthset 4.0 (E4.5), o HUD tem barra superior, barra de ferramentas e painel lateral recolhível. Para a interação atual, use `docs/INTERACOES.md` e `index.html`.
+
 Status: parcial. Descreve o que existe e o que está previsto.
 
 ## Estrutura de tela (atual)

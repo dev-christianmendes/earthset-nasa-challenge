@@ -97,3 +97,10 @@ python3 -B -u scripts/validate-performance.py 5189 0 .scratch-agent/astronomy-fo
 ```
 
 O build e os assets devem permanecer fixos durante cada medição. Se executar benchmarks GPU simultâneos, identificar contenção e não comparar FPS como se fossem amostras isoladas.
+
+## Registro histórico da linha de base (14/11/2026)
+
+Copiado sem alteração de `docs/CONTEXTO_CODEX.md` (arquivado em 15/11/2026), para não perder a evidência:
+
+- Não há vazamento contínuo de GPU comprovado: dez reinícios mantiveram 202 geometrias/10 texturas/17 programas. Descarte de provisórios e atribuição a shaders continuam em investigação. A associação Sol–LOLA foi posteriormente confirmada/corrigida em DT-16; ver atualização acima.
+- Relato de demora: separar confirmação da ordem de duração simulada. Linha de base Intel Xe/Vulkan: 4,9 ms até feedback DOM, 263 ms até movimento e 5,315 s até inspeção em 1×. Investigar casos de segundos sem confirmação; não prometer resposta de movimento em 150 ms quando há preparo previsto.

@@ -1,6 +1,8 @@
+> **Arquivado em 15/11/2026 (higienização documental).** Memória de retomada de 14/11 a 15/11/2026. Superada por `docs/PROJECT_STATUS.md`, `docs/backlog.md` (bloco 10 e 12) e `docs/PLANO_AJUSTES_AUDITORIA.md`. Dados de desempenho preservados em `docs/PERFORMANCE_VALIDATION.md`.
+
 # Contexto para o Codex (ponto de entrada)
 
-> **Atualização de dívida técnica (15/11/2026):** usar [PLANO_AJUSTES_AUDITORIA.md](PLANO_AJUSTES_AUDITORIA.md), o bloco 10 do [backlog.md](backlog.md) e a memória de retomada abaixo para os achados da auditoria. [MAPA_SISTEMA.md](MAPA_SISTEMA.md) e as demais seções abaixo preservam levantamentos anteriores e podem conter números, hashes e estados superados. O plano de produto v4 continua em [PLANO_V4.md](PLANO_V4.md). Regras de trabalho: `AGENTS.md`.
+> **Atualização de dívida técnica (15/11/2026):** usar [PLANO_AJUSTES_AUDITORIA.md](../PLANO_AJUSTES_AUDITORIA.md), o bloco 10 do [backlog.md](../backlog.md) e a memória de retomada abaixo para os achados da auditoria. [MAPA_SISTEMA.md](MAPA_SISTEMA.md) e as demais seções abaixo preservam levantamentos anteriores e podem conter números, hashes e estados superados. O plano de produto v4 continua em [PLANO_V4.md](../PLANO_V4.md). Regras de trabalho: `AGENTS.md`.
 
 Data de referência: 14/11/2026. Este documento é a **fonte principal** para o agente Codex. Ele diz o que já existe, o que falta, quem decide o quê e como trabalhar sem quebrar o projeto. Os demais documentos são de apoio e estão listados na seção 2, com o nível de confiança de cada um.
 
@@ -17,7 +19,7 @@ Prazo de envio do desafio: **15/11/2026, 23h59** (meta interna 12h).
 
 - **Histórico da primeira etapa de iluminação/astronomia em 15/11 (superado pelo seguimento acima):** ver `EARTHSET_VALIDATION_ROADMAP.md` e bloco 11 do backlog. Sol/luz usam a tabela energética preservada; sombras ativas; Terra/5 planetas Horizons e 904 estrelas BSC5/NOIRLab; Ciência EN/PT. 208 testes TS, 43 Python, build e 33 E2E aprovados. SHA-256 confirma preservação de terreno/implantação. Esta etapa não encerra DT-16 (observador regional/azimute) nem DT-13–15/17. A precisão da rotação conferida não equivale à astrometria completa das estrelas. Detalhes de FPS, pacote e limites no roadmap.
 
-- O autor pediu registrar o plano e as tarefas para verificação posterior, sem implementar correções nesta etapa. A fonte da dívida é [PLANO_AJUSTES_AUDITORIA.md](PLANO_AJUSTES_AUDITORIA.md), com 17 IDs; a fila rastreável está no bloco 10 de [backlog.md](backlog.md).
+- O autor pediu registrar o plano e as tarefas para verificação posterior, sem implementar correções nesta etapa. A fonte da dívida é [PLANO_AJUSTES_AUDITORIA.md](../PLANO_AJUSTES_AUDITORIA.md), com 17 IDs; a fila rastreável está no bloco 10 de [backlog.md](../backlog.md).
 - Prioridades: DT-01–04 (contratos, integração temporal e cronologia científica), DT-05–06 (água e ocupação), DT-07–09/13 (abrigo, fluxos, produção e resposta), DT-10–12 (transições/regressões); DT-14–16 são hipóteses, DT-17 fecha a validação.
 - Estado importante: DT-01 já foi corrigida externamente para `hoursLeft`; typecheck e 9 testes direcionados passaram nesta etapa. DT-12 teve comparação reduzida para 1×, mas continua sem cobertura de cruzamento 12/24 h. Reproduzir antes de tratar achado histórico como defeito atual.
 - Não há vazamento contínuo de GPU comprovado: dez reinícios mantiveram 202 geometrias/10 texturas/17 programas. Descarte de provisórios e atribuição a shaders continuam em investigação. A associação Sol–LOLA foi posteriormente confirmada/corrigida em DT-16; ver atualização acima.
@@ -192,3 +194,8 @@ Captura (Chrome headless): `google-chrome --headless=new --no-sandbox --use-angl
 - **Blender:** `transform_apply` aplica também a localização, se a opção for padrão. Aplicar só a escala quando a origem precisa ficar no pivô. Escala é tamanho total.
 - **Saída longa de comando** é cortada pela ferramenta. Prefira resumos por script.
 - **Commits sem pedido:** a regra 7 do AGENTS exige pedido explícito. Eu fiz commits sem pedido em algumas etapas; não repetir.
+
+
+## Retomada: visibilidade do céu (15/11/2026)
+
+Exposição longa ativa por padrão, ganho artístico36, alpha só de cobertura e tamanho dos pontos em CSS/DPR corrigidos; botão “Olhar céu estrelado” em Ciência. E2E dedicado compara pixels semHUD, default ligado, direção/intensidade solar e hash de posições iguais: normal0px, longa187 desktop/306 celular emulado no campo fixado. AST-VIS-01 concluída localmente. Sol/sombras ainda se movem em degraus por Math.floor de1h (~0,508°/salto; nominal1s em1× e0,25s em4×), intensidade3,4/0 binária e política de sombras mais cara abaixo30FPS. AST-VIS-02 pendente, com aceite de amostragem contínua compartilhada e testes de energia; explicação em `SCENE_SKY_REVIEW.md`. Ajuste visual não resolve a fluidez solar. Há atividade paralela em causalidade DONKI/motor; preservar esses arquivos.

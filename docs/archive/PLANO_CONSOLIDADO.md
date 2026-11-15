@@ -1,3 +1,5 @@
+> **Arquivado em 15/11/2026 (higienização documental).** Substituído pelo `docs/PLANO_V4.md` (Earthset 4.0, D-16) em 14/11/2026. Plano de escopo v3, mantido como histórico.
+
 # Plano consolidado (escopo v3, 14/11/2026)
 
 > **Substituído em 14/11/2026 (noite) por `docs/PLANO_V4.md` (Earthset 4.0, D-16).** Este plano fica como histórico.

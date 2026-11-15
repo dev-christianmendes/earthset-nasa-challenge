@@ -1,6 +1,6 @@
 # Earthset 4.0 · Plano de reformulação (experiência, arte, narrativa, jogabilidade)
 
-Origem: pedido do autor de 14/11/2026, noite ("EARTHSET 4.0"). **Substitui** a ordem de `docs/PLANO_CONSOLIDADO.md` a partir daqui. A direção visual continua a D-11 (Cinematic Scientific Sci-Fi), agora com estilo 3D estilizado de alta qualidade (D-16).
+Origem: pedido do autor de 14/11/2026, noite ("EARTHSET 4.0"). **Substitui** a ordem de `docs/archive/PLANO_CONSOLIDADO.md` a partir daqui. A direção visual continua a D-11 (Cinematic Scientific Sci-Fi), agora com estilo 3D estilizado de alta qualidade (D-16).
 
 Identidade: **EARTHSET — One mission. One base. 708 hours to survive.**
 

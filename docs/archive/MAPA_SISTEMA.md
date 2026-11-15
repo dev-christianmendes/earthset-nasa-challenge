@@ -1,6 +1,8 @@
+> **Arquivado em 15/11/2026 (higienização documental).** Levantamento de 14/11/2026 (referência git `57bd2d3`). Superado pelo `docs/PROJECT_STATUS.md` e pelo `docs/arquitetura.md`. Ele mesmo lista contradições (ex.: bateria 1200 vs 1000, que o código resolve em 1000).
+
 # Mapa do sistema Earthset
 
-**Levantamento:** 14/11/2026, Codex. **Referência Git:** `57bd2d3`, mais alterações locais preexistentes, inclusive modelos GLB. Este documento descreve o sistema observado; não declara implementadas as propostas de [PLANO_CONSOLIDADO.md](PLANO_CONSOLIDADO.md). As regras de trabalho continuam em [AGENTS.md](../AGENTS.md).
+**Levantamento:** 14/11/2026, Codex. **Referência Git:** `57bd2d3`, mais alterações locais preexistentes, inclusive modelos GLB. Este documento descreve o sistema observado; não declara implementadas as propostas de [PLANO_CONSOLIDADO.md](PLANO_CONSOLIDADO.md). As regras de trabalho continuam em [AGENTS.md](../../AGENTS.md).
 
 ## 1. Produto e finalidade
 
@@ -8,7 +10,7 @@ Earthset é um jogo educativo 3D de gestão de uma base no polo sul da Lua. O jo
 
 O resumo do [desafio oficial Build a Junior Astronaut Mission Trainer](https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/) foi localizado nesta auditoria no índice de busca do site: propõe um jogo/app para estudantes administrarem um posto lunar ou marciano, conciliando suporte à vida, radiação, energia e alimentos. Earthset está alinhado a esse núcleo. Não confundir isso com validação integral do enunciado/recursos ou dos guias: as aberturas diretas retornaram 502. A2 está parcialmente esclarecido; A5 permanece aberto.
 
-O índice da [página oficial de 2026](https://www.spaceappschallenge.org/2026/) confirma o evento em 14–15/11 e fechamento de submissão em 15/11 às 23h59 locais. A meta interna do repo é 15/11 às 12h. Composição da equipe/Local Event, formatos exatos e condições finais de envio ainda precisam da conferência indicada em [event-rules.md](event-rules.md).
+O índice da [página oficial de 2026](https://www.spaceappschallenge.org/2026/) confirma o evento em 14–15/11 e fechamento de submissão em 15/11 às 23h59 locais. A meta interna do repo é 15/11 às 12h. Composição da equipe/Local Event, formatos exatos e condições finais de envio ainda precisam da conferência indicada em [event-rules.md](../event-rules.md).
 
 | Critério do projeto para julgamento | Implementação/evidência | Falta fechar |
 | --- | --- | --- |
