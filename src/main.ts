@@ -33,6 +33,7 @@ import { mountSpacePanel } from './ui/space-panel';
 import { mountSkyPanel, skyLongExposure } from './ui/sky-panel';
 import { bodyAt, type BodyId } from './astronomy/sky';
 import { SKY } from './data/sky';
+import { apparentSunDirection } from './render/sky';
 import { sampleAt } from './engine/sun';
 import { getLang, t } from './i18n';
 
@@ -546,6 +547,7 @@ function maybeAutostart(): void {
   if (!import.meta.env.DEV) return;
   // Gancho só de desenvolvimento para os testes de interface: posição de um objeto na tela (px).
   (window as unknown as { __earthset: unknown }).__earthset = {
+    sunDirection: apparentSunDirection,
     screenOf(id: SelectableId): [number, number] | null {
       const fixed: Partial<Record<SelectableId, THREE.Object3D>> = { rover: robot, greenhouse, habitat, antenna, processor, storage, panels: powerUnit };
       const object = fixed[id] ?? crewObject(id === 'crew0' ? 0 : 1);

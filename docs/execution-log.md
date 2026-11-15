@@ -772,3 +772,13 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Pendências do item:** horizonte, transição binária de intensidade (`sun.intensity = lit ? 3.4 : 0`) e política de sombras sob FPS baixo (`main.ts:frame`).
 - **Git:** nenhum commit ou push nesta etapa.
 
+## 15/11/2026 · AST-VIS-02, verificação de movimento no navegador
+
+- **Probe de desenvolvimento:** `window.__earthset.sunDirection()` (só com `npm run dev`, no mesmo gancho de teste já existente) lê a direção do disco em `src/render/sky.ts`. Não altera o jogo nem o build de produção.
+- **Script:** `scripts/e2e-sol-continuo.py`. Abre `?autostart=cadet&nointro&hour=60`, lê a direção a cada ~66 ms por 4 s em 1×.
+- **Depois da interpolação:** 58 de 59 leituras mudaram (uma igual), maior sequência parada de 1 leitura, passo mediano 0,034°, máximo 0,059°.
+- **Antes (troca temporária para `sampleAt` e restauração do arquivo):** 31 de 60 mudaram, sequência parada de 15 leituras (~1 s), salto de 0,507°. Confirma o diagnóstico de `docs/SCENE_SKY_REVIEW.md`.
+- **Regressão do céu:** `scripts/e2e-sky-visibility.py` (porta 5192) terminou com saída 0; bright_pixels 0 no modo normal e 187 no modo longo.
+- **Comandos:** `npm run typecheck` (0), `npx vitest run` (24 arquivos, 225 testes), `npm run build` (0).
+- **Git:** arquivos desta etapa ainda sem commit.
+

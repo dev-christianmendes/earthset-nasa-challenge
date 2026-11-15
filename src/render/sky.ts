@@ -136,3 +136,9 @@ export function updateSky(hour: number, lit: boolean, site: Site, longExposure =
   pointGeometry.attributes.position.needsUpdate = true;
   pointGeometry.attributes.magnitude.needsUpdate = true;
 }
+
+/** Direção do disco solar aparente no referencial da cena (só para verificação em desenvolvimento). */
+export function apparentSunDirection(): number[] {
+  return solarDisc.position.clone().normalize().toArray();
+}
+
