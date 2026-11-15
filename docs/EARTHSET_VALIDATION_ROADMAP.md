@@ -101,3 +101,8 @@ Artefatos locais em `.scratch-agent/astronomy-2026-11-15/`: `baseline.json`, `va
 | `src/data/terrain-sites.json` | `c21616f7d6d845f2aa4ba9b1765d22aa6cfc2a7e3d7dc6b4da321853c84be1a4` |
 | `src/data/sun-south-pole.json` | `892f4f5b1d3d28ece1d70a87b156d394780a10e95510f4cb466c7b4913ba2b10` |
 | `data-pipeline/fetch_lola.py` | `e61e73692358e1c808036491be4d20bc1b15684b0c0d90b6900c14cfa4735616` |
+
+
+## Revisão posterior: céu perceptível e diagnóstico solar
+
+Em15/11, por relato do autor, exposição longa passou a iniciar ativa, com shader/tamanho de pontos corrigidos e botão para olhar o céu. Evidência real de pixels, capturas e causas da luz em degraus em [SCENE_SKY_REVIEW.md](SCENE_SKY_REVIEW.md). AST-VIS-01 concluída localmente; AST-VIS-02 (amostragem solar contínua) pendente. O modo de exposição permanece artístico e separado da energia.

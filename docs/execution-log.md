@@ -732,3 +732,32 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - Revalidação pré-commit: `npm run typecheck`, `npm run test -- --no-cache` (213/23 arquivos), `python3 -B -m unittest discover -s data-pipeline/tests` (51) e `npm run build` aprovados; JS final D0O8Hid3, 403,54 kB gzip. `git diff --check` aprovado.
 - `git add` inicial falhou porque `.git/index.lock` estava protegido como somente leitura pelo sandbox. Repetição com escalada autorizada concluiu o preparo dos arquivos desta etapa.
 - Destino solicitado: branch main em origin (dev-christianmendes/earthset-nasa-challenge). Este registro complementa a validação do commit `c22e875`; não reescreve o commit externo. O resultado final do envio fica verificável no histórico Git/remoto e na resposta desta execução. Não há pedido de deploy.
+
+
+## 15/11/2026 — céu legível e explicação dos saltos solares
+
+- Autor pediu rever céu pouco visível/manter exposição longa se necessário e explicar falta de fluidez da luz/sombra. Leitura confirmou `longExposure=false`, fluxo estelar multiplicando cor ealpha e tamanhos subpixel em telas densas.
+- Baseline com `python3 -B -u scripts/e2e-sky-visibility.py 5192 --baseline`: normal0 pixels RGB≥40 no campo alto semHUD; longa30 desktop/23 celular emulado. O primeiro ajuste ainda teve73px e falhou no mínimo100, levando a revisão de ganho/tamanho, sem relaxar o teste.
+- Implementação: exposição longa padrão true; ganho artístico36; alpha só de cobertura circular; resposta1,8–3,6px CSS com pixelRatio do renderer; botão EN/PT para olhar campo de céu a45°. Não cria posições astronômicas nem muda o Sol/energia.
+- E2E final pelo botão da interface: default true nos dois perfis; longa187px desktop/306px mobile contra normal0/0; posição do catálogo hash4172724579, direção/intensidade solar iguais, 12draws em ambas exposições, zero erros JS/GLSL. Capturas canvas e tela revisadas desktop/celular em `.scratch-agent/sky-visibility/after/`.
+- Diagnóstico solar: `sampleAt` usa Math.floor(hour/step), direção mantida por1h; dados medidos: saltos0,506212–0,508556°, mediana0,507624°, h24→25=0,507865°. Com SPEEDS1/2/4h/s, nominal1/0,5/0,25s entre saltos. `sun.intensity` binária3,4/0 e preenchimento0,3/0,18 explicam transições bruscas; política de sombras por frame abaixo~30FPS é agravante possível a perfilar. AST-VIS-02 registrada como pendente, sem alterar regras ou movimento solar nesta etapa.
+- `npm run typecheck`, `npm run test -- --no-cache` (220 testes/24 arquivos na árvore compartilhada, incluindo7 testes de causalidade de outra atividade) e `npm run build` aprovados. Build final desta execução CZ2wl0Ib,403,82kB gzip; aviso de chunk >500kB permanece.
+- Atividade externa em fetch_donki, clima espacial, motor, main e testes preservada; patch próprio em main apenas liga o botão de enquadramento. Nenhum comando git de commit/push/deploy executado nesta revisão.
+
+- **Regressão final do céu:** `scripts/e2e-astronomy.py 5192 .scratch-agent/sky-visibility/astronomy` passou36 verificações, sem erros JS/GLSL; Sol/luz/energia e horizonte coerentes nas horas amostradas. Três janelas fixas atingiram~60FPS/P9516,7–16,8ms, sem apagar os resultados anteriores adversos de carregamento.
+- **Solar observado em movimento:** E2E dedicado coletou187frames em3106,9ms (~60FPS) e183 pares sem mudança na direção; apenas3 saltos, aos757/1757/2757ms, de0,507865/0,507853/0,507840°. Confirmação direta da quantização horária, independentemente de baixo FPS.
+- **Reorganização documental externa:** AGENTS/CLAUDE alterados por outra atividade enquanto a revisão rodava. CONTEXTO_CODEX foi movido para docs/archive com o registro desta revisão preservado. Estado corrente complementado em `docs/PROJECT_STATUS.md`, conforme o novo mapa; arquivos arquivados não foram recriados. Demais exclusões/mudanças externas preservadas.
+
+## 15/11/2026 · Higienização documental (AGENTS, estado, backlog e arquivo)
+
+- **Pedido:** auditoria e padronização da documentação para agentes, com risco mínimo de regressão. Sem alteração de código, dados, assets ou configuração. Sem commit nem push.
+- **Verificação antes das edições:** `npm run typecheck` (exit 0); `npx vitest run` (24 arquivos, 220 testes, todos passando); `python3 -B -m unittest discover -s data-pipeline/tests` (54 testes, OK). Build não executado (gera `dist/`).
+- **Contradições corrigidas:** capacidade da bateria 1200 → 1000 (`src/main.ts`); Sol "ilustrativo, dia de 354 h" → Sol real; `advance` com quatro parâmetros; equilíbrio "2 → 3 corações" com a referência atual; backlog dizia que o plano vigente era `PLANO_CONSOLIDADO.md`, que se declara substituído pelo `PLANO_V4.md`; B0.6 (envio) marcado como pendente no AGENTS e feito no backlog; `docs/arquitetura.md` com status de 14/11 e planejamento como se fosse atual.
+- **Criados:** `docs/PROJECT_STATUS.md` (estado verificado, com comandos para reproduzir), `docs/archive/` com aviso em cada arquivo.
+- **Reescritos:** `AGENTS.md` (regras permanentes e independentes de modelo; estado e ferramentas do Claude saíram), `CLAUDE.md` (startup e ferramentas específicas), `docs/backlog.md` (só pendências; itens concluídos saíram; decisões e achados do autor listados). A versão anterior está no commit `c22e875`.
+- **Arquivados** (`docs/archive/`): `PLANO_CONSOLIDADO.md` (substituído pelo PLANO_V4), `PLANO_PARA_AGENTE.md`, `MAPA_SISTEMA.md`, `INTERACTION_MAP.md` (superado por `INTERACOES.md`), `CONTEXTO_CODEX.md` (superado por PROJECT_STATUS e backlog), `questionario-escopo.html`. Nenhum foi apagado.
+- **Preservado antes de arquivar:** linha de base de desempenho e contagem de reinícios de 14/11, copiadas sem alteração para `docs/PERFORMANCE_VALIDATION.md`.
+- **Links:** 73 links internos em `AGENTS.md`, `CLAUDE.md`, `README.md`, `AI_DISCLOSURE.md` e `docs/**`, 0 quebrados após a correção de `docs/archive/MAPA_SISTEMA.md`.
+- **Não alterado:** `docs/data-sources.md`, `docs/execution-log.md` (exceto esta entrada), `docs/DECISOES.md`, `docs/EARTHSET_VALIDATION_ROADMAP.md`, `docs/SCENE_SKY_REVIEW.md`, `docs/ORIENTACOES_AUDITORIA_V5.md` e o `README.md`. Os arquivos de astronomia tinham edições de outra sessão em andamento.
+- **Achado fora do escopo:** `data-pipeline/fetch_sun.py`, linha 14, diz que o arquivo grava a tabela do jogo; o código grava só o legado. Não corrigido (regra: sem alteração de código).
+- **Pendências de decisão:** listadas em `docs/backlog.md`, seção 6 (histórico do git, Dependabot vitest 5, PDF no README, caminhos do PLANO_V4, reescrita da arquitetura).
