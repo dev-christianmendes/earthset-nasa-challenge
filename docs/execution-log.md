@@ -791,3 +791,23 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Backlog:** DT-02 a DT-06 marcados como parciais, com o que ainda falta em cada um.
 - **Git:** sem commit nesta etapa.
 
+## 15/11/2026 · U-06 aceno da tripulação ao aviso da antena (parcial)
+
+- **Mudança:** `requestCrewWave(3)` em `src/render/scene.ts` (aceno de 3 s para quem está parado e tem o clipe `wave`); `src/main.ts` chama ao entrar em monitoramento com a antena instalada.
+- **Por que no scene:** `animateCrew` escolhe o clipe a cada quadro (ocioso, trabalho ou caminhada), então um clipe disparado de fora seria sobrescrito.
+- **Clipe:** `public/models/ext/astronaut.glb` contém o nome "wave", que é o modelo carregado primeiro.
+- **Comandos:** `npm run typecheck` (0), `npm run build` (0), `npx vitest run` (25 arquivos, 233 testes).
+- **Captura:** `?clockAt=409&antenna=tuned` abre em monitoramento, sem erro de página. O astronauta fica pequeno no enquadramento padrão e se desloca nos quadros seguintes; o aceno não ficou confirmado visualmente.
+- **Pendente:** captura de perto do aceno; animação de colheita própria.
+- **Git:** sem commit.
+
+## 15/11/2026 · U-06, aceno verificado em captura de perto
+
+- **Clipe:** `wave` existe em `public/models/ext/astronaut.glb` (195 canais, duração 2,5 s) e é mapeado para `actions.wave`.
+- **Sonda de desenvolvimento:** `window.__earthset.crewState()` (só com `npm run dev`) lê, por astronauta, a animação ativa, se está em movimento e se a janela de aceno está aberta (`crewAnimationState` em `src/render/scene.ts`).
+- **Primeira tentativa:** a janela abriu cedo, durante o carregamento (`clockAt=405` já estava em monitoramento), e fechou antes da captura. Não houve aceno visível.
+- **Segunda tentativa:** `clockAt=395`. A leitura mostrou `current: wave` com `waveOpen: true` entre 10,4 s e 12,4 s de cena, e `idle` depois de 13,3 s.
+- **Captura:** nos quadros da janela, os braços dos dois astronautas aparecem levantados. Recortes em `.scratch-agent/u06/tira_aceno.png`.
+- **Pendente:** animação de colheita própria. A colheita ainda usa o clipe de trabalho.
+- **Git:** sem commit.
+

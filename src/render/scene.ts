@@ -481,9 +481,32 @@ function playCrewClip(member: Crew, name: Clip): void {
   member.current = name;
 }
 
+/** Estado da animação de cada astronauta (só para verificação em desenvolvimento). */
+export function crewAnimationState(): { current: string; moving: boolean; hasWave: boolean; waveOpen: boolean; sceneSec: number; waveUntilSec: number }[] {
+  return crew.map((m) => ({
+    current: m.current,
+    moving: m.moving,
+    hasWave: !!m.actions.wave,
+    waveOpen: lastSceneSec < crewWaveUntil,
+    sceneSec: lastSceneSec,
+    waveUntilSec: crewWaveUntil,
+  }));
+}
+
+/** Aceno pedido pela interface (aviso da antena), em segundos de cena; consumido em updateScene. */
+let crewWaveRequest = 0;
+let crewWaveUntil = -Infinity;
+let lastSceneSec = 0;
+
+/** Pede à tripulação um aceno de `seconds` segundos (U-06). Só acena quem está parado e tem o clipe. */
+export function requestCrewWave(seconds: number): void {
+  crewWaveRequest = seconds;
+}
+
 function animateCrew(member: Crew, t: number, dt: number): void {
   if (member.mixer) {
-    playCrewClip(member, member.moving ? (member.actions.walk ? 'walk' : 'run') : member.working ? 'work' : 'idle');
+    const waving = t < crewWaveUntil && !member.moving && !!member.actions.wave;
+    playCrewClip(member, waving ? 'wave' : member.moving ? (member.actions.walk ? 'walk' : 'run') : member.working ? 'work' : 'idle');
     const cadence = member.moving ? Math.min(3, Math.max(0.6, member.speed / CREW_WALK_SPEED)) : 1;
     const gait = member.actions.walk ?? member.actions.run;
     if (gait) gait.timeScale = member.actions.walk ? cadence : 0.45 * cadence;
@@ -655,6 +678,11 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   const earthView = bodyAt(SKY, 'earth', state.clock.hour);
 
   const t = now / 1000;
+  lastSceneSec = t;
+  if (crewWaveRequest > 0) {
+    crewWaveUntil = t + crewWaveRequest;
+    crewWaveRequest = 0;
+  }
   const dt = !animate || lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
   lastNow = now;
 

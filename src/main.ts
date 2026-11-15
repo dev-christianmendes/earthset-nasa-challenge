@@ -18,7 +18,7 @@ import { lumaAdvice, lumaEvents, type LumaAction } from './engine/guide';
 import { SUN } from './data/sun';
 import { TERRAIN } from './data/terrain';
 import { WEATHER } from './data/space-weather';
-import { camera, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, updateScene } from './render/scene';
+import { camera, crewObject, loadBaseModels, loadCrewModels, renderer, robot, resetScenePresentation, resizeRenderer, scene, setQuality, requestCrewWave, crewAnimationState, updateScene } from './render/scene';
 import { antenna, greenhouse, habitat, powerUnit, processor, storage } from './render/base-layout';
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
 import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
@@ -227,9 +227,13 @@ initLuma((action) => {
 // ---------- HUD e LUMA ----------
 
 let hudDueAt = 0;
+let previousAlertLevel = 'normal';
 function renderNow(now: number): void {
   const weather = weatherForView();
   const alert = alertNow();
+  // U-06: a tripulação acena quando o aviso da antena começa (monitoramento com antena instalada).
+  if (started && game.robot.antennaInstalled && alert.level === 'monitoring' && previousAlertLevel !== 'monitoring') requestCrewWave(3);
+  previousAlertLevel = alert.level;
   renderHud(game, { weather, alert, lit: sunlit(game.clock.hour), mode: MODES[mode], explanations: settings.explanations || MODES[mode].explanations });
   if (started && selectedObject()) renderContext(game, contextInfo());
   if (started) updateLuma(lumaAdvice(game, alert, MODES[mode].luma), game.clock.hour, now);
@@ -548,6 +552,7 @@ function maybeAutostart(): void {
   // Gancho só de desenvolvimento para os testes de interface: posição de um objeto na tela (px).
   (window as unknown as { __earthset: unknown }).__earthset = {
     sunDirection: apparentSunDirection,
+    crewState: crewAnimationState,
     screenOf(id: SelectableId): [number, number] | null {
       const fixed: Partial<Record<SelectableId, THREE.Object3D>> = { rover: robot, greenhouse, habitat, antenna, processor, storage, panels: powerUnit };
       const object = fixed[id] ?? crewObject(id === 'crew0' ? 0 : 1);
