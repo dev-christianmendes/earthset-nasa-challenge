@@ -21,6 +21,8 @@ export interface SquadInfo {
   /** Quem está selecionado no painel e quem a câmera acompanha. */
   selected: string | null;
   following: SquadId | null;
+  /** Previsão da água (ROV-04): o cartão do rover avisa quando a fila deixa a base sem água. */
+  water?: { zeroIn: number | null; risk: boolean };
 }
 
 export interface SquadHandlers {
@@ -73,6 +75,11 @@ export function squadEntries(state: GameState, info: SquadInfo): Record<SquadId,
     const phaseText = phase === 'operate' || phase === 'deliver' ? t(`phase.${phase}.${head.kind}`) : phase === 'return' && head.kind === 'ice' ? t('phase.return.ice') : t(`phase.${phase}`);
     const more = state.robot.queue.length > 1 ? ` · +${state.robot.queue.length - 1}` : '';
     out.rover = { status: `${mission} · ${why ?? phaseText}${more}`, progress: taskProgress(head), waiting: !!why, busy: true, tag: why ? `${mission} · ${why}` : mission };
+  }
+  // ROV-04: risco de ficar sem água antes do próximo gelo aparece no cartão do rover (com ou sem missão).
+  if (info.water?.risk && info.water.zeroIn !== null) {
+    const warn = t('squad.water', { s: seconds(info.water.zeroIn, info.speed) });
+    out.rover = { ...out.rover, status: `⚠ ${warn} · ${out.rover.status}`, waiting: true };
   }
   return out;
 }

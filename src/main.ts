@@ -10,6 +10,7 @@ import { MAX_PANELS, MAX_QUEUE } from './engine/robot';
 import { createClock, MATCH_HOURS } from './engine/clock';
 import { isSunlit } from './engine/sun';
 import { radiationHoursLeft, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
+import { forecastWater, forecastWithAction, type WaterForecast } from './engine/forecast';
 import { alertAt, type AlertView } from './engine/alert';
 import { crewSheltered } from './engine/crew';
 import { SPACE_EVENTS } from './data/space-weather-events';
@@ -78,7 +79,38 @@ const alertNow = (): AlertView =>
     reach: game.robot.antennaInstalled ? warningAhead(game.antennaTuneLeft) : null,
     sheltered: crewSheltered(game.crew, game.crewOrder),
   });
-const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], alert: alertNow(), radiationLeft: radiationHoursLeft(WEATHER, game.clock.hour) });
+const contextInfo = (): ContextInfo => ({ radiation: weatherNow().radiation, lit: sunlit(game.clock.hour), speed: SPEEDS[speedIndex], alert: alertNow(), radiationLeft: radiationHoursLeft(WEATHER, game.clock.hour), water: waterForecast() });
+
+// ---------- Previsão da água (ROV-04) ----------
+// Simular 48 h custa ~3,6 ms: guarda o resultado e só recalcula quando muda algo que a altera
+// (hora inteira, fila do rover, tarefas da tripulação, ordem de abrigo, água arredondada).
+let forecastKey = '';
+const forecastCache = new Map<string, WaterForecast>();
+function forecastStateKey(): string {
+  const queue = game.robot.queue.map((q) => q.kind).join(',');
+  const crew = game.agents.map((a) => (a.task ? `${a.task.kind}:${a.task.phase}` : '-')).join(',');
+  return `${Math.floor(game.clock.hour)}|${queue}|${crew}|${game.crewOrder}|${Math.round(game.vitals.water)}|${game.robot.safe ? 1 : 0}`;
+}
+function cachedForecast(tag: string, run: () => WaterForecast): WaterForecast {
+  const key = forecastStateKey();
+  if (key !== forecastKey) {
+    forecastKey = key;
+    forecastCache.clear();
+  }
+  let f = forecastCache.get(tag);
+  if (!f) {
+    f = run();
+    forecastCache.set(tag, f);
+  }
+  return f;
+}
+function waterForecast(): WaterForecast {
+  return cachedForecast('now', () => forecastWater(game, sunlit, weatherAtHour));
+}
+function waterForecastWith(action: GameAction): WaterForecast {
+  if (action.type !== 'ENQUEUE_TASK') return waterForecast();
+  return cachedForecast(`enqueue:${action.kind}`, () => forecastWithAction(game, action, sunlit, weatherAtHour));
+}
 
 // ---------- Ações ----------
 
@@ -175,8 +207,11 @@ function selectObject(id: SelectableId | null): void {
   if (id) renderContext(game, contextInfo());
 }
 
+let riskAfterOrder = false;
 mountContext(document.getElementById('ctx') as HTMLElement, {
+  forecast: (action) => waterForecastWith(action),
   act(action) {
+    riskAfterOrder = action.type === 'ENQUEUE_TASK' && action.kind !== 'ice' && waterForecastWith(action).risk;
     const failure = act(action);
     if (failure) {
       showToast(t('ctx.status'), failure);
@@ -189,7 +224,10 @@ mountContext(document.getElementById('ctx') as HTMLElement, {
       if (!isFollowing()) goTo(action.kind === 'calibrate' ? 'energy' : action.kind === 'tune' ? 'antenna' : 'greenhouse', performance.now(), 0.9);
     }
     if (action.type === 'ENQUEUE_TASK') {
-      showToast(orderToast(false), t(`mission.${action.kind}`));
+      // A previsão do estado já com a ordem (calculada antes de aceitar) decide o aviso de água.
+      // Se a ordem já espera (radiação, bateria), esse motivo vem primeiro; senão, o risco de água.
+      const risky = riskAfterOrder && orderToast(false) === t('toast.order');
+      showToast(risky ? t('toast.order.risk') : orderToast(false), t(`mission.${action.kind}`));
       // Primeira missão da fila: a câmera acompanha o rover saindo da garagem (o jogador pode arrastar para soltar).
       if (game.robot.queue.length === 1 && !isFollowing()) goTo('rover', performance.now(), 0.9);
     }
@@ -296,7 +334,7 @@ const SHOT_TO_SQUAD: Partial<Record<Shot, SquadId>> = { crew: 'crew0', crew1: 'c
 const squadInfo = () => {
   const info = contextInfo();
   const shot = followingShot();
-  return { radiation: info.radiation && game.crewOrder !== 'outside', radiationLeft: info.radiationLeft, speed: info.speed, selected: selectedObject(), following: shot ? SHOT_TO_SQUAD[shot] ?? null : null };
+  return { radiation: info.radiation && game.crewOrder !== 'outside', radiationLeft: info.radiationLeft, speed: info.speed, selected: selectedObject(), following: shot ? SHOT_TO_SQUAD[shot] ?? null : null, water: info.water };
 };
 mountSquad(document.getElementById('squad') as HTMLElement, {
   select: (id) => selectObject(id),

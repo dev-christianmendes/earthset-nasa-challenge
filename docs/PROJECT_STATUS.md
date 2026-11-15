@@ -53,6 +53,7 @@ A tabela de desempenho e as capturas de 15/11 estão em `docs/PERFORMANCE_VALIDA
 - Interação: seleção por toque e teclado, painel contextual com ações validadas pelo motor (`src/render/picking.ts`, `src/ui/context-panel.ts`).
 - Tripulação na cena (D-20): navegação contornando as estruturas, locomoção com inércia e passo lunar, animação por clipes do GLB (`src/render/crew-nav.ts`, `src/render/crew-gait.ts`, `src/render/crew-rig.ts`).
 - Interface (D-23): barra da equipe com estado e motivo de espera, etiquetas de tarefa sobre astronautas e rover, painel com tarefas indisponíveis recolhidas e primeiros passos na primeira partida (`src/ui/squad.ts`, `src/ui/context-panel.ts`).
+- Previsão da água (D-24): o motor simula 48 h com as próprias regras e a interface avisa quando a fila deixa a base sem água antes do próximo gelo (`src/engine/forecast.ts`).
 - Rover (D-22): trajetória planejada contornando estruturas, curvas em arco de raio mínimo, velocidade que freia nas curvas dentro do horário do motor e chassi inclinado pelo relevo (`src/render/rover-routes.ts`). ~3,3 m/s de média em 1×.
 - Câmera (D-21): planos de visão geral, astronauta, rover e equipamentos; acompanhamento que desvia de estruturas e do chão (`src/render/director.ts`). Com acompanhamento ligado, as ordens não trocam a câmera.
 - Ordem em espera (D-21): o aviso de ordem e o painel dizem por que a tarefa espera (radiação, ordem de abrigo, bateria) e quanto falta (`radiationHoursLeft` em `src/engine/space-weather.ts`).

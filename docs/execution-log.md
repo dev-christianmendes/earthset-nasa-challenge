@@ -945,3 +945,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Comandos:** `npm run typecheck` passou; `npx vitest run` 259 de 259; `npm run build` passou.
 - **Pendente:** etiqueta pode passar por trás da barra da equipe no celular deitado; aviso de fila para água (ROV-04).
 
+## 15/11/2026 · Aviso de água na fila do rover (ROV-04, D-24)
+
+- **Arquivos:** novo `src/engine/forecast.ts` e `tests/engine/previsao.test.ts` (4 testes); alterados `src/main.ts`, `src/ui/context-panel.ts`, `src/ui/squad.ts`, `src/ui/styles.css`, `src/i18n.ts`.
+- **Medição:** 3,63 ms por previsão de 48 h (média de 50 execuções, motor puro no Node).
+- **Navegador (1280×800, hora 60, água 18,8):** sem fila, o painel diz "a água acaba em ~39 s e não há gelo na fila" e o cartão do rover mostra o aviso; ao pedir o painel, o aviso da ordem diz "atenção: a água acaba antes do próximo gelo"; com gelo atrás do painel, diz "o próximo gelo só chega em ~36 s". Sem erros de página.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run` 263 de 263; `npm run build` passou.
+- **Não feito:** reordenar a fila automaticamente (decisão do jogador); aviso equivalente para ar, comida e bateria.
+- **Git:** commit local, sem push.
+

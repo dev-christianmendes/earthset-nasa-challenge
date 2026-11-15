@@ -109,7 +109,6 @@ Já entregue (D-20, D-21; não repetir): locomoção e navegação da tripulaç�
 - [ ] **ROV-01 · P2 · Medium** Manobra de chegada: alinhar a caçamba ao processador (ré curta) e parar de lado para o painel; hoje chega de frente pelo fim da rota.
 - [ ] **ROV-02 · P2 · Medium** Rover como obstáculo dinâmico para a tripulação (hoje só a garagem é obstáculo) e a tripulação como obstáculo para o rover.
 - [ ] **ROV-03 · P2 · Low** Rodas com esterçamento visível nas curvas e giro proporcional à velocidade real (hoje giram a ritmo fixo enquanto o rover anda); volta à garagem fora de missão também pela trajetória planejada.
-- [ ] **ROV-04 · P1 · High** Equilíbrio percebido: a missão de painel dura ~28 h de jogo e, sem gelo na fila, a água zera por volta da hora 100 (reproduzido no fluxo integrado: zero da hora ~108 à ~124, risco de coração). Aviso na interface ao enfileirar ("a água acaba antes de o rover voltar") e/ou ordem sugerida, sem mudar regras.
 
 **Validação**
 - [ ] **VAL-01 · P1** Matriz final integrada (seção 7 do pedido) em desktop e celular depois de UX-04 a UX-07, com evidências. Aparelho físico: ver AST-PERF-02.

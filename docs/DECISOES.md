@@ -175,3 +175,10 @@ Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'`
 - **Primeiros passos (UX-07):** três passos que avançam pelas ações (selecionar → ordenar → câmera), com Pular; não voltam depois de concluídos (`localStorage`).
 - **Princípio:** só lê o estado do motor; nenhuma regra de jogo na interface.
 
+## D-24. Aviso de água na fila do rover (15/11/2026, noite)
+
+- **Problema (ROV-04):** com missões de rover mais longas (D-22), um painel na frente do gelo deixava a água em zero por ~16 h de jogo (hora ~108 à ~124 no fluxo integrado), com risco de perder coração, sem nenhum aviso.
+- **Decisão:** não mudar regra nem ordem da fila. O motor ganha uma previsão pura (`src/engine/forecast.ts`): simula 48 h numa cópia do estado, com Sol, clima, consumo, fila e ajuda da tripulação reais, e devolve em quantas horas a água zera e quando chega o próximo gelo. Se zera antes, é risco.
+- **Onde aparece:** faixa no painel do rover, cartão do rover na barra da equipe, rótulo em cada missão que causaria o risco e o aviso da ordem. Missão arriscada continua permitida.
+- **Custo:** ~3,6 ms por previsão; o resultado é guardado e só recalculado quando muda hora, fila, tarefas da tripulação, ordem de abrigo ou água.
+

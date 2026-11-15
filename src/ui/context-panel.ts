@@ -31,6 +31,7 @@ import { EXPOSURE_HOURS_PER_HEART } from '../engine/crew';
 import { GREENHOUSE, PANEL_OUTPUT_PER_HOUR, deriveFlow, type GreenhouseMode } from '../engine/resources';
 import { isWorking } from '../engine/robot';
 import { PHASES, missionPhase, phaseProgress, type MissionPhase } from '../engine/mission';
+import type { WaterForecast } from '../engine/forecast';
 import { ICE_HELP_HOURS, ICE_WATER_PER_TRIP, MAX_PANELS, TASK_HOURS, type TaskKind } from '../engine/robot';
 import type { AlertView } from '../engine/alert';
 import { safeStatus } from '../engine/safe-mode';
@@ -47,6 +48,8 @@ export interface ContextInfo {
   alert: AlertView;
   /** Horas de jogo até a radiação atual passar (0 sem radiação). */
   radiationLeft: number;
+  /** Previsão da água com a fila atual (ROV-04). */
+  water: WaterForecast;
 }
 
 export interface ContextHandlers {
@@ -60,6 +63,8 @@ export interface ContextHandlers {
   /** Troca o objeto selecionado (ex.: de um astronauta para o outro). */
   select(id: SelectableId): void;
   close(): void;
+  /** Previsão da água se a ação for aceita agora (ROV-04); calculada e guardada pelo main. */
+  forecast(action: GameAction): WaterForecast;
 }
 
 type Updater = (state: GameState, sheltered: boolean) => void;
@@ -77,7 +82,7 @@ let radiationNow = false;
 /** Evento de radiação em curso, qualquer que seja a decisão do jogador. */
 let eventNow = false;
 let speedNow = 1;
-let world: ContextInfo = { radiation: false, lit: true, speed: 1, alert: { level: 'normal', episode: null, evidence: null, precursor: null, recoveryLeft: 0, lagRange: null }, radiationLeft: 0 };
+let world: ContextInfo = { radiation: false, lit: true, speed: 1, alert: { level: 'normal', episode: null, evidence: null, precursor: null, recoveryLeft: 0, lagRange: null }, radiationLeft: 0, water: { zeroIn: null, iceIn: null, risk: false } };
 
 const TOOL_FOR: Partial<Record<SelectableId, Tool>> = {
   habitat: 'crew',
@@ -377,7 +382,7 @@ function roverView(state: GameState): View {
   const blocked = ROVER_KINDS.map((k) => `${k}:${whyNot(state, { type: 'ENQUEUE_TASK', kind: k }) ?? ''}`).join('|');
   return {
     title: t('ctx.rover'),
-    signature: `rover/${queue.map((q) => q.kind).join(',')}/${blocked}/${state.installation.panels}`,
+    signature: `rover/${queue.map((q) => q.kind).join(',')}/${blocked}/${state.installation.panels}/${ROVER_KINDS.map((k) => (handlers.forecast({ type: 'ENQUEUE_TASK', kind: k }).risk ? 1 : 0)).join('')}`,
     build: (s) => {
       const status = make('ul', 'status-list');
       status.append(
@@ -386,6 +391,16 @@ function roverView(state: GameState): View {
           v.textContent = !task ? t('ctx.rover.idle') : waitText(st) ?? (radiationNow ? t('phase.wait.radiation') : st.vitals.battery <= 0 ? t('phase.wait.battery') : phaseLabel(missionPhase(task), task.kind));
         }),
       );
+      // ROV-04: aviso de água enquanto a fila deixar a base sem água antes do próximo gelo.
+      const warn = make('p', 'ctx-warn');
+      warn.setAttribute('role', 'status');
+      updaters.push(() => {
+        const f = world.water;
+        warn.hidden = !f.risk;
+        if (!f.risk || f.zeroIn === null) return;
+        const s = Math.max(1, Math.round(f.zeroIn / Math.max(1, speedNow)));
+        warn.textContent = f.iceIn === null ? t('water.risk.noIce', { s }) : t('water.risk.late', { s, ice: Math.max(1, Math.round(f.iceIn / Math.max(1, speedNow))) });
+      });
       const missions = make('div', 'ctx-tasks');
       for (const kind of ROVER_KINDS) {
         const action: GameAction = { type: 'ENQUEUE_TASK', kind };
@@ -400,6 +415,8 @@ function roverView(state: GameState): View {
         } else {
           button.classList.add('primary');
           button.addEventListener('click', () => handlers.act(action));
+          // Missão que deixaria a base sem água antes do gelo: continua possível, mas avisada.
+          if (kind !== 'ice' && handlers.forecast(action).risk) button.append(make('em', 'warn', t('water.risk.button')));
         }
         missions.append(button);
       }
@@ -416,7 +433,7 @@ function roverView(state: GameState): View {
       const follow = make('button', 'ctx-link', t('ctx.rover.follow'));
       follow.type = 'button';
       follow.addEventListener('click', () => handlers.focus('rover'));
-      return [status, missionSteps(), heading(t('ctx.missions')), missions, ...(queue.length ? [heading(t('rover.queue')), list] : []), follow];
+      return [status, warn, missionSteps(), heading(t('ctx.missions')), missions, ...(queue.length ? [heading(t('rover.queue')), list] : []), follow];
     },
   };
 }
