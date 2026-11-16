@@ -635,6 +635,13 @@ export function mountContext(element: HTMLElement, h: ContextHandlers): void {
   body = root.querySelector('#ctx-body') as HTMLElement;
   (root.querySelector('#ctx-close') as HTMLElement).addEventListener('click', () => h.close());
   (root.querySelector('#ctx-overview') as HTMLElement).addEventListener('click', () => h.overview());
+  // UX-03: no celular em pé, o painel pode ser recolhido para não cobrir a cena.
+  const fold = root.querySelector('#ctx-fold') as HTMLButtonElement;
+  fold.addEventListener('click', () => {
+    const folded = !root.classList.contains('folded');
+    root.classList.toggle('folded', folded);
+    fold.setAttribute('aria-expanded', String(!folded));
+  });
 }
 
 export function selectedObject(): SelectableId | null {

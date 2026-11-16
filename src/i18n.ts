@@ -376,6 +376,7 @@ const DICT: Record<string, Record<Lang, string>> = {
   'sun.dark': { en: 'Shadow', pt: 'Sombra' },
   'ctx.close': { en: 'Close', pt: 'Fechar' },
   'ctx.overview': { en: 'Overview', pt: 'Visão geral' },
+  'ctx.fold': { en: 'Collapse panel', pt: 'Recolher painel' },
   'ctx.focus': { en: 'Focus', pt: 'Focar' },
   'ctx.otherCrew': { en: 'Switch to {who}', pt: 'Ir para {who}' },
   'toast.hint': { en: 'Tap the greenhouse, the rover or an astronaut to give orders', pt: 'Toque na estufa, no rover ou em um astronauta para dar ordens' },

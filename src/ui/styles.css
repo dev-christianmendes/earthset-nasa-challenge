@@ -388,6 +388,13 @@ button.ghost { background: transparent; }
 @media (max-width: 760px) {
   .ctx { left: 8px; right: 8px; width: auto; top: auto; bottom: 84px; max-height: 52vh; }
 }
+/* UX-03: recolher o painel no celular em pé. Recolhido, sobra só o cabeçalho sobre a cena. */
+.ctx-fold { display: none; }
+@media (max-width: 760px) {
+  .ctx-fold { display: inline-flex; }
+  .ctx.folded { max-height: none; }
+  .ctx.folded .side-body { display: none; }
+}
 .ctx-mission { margin: 4px 0 6px; }
 .ctx-mission[hidden] { display: none; }
 .ctx-queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }

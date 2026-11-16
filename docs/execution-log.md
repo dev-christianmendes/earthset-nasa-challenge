@@ -1023,3 +1023,12 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Comandos:** `npm run typecheck` passou; `npx vitest run` 291/291 em 33 arquivos; `npm run build` passou (aviso de chunk >500 kB permanece, AST-PERF-03).
 - **Limites:** não cobre rótulos 3D na cena, estados de carregamento e mensagens de erro como classe separada, nem aparelho físico. Item UX-09 marcado no backlog com essa ressalva.
 - **Git:** sem commit, push ou deploy.
+
+## 15/11/2026 · Painel recolhível no celular (UX-03)
+- **Pedido:** próximo item P1 aberto (UX-03): no celular em pé, o painel cobre metade da cena; aceite com toque em 412×915.
+- **Causa:** `.ctx` no celular ocupava até 52vh (476 px em 915 px) sem forma de recolher.
+- **Mudança:** botão `#ctx-fold` (ícone `min`, `aria-expanded`) no cabeçalho do painel, em `index.html`; alternância em `mountContext` (`src/ui/context-panel.ts`); texto `ctx.fold` em `src/i18n.ts`; CSS em `src/ui/styles.css` (botão oculto fora do celular; `.ctx.folded` esconde `.side-body` e tira o limite de altura).
+- **Verificação:** `scripts/e2e-ux-mobile-panel.py 5173 .scratch-agent/ux-mobile-panel`, em 412×915 com toque: 7/7. Aberto: 476 px. Recolhido: 62 px, corpo oculto, `aria-expanded=false`. Reaberto: 476 px de novo. Captura `recolhido.png` vista.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run` 291/291 em 33 arquivos; `npm run build` passou.
+- **Limites:** só toque, sem arraste. Desktop revisado por CSS, sem captura nova. Verificação em aparelho físico continua em AST-PERF-02.
+- **Git:** sem commit, push ou deploy.
