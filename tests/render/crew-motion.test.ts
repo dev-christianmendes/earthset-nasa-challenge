@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Navegação e locomoção da tripulação (módulos puros de src/render): rotas sem atravessar estruturas,
-// coerência com as horas de trajeto do motor, movimento contínuo, chegada suave e independência do FPS.
 import { describe, expect, it } from 'vitest';
 import { AGENT_TASK_KINDS, TRAVEL_HOURS_BY_KIND } from '../../src/engine/astronaut';
 import { CLEARANCE, CREW_HOMES, ICE_HELPER, OBSTACLES, distanceTo, isInside, pathBetween, workSpot, type PolyPath } from '../../src/render/crew-nav';
@@ -20,7 +18,6 @@ function minClearance(path: PolyPath, skip: number): { d: number; who: string } 
   return best;
 }
 
-/** Densifica o caminho para checar a folga também entre os vértices. */
 function dense(path: PolyPath): PolyPath {
   const xs: number[] = [];
   const zs: number[] = [];
@@ -94,7 +91,6 @@ describe('rotas da tripulação', () => {
   });
 });
 
-/** Simula uma ida rastreando a fração do motor (que avança em degraus de 0,05 h) e registra a velocidade. */
 function simulateTrip(fps: number, travelHours: number, rate: number): { w: Walker; maxDv: number; maxYaw: number; maxSpeed: number; frames: number } {
   const path = pathBetween(CREW_HOMES[1], workSpot(1, 'calibrate'));
   const w = createWalker(CREW_HOMES[1].x, CREW_HOMES[1].z, Math.PI / 2);
@@ -105,7 +101,6 @@ function simulateTrip(fps: number, travelHours: number, rate: number): { w: Walk
   let maxYaw = 0;
   let maxSpeed = 0;
   let frames = 0;
-  // Ida mais 4 s de folga para a frenagem final.
   while (hour < travelHours + 4 * rate) {
     hour += dt * rate;
     const engineHour = Math.floor(hour / 0.05) * 0.05;
@@ -238,7 +233,6 @@ describe('passos', () => {
       if (w.phase < last) turns++;
       last = w.phase;
     }
-    // Entre voltas completas, o número de apoios é 2 por volta (±1 pela volta em andamento).
     expect(Math.abs(w.steps - start - 2 * turns)).toBeLessThanOrEqual(1);
     expect(turns).toBeGreaterThan(0);
     const still = createWalker(0, 0, 0);

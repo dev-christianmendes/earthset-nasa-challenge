@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Decisão do jogador durante a radiação: abrigar ou continuar fora aceitando o risco (V5.P3, seção 3.7).
 import { TASK_HOURS } from '../../src/engine/robot';
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch, type GameState } from '../../src/engine/game';
@@ -62,7 +61,6 @@ describe('decisão de continuar fora (risco explícito)', () => {
     };
     const fora = run(queued(order(game(), 'outside')), 2);
     const abrigo = run(queued(game()), 2);
-    // No abrigo o robô não anda: falta a missão inteira. Fora, ele já avançou.
     expect(abrigo.robot.queue[0]!.hoursLeft).toBe(TASK_HOURS.ice);
     expect(fora.robot.queue[0]!.hoursLeft).toBeLessThan(TASK_HOURS.ice);
   });

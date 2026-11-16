@@ -1,9 +1,6 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Textos do modo escola (B3.4): rótulos curtos e explicações de cada recurso, em inglês e português.
-// Sem DOM e sem regra de jogo; a tela (src/ui/hud.ts) aplica estes textos.
 import type { Lang } from './i18n';
 
-/** Rótulo curto para o modo escola, pelo identificador (`data-label` em index.html). */
 export const SCHOOL_LABELS: Record<string, Record<Lang, string>> = {
   battery: { en: 'Energy', pt: 'Energia' },
   air: { en: 'Air', pt: 'Ar' },
@@ -18,21 +15,17 @@ export const SCHOOL_LABELS: Record<string, Record<Lang, string>> = {
 };
 
 export interface Explanation {
-  /** O que é, em uma frase. */
   what: string;
-  /** Por que o valor sobe ou cai. */
   why: string;
   /** De onde vem o dado. Dado real é Sol, relevo e clima; o resto é regra do jogo. */
   source: string;
 }
 
-/** Títulos das três linhas de explicação. */
 export const HINT_TITLES: Record<Lang, { what: string; why: string; source: string }> = {
   en: { what: 'What it is: ', why: 'Why it changes: ', source: 'Source: ' },
   pt: { what: 'O que é: ', why: 'Por que muda: ', source: 'Fonte: ' },
 };
 
-/** Explicações ao lado de cada recurso (`data-hint` em index.html). */
 export const EXPLANATIONS: Record<string, Record<Lang, Explanation>> = {
   battery: {
     pt: {

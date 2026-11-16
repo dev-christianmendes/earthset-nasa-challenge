@@ -1,16 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Estados de alerta de clima espacial: NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO. Motor puro.
-// Os estados saem de EVIDÊNCIA do catálogo NASA DONKI (src/engine/space-events.ts) e de regras abaixo, sem número solto.
-//
-// Regras (docs/AUDITORIA_V5.md, seção 9):
-//  - ALERTA / ABRIGO: há um episódio de radiação em curso (SEP registrado pela DONKI; duração de 24 h é regra de jogo).
-//    ALERTA enquanto alguém ainda caminha até o abrigo; ABRIGO quando toda a tripulação está dentro.
-//  - RECUPERAÇÃO: nas RECOVERY_HOURS depois do fim do episódio (regra de jogo; a DONKI não informa o fim da radiação).
-//  - MONITORAMENTO: só com antena. Uma erupção (FLR) ou CME ligada ao próximo SEP já foi registrada e o SEP começa
-//    em até `reach` horas depois dela (alcance da antena: facilities.warningAhead). Não há tempo restante: o intervalo
-//    entre erupção e SEP varia de horas a dias nos dados (`lagRange`), então não existe previsão justificável.
-//  - Limite honesto: o catálogo só contém erupções que foram seguidas por um SEP. Na vida real, a maioria das erupções
-//    não gera SEP; o jogo não mostra falsos alarmes (`hindsight` = true).
+// O catálogo é retrospectivo: contém precursores de SEP, sem modelar falsos alarmes.
 
 import { episodeAt, type LinkedEvent, type RadiationEpisode, type SepEvent, type SpaceEventCatalog } from './space-events';
 
@@ -24,7 +13,6 @@ const PRECURSOR_TYPES: readonly string[] = ['FLR', 'CME'];
 export interface AlertInput {
   /** Alcance da antena em horas, ou null sem antena instalada (sem antena não há MONITORAMENTO). */
   readonly reach: number | null;
-  /** Toda a tripulação já está dentro do habitat. */
   readonly sheltered: boolean;
 }
 
@@ -36,7 +24,6 @@ export interface AlertView {
   readonly evidence: SepEvent | null;
   /** Erupção ou CME registrada que sustenta o MONITORAMENTO. */
   readonly precursor: LinkedEvent | null;
-  /** Horas que faltam da recuperação (0 fora dela). */
   readonly recoveryLeft: number;
   /** Menor e maior intervalo, nos dados, entre a erupção ou CME mais próxima e o início do SEP. Só no monitoramento. */
   readonly lagRange: readonly [number, number] | null;
@@ -47,7 +34,6 @@ function sepsOf(catalog: SpaceEventCatalog, episode: RadiationEpisode): SepEvent
   return catalog.events.filter((e): e is SepEvent => e.type === 'SEP' && ids.has(e.id)).sort((a, b) => a.hour - b.hour);
 }
 
-/** Hora do primeiro SEP e as erupções e CMEs ligadas aos SEP do episódio. */
 function precursorsOf(catalog: SpaceEventCatalog, episode: RadiationEpisode): { onset: number; list: LinkedEvent[] } {
   const seps = sepsOf(catalog, episode);
   const onset = seps.length > 0 ? seps[0].hour : episode.start_hour;
@@ -56,7 +42,6 @@ function precursorsOf(catalog: SpaceEventCatalog, episode: RadiationEpisode): { 
   return { onset, list: [...seen.values()].filter((l) => l.hour <= onset) };
 }
 
-/** Menor e maior intervalo (horas) entre o precursor mais próximo e o início de cada episódio do catálogo. */
 export function lagRangeOf(catalog: SpaceEventCatalog): readonly [number, number] | null {
   const lags: number[] = [];
   for (const episode of catalog.radiation_episodes) {
@@ -68,14 +53,12 @@ export function lagRangeOf(catalog: SpaceEventCatalog): readonly [number, number
 
 const NONE = { episode: null, evidence: null, precursor: null, recoveryLeft: 0, lagRange: null } as const;
 
-/** Estado de alerta na hora `hour`. Só usa o que já foi registrado até essa hora; nunca mostra o futuro. */
 export function alertAt(catalog: SpaceEventCatalog, hour: number, input: AlertInput): AlertView {
   if (!Number.isFinite(hour)) throw new RangeError(`hora inválida para o alerta: ${hour}`);
 
   const active = episodeAt(catalog, hour);
   if (active) {
     const seps = sepsOf(catalog, active);
-    // Só evidência já registrada: nunca um SEP com horário posterior à hora atual (E02).
     const evidence = [...seps].reverse().find((s) => s.hour <= hour) ?? null;
     return { ...NONE, level: input.sheltered ? 'shelter' : 'alert', episode: active, evidence };
   }

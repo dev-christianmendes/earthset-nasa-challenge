@@ -1,5 +1,4 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-"""Referencial da projeção polar e contratos entre observador, grade e DEM."""
 import json
 import math
 import sys
@@ -8,7 +7,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from observer import inverse, forward, grid_azimuth, site_observer, ROOT
-
 
 class ObserverTests(unittest.TestCase):
     def test_sites_voltam_a_implantacao_preservada(self):
@@ -42,6 +40,5 @@ class ObserverTests(unittest.TestCase):
 
     def test_polo_exato_nao_inventa_longitude(self):
         with self.assertRaises(ValueError): inverse(0, 0)
-
 
 if __name__ == '__main__': unittest.main()

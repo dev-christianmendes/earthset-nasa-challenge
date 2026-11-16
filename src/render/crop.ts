@@ -1,8 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Plantas da estufa (D-18): o estágio de crescimento vem do motor (src/engine/greenhouse.ts), aqui só se desenha.
-// Muda pequena, planta desenvolvida e planta pronta (com frutos). Duas malhas instanciadas: custo de 2 draws.
-// As posições vêm dos leitos do modelo (nós `bed_*` com `length` nos extras, D-25); sem eles (modelo antigo ou
-// falha de carga), usa o layout anterior de três fileiras.
 import * as THREE from 'three';
 import { STAGE_DEVELOPED } from '../engine/greenhouse';
 import { greenhouse, greenhouseModelHooks } from './base-layout';
@@ -53,7 +49,6 @@ const scale = new THREE.Vector3();
 let lastBucket = -1;
 let lastGrowth = 0;
 
-/** Atualiza o desenho só quando o crescimento muda em passos de ~2%. */
 export function updateCrop(growth: number): void {
   lastGrowth = growth;
   const bucket = Math.round(growth / 2);

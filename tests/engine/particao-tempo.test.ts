@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// DT-02: o mesmo cenário, avançado em passos de tamanhos diferentes, deve dar o mesmo resultado.
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch, outcomeOf, type GameState } from '../../src/engine/game';
 import { MATCH_HOURS } from '../../src/engine/clock';
@@ -35,7 +34,6 @@ function enqueue(g: GameState, kind: TaskKind): GameState {
   return r.ok ? r.state : g;
 }
 
-/** Plano de referência (mesma lógica de tests/engine/partida.test.ts), avaliado a cada passo. */
 function plan(g: GameState): GameState {
   const queued = (k: TaskKind): number => g.robot.queue.filter((t) => t.kind === k).length;
   let s = g;
@@ -46,7 +44,6 @@ function plan(g: GameState): GameState {
   return s;
 }
 
-/** Partida com o plano; decide quando a hora cai em múltiplos de `every` (nos passos em que isso acontece). */
 function fullMatch(dt: number, every: number): GameState {
   let g = createGame({ installation: INST });
   let guard = 0;

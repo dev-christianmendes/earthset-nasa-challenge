@@ -1,11 +1,8 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Telas fora da partida (menu, modos, história, como jogar, ciência, configurações, créditos, pausa, fim)
-// e configurações do jogador. Só DOM; nenhuma regra de jogo.
 
 export type ScreenId = 'loading' | 'menu' | 'modes' | 'story' | 'howto' | 'science' | 'settings' | 'credits' | 'pause' | 'end';
 
 const ALL: readonly ScreenId[] = ['loading', 'menu', 'modes', 'story', 'howto', 'science', 'settings', 'credits', 'pause', 'end'];
-/** Telas abertas por cima de outra (voltar retorna à anterior). */
 interface ScreenFrame {
   id: ScreenId;
   returnFocus: HTMLElement | null;
@@ -42,7 +39,6 @@ function render(restore: HTMLElement | null = null): void {
       screen.setAttribute('aria-modal', String(id === top));
     }
   }
-  // O HUD continua visível atrás da pausa, mas não recebe foco/cliques ou atalhos de tecnologia assistiva.
   for (const background of document.querySelectorAll<HTMLElement>('#hud, #cine, canvas')) background.inert = top !== null;
   document.body.dataset.screen = top ?? 'game';
   for (const fn of listeners) fn(top);
@@ -59,7 +55,6 @@ function render(restore: HTMLElement | null = null): void {
   }
 }
 
-// Tab fica na tela ativa, inclusive quando o último controle é Voltar. Escape é tratado pelo fluxo em main.ts.
 document.addEventListener('keydown', (event) => {
   const top = currentScreen();
   if (!top || event.key !== 'Tab') return;
@@ -82,7 +77,6 @@ export function showScreen(id: ScreenId | null): void {
   render(id ? null : restore);
 }
 
-/** Abre uma tela por cima da atual. */
 export function pushScreen(id: ScreenId): void {
   if (currentScreen() === id) return;
   const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -90,7 +84,6 @@ export function pushScreen(id: ScreenId): void {
   render();
 }
 
-/** Volta à tela anterior. */
 export function popScreen(): void {
   const frame = stack.pop();
   render(frame?.returnFocus ?? null);
@@ -103,8 +96,6 @@ export function currentScreen(): ScreenId | null {
 export function onScreenChange(fn: (id: ScreenId | null) => void): void {
   listeners.push(fn);
 }
-
-// ---------- Configurações (guardadas no navegador; falham em silêncio em janela privada) ----------
 
 export interface Settings {
   intro: boolean;
@@ -137,6 +128,5 @@ export function saveSettings(settings: Settings): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(settings));
   } catch {
-    // sem armazenamento: vale só nesta página
   }
 }

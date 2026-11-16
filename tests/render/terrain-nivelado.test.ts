@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// D-26: plataforma nivelada da base. A altura é uma só para a malha e para os objetos; fora da plataforma o relevo
-// medido não muda; dentro dela a inclinação cai a valores confortáveis para rover, tripulação e módulos.
 import { describe, expect, it } from 'vitest';
 import { TERRAIN_MESH } from '../../src/data/terrain-mesh';
 import { LEVELED_HEIGHTS, PADS, VERTICAL_EXAGGERATION, groundFor, padWeight, surfaceHeight } from '../../src/render/terrain-height';
@@ -12,7 +10,6 @@ const half = size_m / 2;
 const xOf = (i: number) => -half + i * step;
 const zOf = (j: number) => half - j * step;
 
-/** Inclinação (graus) no ponto, por diferença central de 1 m. */
 function slopeAt(x: number, z: number): number {
   const gx = surfaceHeight(x + 0.5, z) - surfaceHeight(x - 0.5, z);
   const gz = surfaceHeight(x, z + 0.5) - surfaceHeight(x, z - 0.5);
@@ -77,7 +74,6 @@ describe('plataformas niveladas (D-26)', () => {
   });
 
   it('a rampa não cria paredes: em nenhum ponto passa a inclinação máxima do relevo medido (com exagero) nem a dele no mesmo ponto em mais de 12°', () => {
-    /** Relevo medido com exagero, pelos mesmos triângulos da malha. */
     const raw = (x: number, z: number): number => {
       const fi = Math.min(n - 1.001, Math.max(0, (x + half) / step));
       const fj = Math.min(n - 1.001, Math.max(0, (half - z) / step));

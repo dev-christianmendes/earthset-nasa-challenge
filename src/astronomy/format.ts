@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Formato tabular gerado pelo pipeline; restaura objetos na fronteira dos dados.
 import { BODY_IDS, type BodyId, type BodySample, type CatalogStar, type SkyTable } from './sky';
 
 interface PackedSky extends Omit<SkyTable, 'bodies' | 'stars'> {

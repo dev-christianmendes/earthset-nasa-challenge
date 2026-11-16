@@ -1,4 +1,3 @@
-# Atualizações semanais de dependências e de ações do GitHub. Revisar antes de aceitar.
 version: 2
 updates:
   - package-ecosystem: npm

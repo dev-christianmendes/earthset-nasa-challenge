@@ -1,9 +1,8 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Cena three.js (Earthset 4.0): relevo medido, céu, base por áreas, rover, tripulação e luz.
-// Só desenha o estado recebido; regra fica no motor. Fases das missões vêm de src/engine/mission.ts.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GameState } from '../engine/game';
+import { RESOURCE_ALERT_PERCENT } from '../engine/resource-alerts';
 import { isGreenhouseOn } from '../engine/resources';
 import { phaseFraction, type AgentTaskKind } from '../engine/astronaut';
 import { TUNE_HOURS, calibrationFactor } from '../engine/facilities';
@@ -27,7 +26,6 @@ import { distanceAt, roverReturn, roverRoute, roverTrack } from './rover-routes'
 import { createWalker, LOPE_SPEED, remaining, setPath, stepGait, stepWalker, type Drive, type Walker } from './crew-gait';
 import { CrewRig, type PoseClip } from './crew-rig';
 
-/** Paleta da cena (tokens de docs/VISUAL_DIRECTION.md). */
 export const PALETTE = {
   space: 0x03050a,
   sunlight: 0xfffaf3,
@@ -38,14 +36,11 @@ export const PALETTE = {
   panelGlow: 0x0c2446,
 } as const;
 
-// ---------- Renderizador ----------
-
 export const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
-// O mapa de sombra é redesenhado em quadros alternados (ver main.ts): metade do custo, diferença invisível a 60 fps.
 renderer.shadowMap.autoUpdate = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.95;
@@ -72,7 +67,6 @@ controls.minPolarAngle = THREE.MathUtils.degToRad(8);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(84);
 controls.update();
 
-/** Qualidade: sombras em 2048 (alta) ou 1024 e densidade de pixels menor (baixa). */
 export function setQuality(high: boolean): void {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, high ? 1.5 : 1));
   const size = high ? 2048 : 1024;
@@ -91,8 +85,6 @@ export function resizeRenderer(): void {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 resizeRenderer();
-
-// ---------- Relevo medido (LRO LOLA) ----------
 
 function regolithTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -158,7 +150,6 @@ function buildTerrain(): THREE.BufferGeometry {
       positions[3 * k + 2] = half - j * step;
       uvs[2 * k] = i / (n - 1);
       uvs[2 * k + 1] = j / (n - 1);
-      // Tom decorativo: partes altas um pouco mais claras (a geometria medida não muda).
       const t = (LEVELED_HEIGHTS[k] - minH) / Math.max(1e-6, maxH - minH);
       const grain = 0.93 + 0.07 * Math.sin(k * 12.9898) * Math.cos(k * 0.37);
       const shade = (0.82 + 0.18 * t) * grain;
@@ -187,9 +178,6 @@ ground.receiveShadow = true;
 ground.castShadow = true;
 scene.add(ground);
 
-// ---------- Luz ----------
-
-/** Sol: luz direcional com sombras, na direção da tabela do JPL Horizons. */
 export const sun = new THREE.DirectionalLight(PALETTE.sunlight, 3.2);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -205,14 +193,9 @@ scene.add(ambient);
 /** Luz de recorte fria, oposta ao Sol: separa as peças do fundo escuro (escolha visual). */
 const rim = new THREE.DirectionalLight(0xffffff, 0.12);
 scene.add(rim, rim.target);
-// Corpos e catálogo no mesmo referencial do Sol; sem halo atmosférico e sem emissivo no lado noturno terrestre.
 scene.add(astronomicalSky);
 
-// ---------- Base ----------
-
 scene.add(base);
-
-// ---------- Rover ----------
 
 export const robot = new THREE.Group();
 robot.name = 'rover';
@@ -234,13 +217,10 @@ const rover = {
   cargo: null as THREE.Mesh | null,
 };
 scene.add(robot);
-// Carga visível: caixa de gelo (azul) ou painel (placa) sobre o rover durante a volta ou a ida.
 // Carga da missão de gelo: regolito com gelo (escuro, ~5,6% de água em massa em Cabeus, LCROSS), não um bloco de gelo.
-// Um monte que cresce na escavação e some na descarga. Ver docs/data-sources.md (extração de água).
 const regolithMat = new THREE.MeshStandardMaterial({ color: 0x5d5a55, roughness: 1 });
 const cargoIce = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), regolithMat);
 cargoIce.scale.set(0.95, 0.55, 0.95);
-/** Grãos de gelo à vista no monte (brilho frio discreto). */
 const cargoFrost = new THREE.Mesh(new THREE.SphereGeometry(0.51, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xcfe6f5, roughness: 0.6, transparent: true, opacity: 0.18, depthWrite: false }));
 cargoIce.add(cargoFrost);
 const cargoPanel = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 1.0), new THREE.MeshStandardMaterial({ color: 0x3f6fb0, metalness: 0.5, roughness: 0.3 }));
@@ -251,17 +231,14 @@ for (const c of [cargoIce, cargoPanel]) {
   robot.add(c);
 }
 
-// ---------- Local do gelo e processamento ----------
-// Sequência apoiada em pesquisa (docs/data-sources.md): broca rotativa tipo TRIDENT/PRIME-1 traz o regolito com gelo,
+// Extração conceitual TRIDENT/RESOLVE; referências em docs/data-sources.md.
 // o rover leva ao processador, que aquece o material (conceito RESOLVE: ~150 °C) e recaptura o vapor numa armadilha fria.
 // O aquecimento e a armadilha fria são conceitos testados em laboratório, ainda não operados na Lua: a tela diz isso.
 
-/** Pilha de material escavado ao lado do furo: cresce na escavação e permanece no local (consequência visível). */
 const spoilPile = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x4f4c48, roughness: 1 }));
 spoilPile.receiveShadow = true;
 spoilPile.visible = false;
 scene.add(spoilPile);
-/** Brilho de aquecimento dentro do processador durante a descarga. */
 const heaterLight = new THREE.PointLight(0xff8a3d, 0, 5, 2);
 heaterLight.position.set(ICE_PROCESSOR.x, surfaceHeight(ICE_PROCESSOR.x, ICE_PROCESSOR.z) + 1.2, ICE_PROCESSOR.z);
 scene.add(heaterLight);
@@ -269,7 +246,6 @@ let spoilVolume = 0;
 let lastDigK = 0;
 
 function updateIceSite(drilling: boolean, digK: number, deliverK: number, t: number): void {
-  // A pilha cresce com o que foi escavado (cada viagem soma) e não diminui na partida.
   if (drilling && digK > lastDigK) spoilVolume = Math.min(6, spoilVolume + (digK - lastDigK));
   lastDigK = drilling ? digK : 0;
   if (spoilVolume > 0.01) {
@@ -280,11 +256,9 @@ function updateIceSite(drilling: boolean, digK: number, deliverK: number, t: num
     spoilPile.position.set(px, surfaceHeight(px, pz) - 0.05, pz);
     spoilPile.scale.set(r, 0.45 * r, r);
   }
-  // Processador: aquece na primeira metade da descarga (material entrando), esfria na segunda.
   heaterLight.intensity = deliverK < 0 ? 0 : (deliverK < 0.85 ? 6 : 6 * (1 - (deliverK - 0.85) / 0.15)) * (0.85 + 0.15 * Math.sin(t * 9));
 }
 
-/** Nova partida: o local do gelo volta intocado. */
 function resetIceSite(): void {
   spoilVolume = 0;
   lastDigK = 0;
@@ -292,7 +266,6 @@ function resetIceSite(): void {
   heaterLight.intensity = 0;
 }
 
-// ---------- Faíscas (reparo da antena e ligação do painel) ----------
 // Mesma física da poeira: arcos balísticos na gravidade lunar, sem ar. Brilho âmbar, rápidas.
 
 const SPARK_MAX = 120;
@@ -336,7 +309,7 @@ function updateSparks(dt: number): void {
   sparkGeo.attributes.position.needsUpdate = true;
 }
 
-// ---------- Poeira (balística, sem ar: arcos parabólicos e queda limpa, sem nuvem) ----------
+// Poeira em trajetórias balísticas no vácuo; não há nuvem atmosférica.
 
 const DUST_MAX = 420;
 const LUNAR_G = 1.62;
@@ -351,7 +324,6 @@ scene.add(dust);
 let dustCursor = 0;
 for (let i = 0; i < DUST_MAX; i++) dustPos[3 * i + 1] = -999;
 
-/** Lança `n` grãos a partir de (x, y, z), com velocidade horizontal até `spread` e vertical até `up` (m/s). */
 export function emitDust(x: number, y: number, z: number, n: number, spread: number, up: number): void {
   for (let k = 0; k < n; k++) {
     const i = dustCursor;
@@ -381,8 +353,6 @@ function updateDust(dt: number): void {
   dustGeo.attributes.position.needsUpdate = true;
 }
 
-// ---------- Trajetos do rover ----------
-
 type Path = readonly Spot[];
 
 const roverProbe = { x: 0, z: 0, heading: 0 };
@@ -397,10 +367,8 @@ function along(route: Path, k: number, geometric = false): { x: number; z: numbe
   return { x: roverProbe.x, z: roverProbe.z, heading: roverProbe.heading - Math.PI / 2 };
 }
 
-/** Velocidade visual máxima do rover nos trechos de missão (unidades por segundo real). */
 const VISUAL_TRIP_SPEED = 40;
 
-/** Posição atual do rover (para voltar caminhando depois de cancelar). */
 const roverAt = { x: DOCK.x, z: DOCK.z, heading: Math.PI / 2 };
 const ROVER_RETURN_SPEED = 3.5; // m/s, só para voltar à garagem fora de uma missão (mesma escala das missões, D-22)
 
@@ -418,7 +386,6 @@ function followRover(tx: number, tz: number, th: number, dt: number, bob = 0): v
   const dx = tx - roverAt.x;
   const dz = tz - roverAt.z;
   const dist = Math.hypot(dx, dz);
-  // Passo limitado: se o quadro atrasa, o rover não salta de uma vez (ritmo constante).
   const step = Math.min(dist * k, VISUAL_TRIP_SPEED * dt);
   if (dist > 1e-9) {
     roverAt.x += (dx / dist) * step;
@@ -437,7 +404,6 @@ robot.rotation.order = 'YZX';
 let roverPitch = 0;
 let roverRoll = 0;
 
-/** Pousa o rover no relevo: altura média sob as rodas e chassi inclinado (frente/trás e lateral), suavizado. */
 function setRover(x: number, z: number, heading: number, bob = 0): void {
   roverAt.x = x;
   roverAt.z = z;
@@ -458,16 +424,10 @@ function setRover(x: number, z: number, heading: number, bob = 0): void {
   robot.rotation.set(roverRoll, heading, roverPitch);
 }
 
-/**
- * Posiciona o rover pela fase da tarefa da frente da fila (src/engine/mission.ts): preparação na garagem,
- * deslocamento pela rota, operação no local, volta e entrega. Tarefa suspensa (radiação ou sem bateria):
- * o rover fica parado onde estava, como o motor.
- */
 function placeRover(state: GameState, t: number, dt: number, radiation: boolean): RoverView {
   const task = state.robot.queue[0];
   const safe = state.robot.safe;
   if (task && safe) {
-    // Modo seguro: volta pela rota da missão, na posição dada pela distância restante (motor).
     const d = safeDistance(safe);
     const p = along([...roverRoute(task.kind, state.installation.panels)].reverse(), 1 - d, true);
     const moving = safe.returnLeft > 0 && state.vitals.battery > 0;
@@ -498,7 +458,6 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
   const back = roverReturn(task.kind, state.installation.panels);
   let moving = false;
   if (phase === 'prep') {
-    // Preparação: na garagem, girando para a rota.
     const first = along(route, 0.02, true);
     const turn = Math.atan2(Math.sin(first.heading - roverAt.heading), Math.cos(first.heading - roverAt.heading));
     const h = roverAt.heading + turn * Math.min(1, dt * 3);
@@ -508,7 +467,6 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
     followRover(p.x, p.z, p.heading, dt, 0.015 * Math.sin(t * 22));
     moving = true;
   } else if (phase === 'operate') {
-    // Chega ao local com o mesmo ritmo da viagem (sem teleporte se o quadro atrasou).
     const p = along(route, 1);
     followRover(p.x, p.z, roverAt.heading, dt);
   } else if (phase === 'return') {
@@ -522,19 +480,13 @@ function placeRover(state: GameState, t: number, dt: number, radiation: boolean)
   return { working: true, moving, phase, kind: task.kind, k };
 }
 
-// ---------- Tripulação ----------
-// Quatro camadas separadas: o motor diz a fase da tarefa (src/engine/astronaut.ts); crew-nav.ts planeja a rota
-// contornando as estruturas; crew-gait.ts move o corpo com inércia e passada lunar; crew-rig.ts desenha e anima.
-
 interface CrewMember {
   readonly walker: Walker;
   rig: CrewRig | null;
   readonly home: Spot;
-  /** Destino da rota atual (a rota só é refeita quando ele muda). */
   destKey: string;
   driveKind: Drive['kind'] | '';
   pose: PoseClip;
-  /** Aceno pedido pela introdução (cinematic.ts). */
   cineWave: boolean;
   /** Apoios já avisados ao som e segundos até poder avisar de novo (evita chuva de passos em 4×). */
   lastSteps: number;
@@ -546,7 +498,6 @@ function member(home: Spot, heading: number): CrewMember {
 }
 
 const crew: CrewMember[] = CREW_HOMES.map((home) => member(home, Math.PI / 2));
-/** Abrigo: dentro da câmara de descompressão (a rota entra pela porta). */
 const SHELTER: Spot = { x: AIRLOCK.x - 1.2, z: AIRLOCK.z };
 /** Ritmos próprios (m/s em 1×) fora das tarefas do motor: voltar para casa, ajudar no gelo, correr para o abrigo. */
 const HOME_CRUISE = 1.3;
@@ -565,7 +516,6 @@ function headingTo(from: { x: number; z: number }, to: { x: number; z: number })
   return Math.atan2(to.x - from.x, to.z - from.z);
 }
 
-/** Leva o astronauta a `dest`, refazendo a rota só quando o destino muda (sem salto: parte da posição atual). */
 function routeTo(m: CrewMember, dest: Spot, drive: Drive): void {
   const key = `${dest.x.toFixed(2)},${dest.z.toFixed(2)}`;
   const w = m.walker;
@@ -586,10 +536,6 @@ function aligned(w: Walker, heading: number): boolean {
   return Math.abs(Math.atan2(Math.sin(heading - w.heading), Math.cos(heading - w.heading))) < 0.3;
 }
 
-/**
- * Passos para o som (UX-01): cada apoio de pé vira um aviso, com volume pela velocidade, mais baixo no passo saltado
- * (gravidade lunar: pouso macio) e pela distância da câmera. Em 4× a taxa de avisos é limitada.
- */
 let stepHandler: ((gain: number) => void) | null = null;
 export function setCrewStepHandler(handler: ((gain: number) => void) | null): void {
   stepHandler = handler;
@@ -607,7 +553,6 @@ function reportSteps(m: CrewMember, dt: number): void {
   stepHandler(near * (0.35 + 0.65 * speed) * (1 - 0.3 * w.hopWeight));
 }
 
-/** Alguém trabalhando ou chegando à porta de serviço da estufa: a porta abre (e fecha quando ele sai). */
 function crewAtGreenhouseDoor(): boolean {
   return crew.some((m) => {
     const d = Math.hypot(m.walker.x - GREENHOUSE_DOOR.x, m.walker.z - GREENHOUSE_DOOR.z);
@@ -615,13 +560,11 @@ function crewAtGreenhouseDoor(): boolean {
   });
 }
 
-/** Posição do rover no mundo (só para verificação em desenvolvimento). */
 let lastRoverView: RoverView | null = null;
 export function roverWorldState(): { x: number; z: number; heading: number; phase: string | null } {
   return { x: roverAt.x, z: roverAt.z, heading: roverAt.heading, phase: lastRoverView?.phase ?? null };
 }
 
-/** Estado da animação de cada astronauta (só para verificação em desenvolvimento). */
 export function crewAnimationState(): {
   current: string;
   pose: string;
@@ -655,21 +598,14 @@ export function crewAnimationState(): {
   }));
 }
 
-/** Aceno pedido pela interface (aviso da antena), em segundos de cena; consumido em updateScene. */
 let crewWaveRequest = 0;
 let crewWaveUntil = -Infinity;
 let lastSceneSec = 0;
 
-/** Pede à tripulação um aceno de `seconds` segundos (U-06). Só acena quem está parado e tem o clipe. */
 export function requestCrewWave(seconds: number): void {
   crewWaveRequest = seconds;
 }
 
-/**
- * Tripulação (D-18): quem tem tarefa sai, trabalha e volta pela fase do motor; os outros ficam em casa
- * (o ajudante vai ao processador durante a missão de gelo). Radiação ou abrigo: todos vão ao abrigo.
- * Sequência visual: parado → preparo (vira para a saída) → deslocamento → frenagem → alinhamento → trabalho → volta.
- */
 function updateCrew(state: GameState, t: number, dt: number, view: RoverView, radiation: boolean): void {
   const shelter = radiation || state.crewOrder === 'shelter';
   crew.forEach((m, i) => {
@@ -684,7 +620,6 @@ function updateCrew(state: GameState, t: number, dt: number, view: RoverView, ra
     } else if (task) {
       const spot = workSpot(i, task.kind);
       if (task.phase === 'prep') {
-        // Preparo: em casa, vira para a saída.
         drive = { kind: 'goto', cruise: HOME_CRUISE };
         routeTo(m, m.home, drive);
         face = headingTo(m.home, spot);
@@ -718,15 +653,12 @@ function updateCrew(state: GameState, t: number, dt: number, view: RoverView, ra
     m.pose = pose;
     if (m.rig) {
       m.rig.update(w, pose, surfaceHeight(w.x, w.z), dt);
-      // Dentro do habitat (abrigo) o astronauta não aparece.
       m.rig.holder.visible = Math.hypot(w.x - SHELTER.x, w.z - SHELTER.z) > 0.7;
     }
   });
 }
 
-/** Astronauta: tenta o modelo externo CC0 (ext/astronaut), o Earthset v2, o CC0 OGA e por fim o antigo sem esqueleto. */
 export function loadCrewModels(): Promise<unknown> {
-  // Monta o grafo de navegação agora, não no primeiro passo de uma tarefa.
   pathBetween(crew[0].home, PANEL_FIELD_WORK);
   return Promise.all(
     crew.map(async (m) => {
@@ -741,7 +673,6 @@ export function loadCrewModels(): Promise<unknown> {
           rig = CrewRig.fromGltf(await loadGltf(c.name), c.scale, c.y, c.matte);
           break;
         } catch {
-          // tenta o próximo
         }
       }
       if (!rig) rig = CrewRig.fromStatic(await loadModel('astronaut'));
@@ -752,18 +683,14 @@ export function loadCrewModels(): Promise<unknown> {
   );
 }
 
-/** Objeto do astronauta (para a câmera). */
 export function crewObject(i = 0): THREE.Object3D | null {
   return crew[i]?.rig?.holder ?? null;
 }
 
-/** Faz um astronauta acenar (introdução e momentos da história), se o modelo tiver o clipe. */
 export function crewWave(i: number, on: boolean): void {
   const m = crew[i];
   if (m) m.cineWave = on;
 }
-
-// ---------- Atualização por quadro ----------
 
 let lastNow = 0;
 const sunDir = new THREE.Vector3();
@@ -790,10 +717,9 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   }
   const dt = !animate || lastNow === 0 ? 0 : Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
   lastNow = now;
-  // Ritmo do jogo (horas por segundo real) pelo próprio relógio: a locomoção acompanha 1×, 2× e 4× sem saber do HUD.
   if (dt > 0 && lastClockHour >= 0) {
     const dh = state.clock.hour - lastClockHour;
-    // O motor avança em degraus (0,05 h): filtra a taxa bruta e só depois limita, para não enviesar a média.
+    // Filtra a taxa antes de limitar: os passos discretos do motor não devem enviesar a média.
     if (dh >= 0 && dh < 2) simRateRaw += (dh / dt - simRateRaw) * Math.min(1, dt / 0.6);
     simRate = Math.min(4, Math.max(0.5, simRateRaw));
   }
@@ -803,7 +729,6 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   lastRoverView = view;
   updateCrew(state, t, dt, view, weather.radiation);
 
-  // Rover: rodas giram só ao se deslocar; broca desce e gira na operação de gelo; poeira das rodas e da broca.
   const speedSpin = view.moving ? 9 : 0;
   for (const wheel of rover.wheels) wheel.rotation.z -= speedSpin * dt;
   const drilling = view.working && view.kind === 'ice' && view.phase === 'operate';
@@ -817,7 +742,6 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     emitDust(robot.position.x + front.x, robot.position.y + 0.1, robot.position.z + front.z, 4, 1.1, 1.8);
   }
   updateDust(dt);
-  // Faíscas: solda da antena na operação e ligação do painel à rede (fim da montagem e entrega).
   if (dt > 0 && view.working) {
     if (view.kind === 'antenna' && view.phase === 'operate' && Math.random() < 0.45) {
       emitSparks(antenna.position.x + (Math.random() - 0.5) * 0.9, antenna.position.y + 2.2 + Math.random() * 0.9, antenna.position.z + 0.2, 2);
@@ -828,7 +752,6 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
     }
   }
   updateSparks(dt);
-  // Carga de regolito: enche durante a escavação, vai cheia na volta, esvazia na descarga do processador.
   const iceTask = view.working && view.kind === 'ice';
   const load = !iceTask ? 0 : view.phase === 'operate' ? view.k : view.phase === 'return' ? 1 : view.phase === 'deliver' ? Math.max(0, 1 - view.k * 2) : 0;
   cargoIce.visible = load > 0.02;
@@ -837,7 +760,6 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   cargoPanel.visible = view.working && view.kind === 'panel' && (view.phase === 'prep' || view.phase === 'travel');
   robotBodyMat.emissiveIntensity = view.working ? 0.6 : 0.15;
   if (rover.bodyMat) rover.bodyMat.emissiveIntensity = view.working ? 0.35 : 0.05;
-  // Farol: azul em operação, vermelho na radiação; pisca enquanto trabalha.
   const beaconHex = weather.radiation ? 0xff5a5a : PALETTE.beacon;
   rover.beaconMat.color.setHex(beaconHex);
   rover.beaconMat.emissive.setHex(beaconHex);
@@ -855,7 +777,7 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
         ? { slot: state.installation.panels, k: view.phase === 'operate' ? view.k : 1, connected: false }
         : null,
     batteryPct,
-    anyCritical: batteryPct < 20 || state.vitals.air < 30 || state.vitals.water < 20 || state.vitals.food < 20,
+    anyCritical: batteryPct < RESOURCE_ALERT_PERCENT.battery || state.vitals.air < RESOURCE_ALERT_PERCENT.air || state.vitals.water < RESOURCE_ALERT_PERCENT.water || state.vitals.food < RESOURCE_ALERT_PERCENT.food,
     greenhouseOn: state.crewOrder === 'auto' && isGreenhouseOn(state.vitals, state.installation),
     greenhouseVisible: state.installation.greenhouse !== 'off',
     greenhouseWear: state.crop.wear,
@@ -878,7 +800,6 @@ export function updateScene(state: GameState, now: number, lit: boolean, weather
   return view;
 }
 
-/** Recomeça posições e fases das animações (nova missão). */
 export function resetScenePresentation(): void {
   lastNow = 0;
   setRover(DOCK.x, DOCK.z, Math.PI / 2);
@@ -903,9 +824,6 @@ export function resetScenePresentation(): void {
 }
 setRover(DOCK.x, DOCK.z, Math.PI / 2);
 
-// ---------- Modelos ----------
-
-/** Base (v4 com recuo) e rover (v4 de seis rodas com recuo para o anterior). */
 export function loadBaseModels(): Promise<unknown> {
   const roverJob = (async () => {
     for (const name of ['v4/rover_v4', 'ext/rover', 'rover']) {
@@ -943,13 +861,11 @@ export function loadBaseModels(): Promise<unknown> {
         model.traverse((node) => {
           if (/^wheel_/.test(node.name)) rover.wheels.push(node);
         });
-        // O rover antigo era pequeno: escala para ~2,6 m de comprimento.
         if (name === 'rover') model.scale.setScalar(1.7);
         for (const c of [cargoIce, cargoPanel]) robot.add(c);
         cargoIce.visible = cargoPanel.visible = false;
         return;
       } catch {
-        // próximo
       }
     }
   })();

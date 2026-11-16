@@ -21,7 +21,6 @@ names = sorted(f[:-4] for f in os.listdir(MODELS) if f.endswith(".glb"))
 if ONLY:
     names = [n for n in names if n in ONLY or n.replace("_v4", "") in ONLY]
 
-
 def setup_world(scene):
     w = bpy.data.worlds.new("w")
     w.use_nodes = True
@@ -29,7 +28,6 @@ def setup_world(scene):
     bg.inputs["Color"].default_value = (0.11, 0.115, 0.125, 1)
     bg.inputs["Strength"].default_value = 0.6
     scene.world = w
-
 
 for name in names:
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -57,7 +55,6 @@ for name in names:
           f"{dims.x:.2f},{dims.y:.2f},{dims.z:.2f} zmin={lo.z:.3f}")
     print(f"NODES {name} {nodes}")
     print(f"MATS {name} {mats}")
-    # chão
     bpy.ops.mesh.primitive_plane_add(size=200, location=(0, 0, 0))
     ground = bpy.context.active_object
     gm = bpy.data.materials.new("ground")
@@ -72,7 +69,6 @@ for name in names:
     cam = bpy.data.objects.new("cam", cam_data)
     scene.collection.objects.link(cam)
     dist = size * 2.1 + 0.5
-    # vista 3/4 pela frente (-Y Blender = +Z glTF) e pela direita
     cam.location = center + Vector((dist * 0.62, -dist * 0.78, dist * 0.42))
     cam.rotation_euler = (center - cam.location).to_track_quat("-Z", "Y").to_euler()
     scene.camera = cam
@@ -96,13 +92,11 @@ for name in names:
     scene.render.filepath = os.path.join(OUT, f"{name}.png")
     bpy.ops.render.render(write_still=True)
     print("PREVIEW", scene.render.filepath)
-    # vista traseira 3/4 (esquerda, por trás) para conferir o outro lado
     cam.location = center + Vector((-dist * 0.62, dist * 0.78, dist * 0.42))
     cam.rotation_euler = (center - cam.location).to_track_quat("-Z", "Y").to_euler()
     scene.render.filepath = os.path.join(OUT, f"{name}_rear.png")
     bpy.ops.render.render(write_still=True)
 
-# folha de contato
 bpy.ops.wm.read_factory_settings(use_empty=True)
 pngs = [os.path.join(OUT, f) for f in sorted(os.listdir(OUT)) if f.endswith("_v4.png")]
 if pngs:

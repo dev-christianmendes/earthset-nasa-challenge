@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Rover em modo seguro durante a radiação (V5.P3, seção 3.7): volta à base, espera e recomeça a ida.
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch, type GameState } from '../../src/engine/game';
 import { CALM } from '../../src/engine/space-weather';
@@ -54,9 +53,7 @@ describe('rover em modo seguro', () => {
     g = run(g, 0.25, CALM);
     expect(g.robot.safe).toBeNull();
     expect(missionPhase(g.robot.queue[0]!)).toBe('travel');
-    // Recomeçou da base: o progresso está logo no início da ida, longe dos 50% de antes.
     expect(progress(g)).toBeLessThan(PHASE_BOUNDS_BY_KIND.ice.travel[0] + 0.05);
-    // E a missão ainda se conclui depois.
     g = run(g, TASK_HOURS.ice + 1, CALM);
     expect(g.robot.queue).toHaveLength(0);
     expect(g.missionsDone.ice).toBe(1);
@@ -77,7 +74,7 @@ describe('rover em modo seguro', () => {
   it('sem bateria o rover não volta: fica preso fora até haver energia', () => {
     const base = withTask('ice', 0.5);
     const flat = { ...base, vitals: { ...base.vitals, battery: 0 } };
-    const g = advance(flat, 1, false, RAD); // noite: os painéis não recarregam a base
+    const g = advance(flat, 1, false, RAD);
     expect(safeStatus(g.robot, g.vitals.battery)).toBe('stranded');
     expect(g.robot.safe!.returnLeft).toBeCloseTo(g.robot.safe!.total, 6);
   });

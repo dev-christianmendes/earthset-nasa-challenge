@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Trajetória do rover (D-22): rotas sem atravessar estruturas, curvas com raio mínimo, velocidade crível em 1×
-// e perfil que parte e chega parado, cabendo nas horas do motor.
 import { describe, expect, it } from 'vitest';
 import { MAX_PANELS, TASK_PHASE_HOURS, type TaskKind } from '../../src/engine/robot';
 import { OBSTACLES, distanceTo } from '../../src/render/crew-nav';

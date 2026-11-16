@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// D-19: calibração dos painéis e ajuste da antena. Melhorias temporárias que decaem; sem ordem, nada muda.
 import { describe, expect, it } from 'vitest';
 import { PREP_HOURS, TASK_ENERGY_COST, TRAVEL_HOURS_BY_KIND, WORK_HOURS, type AgentTaskKind } from '../../src/engine/astronaut';
 import {

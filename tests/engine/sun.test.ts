@@ -20,7 +20,6 @@ const SYNTHETIC: SunTable = {
 const REAL = sunJson as SunTable;
 const TERRAIN = terrainJson as TerrainTable;
 
-/** Relevo plano: cada site tem horizonte constante (para testar a regra isolada). */
 function flatTerrain(peak: number, slope: number, rim: number): TerrainTable {
   const site = (h: number) => ({ x_m: 0, y_m: 0, horizon_deg: Array.from({ length: 72 }, () => h) });
   return { azimuth_step_deg: 5, sites: { peak: site(peak), slope: site(slope), rim: site(rim) } };
@@ -56,8 +55,8 @@ describe('Sol na base', () => {
   });
 
   it('a borda exige elevação acima do horizonte local', () => {
-    expect(isSunlit(SYNTHETIC, 0, 'rim', FLAT)).toBe(false); // 0,5 < 1,6
-    expect(isSunlit(SYNTHETIC, 2, 'rim', FLAT)).toBe(true); // 1,7 > 1,6
+    expect(isSunlit(SYNTHETIC, 0, 'rim', FLAT)).toBe(false);
+    expect(isSunlit(SYNTHETIC, 2, 'rim', FLAT)).toBe(true);
   });
 });
 
@@ -74,7 +73,6 @@ describe('tabela real (JPL Horizons)', () => {
     expect(count('peak')).toBeGreaterThanOrEqual(count('slope'));
     expect(count('slope')).toBeGreaterThanOrEqual(count('rim'));
     // Medido no LOLA, com o Sol de 09/10/2024 09:00 (início do cenário): observador LOLA corrigido (DT-16): pico 434 amostras, encosta 179 amostras, borda 0 h de Sol.
-    // A borda é o local mais sombreado do polo, com horizonte de até 55°; sem Sol nesse relevo.
     expect(count('peak')).toBe(434);
     expect(count('slope')).toBe(179);
     expect(count('rim')).toBe(0);

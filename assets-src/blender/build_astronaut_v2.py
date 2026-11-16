@@ -16,22 +16,19 @@ from mathutils import Vector
 
 OUT_DIR = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "public/models"
 
-SUIT = "#E8E5DA"       # branco de traje (habitat white)
+SUIT = "#E8E5DA"
 SUIT_SHADE = "#C9C4B6"
-ACCENT = "#F3A847"     # âmbar: identificação Earthset (faixa e placa)
-TEAL = "#56B9A4"       # visor e luzes de vida
-METAL = "#78818B"      # juntas e fixações
-DARK = "#2A2C33"       # botas, luvas e mangueiras
-VISOR = "#1B3B4A"      # vidro escuro com reflexo teal
-
+ACCENT = "#F3A847"
+TEAL = "#56B9A4"
+METAL = "#78818B"
+DARK = "#2A2C33"
+VISOR = "#1B3B4A"
 
 def hex_rgb(h):
     h = h.lstrip("#")
     return tuple(int(h[i : i + 2], 16) / 255 for i in (0, 2, 4)) + (1.0,)
 
-
 _MATS = {}
-
 
 def mat(name, color, metallic=0.0, rough=0.5, emission=None, strength=0.0):
     if name in _MATS:
@@ -48,11 +45,9 @@ def mat(name, color, metallic=0.0, rough=0.5, emission=None, strength=0.0):
     _MATS[name] = m
     return m
 
-
 def clear():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     _MATS.clear()
-
 
 def smooth(obj, width=0.02, segs=2):
     mod = obj.modifiers.new("Bevel", "BEVEL")
@@ -60,11 +55,9 @@ def smooth(obj, width=0.02, segs=2):
     mod.segments = segs
     mod.limit_method = "ANGLE"
 
-
 def paint(obj, m):
     obj.data.materials.clear()
     obj.data.materials.append(m)
-
 
 def make(kind, location=(0, 0, 0), scale=(1, 1, 1), rotation=(0, 0, 0)):
     if kind == "cube":
@@ -79,9 +72,7 @@ def make(kind, location=(0, 0, 0), scale=(1, 1, 1), rotation=(0, 0, 0)):
     bpy.ops.object.transform_apply(scale=True, rotation=True, location=False)
     return o
 
-
 def segment(p0, p1, radius, m, bevel=0.0):
-    """Cilindro entre dois pontos (eixo de p0 até p1)."""
     a, b = Vector(p0), Vector(p1)
     d = b - a
     length = d.length
@@ -93,19 +84,16 @@ def segment(p0, p1, radius, m, bevel=0.0):
     paint(o, m)
     return o
 
-
 def ball(center, radius, m, scale=(1, 1, 1)):
     o = make("sphere", location=center, scale=(radius * scale[0], radius * scale[1], radius * scale[2]))
     paint(o, m)
     return o
-
 
 def block(center, size, m, bevel=0.02):
     o = make("cube", location=center, scale=size)
     smooth(o, bevel, 2)
     paint(o, m)
     return o
-
 
 # Ossos (posições em metros). Mesma referência para malha e esqueleto.
 JOINTS = {
@@ -127,7 +115,6 @@ JOINTS = {
     "ankle_R": (-0.11, 0.0, 0.1),
 }
 
-
 def build_mesh():
     parts = []
     suit = mat("suit", SUIT, rough=0.55)
@@ -138,34 +125,27 @@ def build_mesh():
     metal = mat("metal", METAL, metallic=0.7, rough=0.35)
     dark = mat("dark", DARK, rough=0.7)
 
-    # Tronco: peito arredondado, cintura e pelve.
     parts.append(block((0, 0, 1.2), (0.46, 0.26, 0.52), suit, 0.1))
     parts.append(block((0, 0, 0.93), (0.34, 0.22, 0.2), shade, 0.06))
-    # Ombros arredondados e anéis de segmentação (fita escura) no peito e na cintura.
     for z, w in ((1.42, 0.2), (1.05, 0.2)):
         parts.append(segment((-w, 0, z), (w, 0, z), 0.07, shade, 0.02))
     parts.append(segment((-0.18, 0, 0.99), (0.18, 0, 0.99), 0.03, dark, 0.005))
-    # Placa de identificação e faixa âmbar no peito (marca Earthset, própria).
     parts.append(block((0, -0.135, 1.27), (0.22, 0.02, 0.1), accent, 0.01))
     parts.append(block((0, -0.135, 1.13), (0.26, 0.02, 0.025), accent, 0.005))
-    # Controles de pulso no antebraço esquerdo, e válvula de oxigênio no peito.
     parts.append(ball((0.25, -0.07, 1.22), 0.035, metal))
     parts.append(segment((0.0, -0.13, 1.37), (0.0, -0.17, 1.42), 0.03, metal))
 
-    # Mochila de suporte de vida: caixa, dois cilindros de ar e mangueiras.
     parts.append(block((0, 0.2, 1.22), (0.34, 0.16, 0.5), shade, 0.05))
     for x in (-0.09, 0.09):
         parts.append(segment((x, 0.28, 1.0), (x, 0.28, 1.42), 0.045, metal, 0.01))
         parts.append(ball((x, 0.28, 1.44), 0.03, teal))
     parts.append(segment((0.0, 0.28, 1.3), (0.0, 0.16, 1.2), 0.015, dark))
 
-    # Pescoço, capacete com viseira refletiva e anel de vedação.
     parts.append(segment(JOINTS["neck"], (0, 0, 1.44), 0.075, suit, 0.02))
     parts.append(ball(JOINTS["head"], 0.17, suit, scale=(1, 1.05, 1.1)))
     parts.append(ball((0, -0.12, 1.5), 0.12, visor, scale=(1.0, 0.55, 0.85)))
     parts.append(segment((0, 0, 1.33), (0, 0, 1.36), 0.1, metal, 0.01))
 
-    # Braços e luvas.
     for side in ("L", "R"):
         sh = JOINTS[f"shoulder_{side}"]
         el = JOINTS[f"elbow_{side}"]
@@ -176,7 +156,6 @@ def build_mesh():
         parts.append(segment(el, wr, 0.062, suit, 0.02))
         parts.append(ball((wr[0] * 1.02, wr[1], wr[2] - 0.05), 0.075, dark, scale=(1, 1.1, 1.2)))
 
-    # Pernas e botas.
     for side in ("L", "R"):
         hp = JOINTS[f"hip_{side}"]
         kn = JOINTS[f"knee_{side}"]
@@ -191,7 +170,6 @@ def build_mesh():
 
     return parts
 
-
 def join(parts):
     bpy.ops.object.select_all(action="DESELECT")
     for o in parts:
@@ -201,7 +179,6 @@ def join(parts):
     body = bpy.context.active_object
     body.name = "astronaut_body"
     return body
-
 
 def build_armature():
     arm_data = bpy.data.armatures.new("astronaut_rig")
@@ -236,7 +213,6 @@ def build_armature():
     bpy.ops.object.mode_set(mode="OBJECT")
     return rig
 
-
 def skin(body, rig):
     bpy.ops.object.select_all(action="DESELECT")
     body.select_set(True)
@@ -244,14 +220,11 @@ def skin(body, rig):
     bpy.context.view_layer.objects.active = rig
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
 
-
-# ---------- Clipes: chaves nas poses dos ossos ----------
 def key(rig, bone, frame, rot):
     pb = rig.pose.bones[bone]
     pb.rotation_mode = "XYZ"
     pb.rotation_euler = rot
     pb.keyframe_insert("rotation_euler", frame=frame)
-
 
 def clip(rig, name, length, frames):
     """frames: lista de (frame, {osso: (rx, ry, rz)}). Cria a ação e a deixa ativa só para as chaves."""
@@ -265,7 +238,6 @@ def clip(rig, name, length, frames):
     rig.animation_data.action.use_fake_user = True
     bpy.context.scene.frame_start = 1
     return action
-
 
 def cycle(rig, name, period, amp, leg_amp, arm_amp, bob, knee):
     half = period / 2
@@ -282,16 +254,13 @@ def cycle(rig, name, period, amp, leg_amp, arm_amp, bob, knee):
             "spine": (0, 0, 0),
         }
         frames.append((f, poses))
-    # Bob do quadril nos dois meios-ciclos.
     frames.append((1 + period / 4, {"hips": (0, 0, 0), "spine": (0, 0, 0)}))
     action = clip(rig, name, period, frames)
     bpy.context.scene.frame_end = max(bpy.context.scene.frame_end, int(period))
     return action
 
-
 def build_clips(rig):
     bpy.context.scene.frame_start = 1
-    # Respiração: peito sobe e desce, lento.
     clip(rig, "idle", 60, [
         (1, {"spine": (0.0, 0, 0), "head": (0.0, 0, 0)}),
         (30, {"spine": (-0.03, 0, 0), "head": (0.02, 0, 0)}),
@@ -299,13 +268,11 @@ def build_clips(rig):
     ])
     cycle(rig, "walk", 24, 0.25, 0.55, 0.45, 0.02, 0.9)
     cycle(rig, "run", 16, 0.4, 0.9, 0.85, 0.04, 1.4)
-    # Trabalho: braço direito dobrado à frente, operando um painel; cabeça voltada.
     clip(rig, "work", 48, [
         (1, {"upperarm_R": (-0.7, 0, 0.1), "forearm_R": (-1.9, 0, 0), "spine": (0.12, 0, 0), "head": (0.2, 0, 0)}),
         (24, {"upperarm_R": (-0.85, 0, 0.1), "forearm_R": (-1.5, 0, 0), "spine": (0.15, 0, 0), "head": (0.25, 0, 0)}),
         (48, {"upperarm_R": (-0.7, 0, 0.1), "forearm_R": (-1.9, 0, 0), "spine": (0.12, 0, 0), "head": (0.2, 0, 0)}),
     ])
-
 
 def export(objs, name):
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -326,17 +293,15 @@ def export(objs, name):
     )
     print("EXPORTED", path, os.path.getsize(path))
 
-
 def main():
     clear()
     parts = build_mesh()
     body = join(parts)
-    smooth(body, 0.0, 1)  # nenhuma; mantém a malha como está
+    smooth(body, 0.0, 1)
     rig = build_armature()
     skin(body, rig)
     build_clips(rig)
     export([rig, body], "astronaut_v2.glb")
     print("CLIPS", [a.name for a in bpy.data.actions])
-
 
 main()

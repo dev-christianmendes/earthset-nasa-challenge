@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// UX-01: eventos sonoros derivados da diferença entre dois estados.
 import { describe, expect, it } from 'vitest';
 import { createGame, type GameState } from '../../src/engine/game';
 import { soundCues } from '../../src/engine/sound-events';

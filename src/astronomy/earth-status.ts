@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Situação da Terra no céu do site: acima do horizonte agora, ou quantas horas faltam para subir.
-// Função pura: recebe a amostragem e não lê dados nem a cena.
 
 export interface EarthSample {
   /** Elevação do centro da Terra, em graus. */

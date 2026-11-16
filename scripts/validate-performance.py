@@ -29,13 +29,11 @@ INIT = """(() => {
   let last; function f(t){if(last!==undefined){a.frames.push(t-last);if(a.frames.length>1800)a.frames.shift();}last=t;requestAnimationFrame(f);}requestAnimationFrame(f);
 })();"""
 
-
 def snapshot(page, cdp):
     result = page.evaluate("""() => { const a=validation,d=a.frames.slice(1).sort((x,y)=>x-y);return {fps:d.length?1000/(d.reduce((s,x)=>s+x,0)/d.length):0,p95:d[Math.floor(d.length*.95)],max:d.at(-1),live:{...a.live},created:{...a.created},deleted:{...a.deleted},longTasks:a.longTasks,longTaskMs:a.longTaskMs,maxLongTaskMs:a.maxLongTaskMs,lostContexts:a.lostContexts,perf:document.getElementById('perf')?.textContent,canvases:document.querySelectorAll('body>canvas').length,overflow:document.documentElement.scrollWidth>innerWidth}; }""")
     result['heap'] = cdp.send('Runtime.getHeapUsage')
     result['dom'] = cdp.send('Memory.getDOMCounters')
     return result
-
 
 def begin(page):
     page.locator('#menu [data-go=modes]').first.click()
@@ -43,7 +41,6 @@ def begin(page):
     page.locator('#story-go').click()
     page.locator('#cine-skip').click()
     page.wait_for_selector('#hud:not([hidden])')
-
 
 with sync_playwright() as p:
     browser = p.chromium.launch(args=['--no-sandbox','--use-angle=vulkan','--enable-features=Vulkan','--ignore-gpu-blocklist','--enable-precise-memory-info'])
@@ -89,7 +86,6 @@ with sync_playwright() as p:
     print('SOAK_START',json.dumps(baseline),flush=True)
     started=time.monotonic(); cycles=0; quality=False
     while time.monotonic()-started < DURATION:
-        # Caminho público: menu, reinício, qualidade, foco e Ciência; nenhum import duplica renderizador.
         if page.locator('#end:not([hidden])').count():
             page.locator('#restart').click()
         page.locator('#pause-btn').click()

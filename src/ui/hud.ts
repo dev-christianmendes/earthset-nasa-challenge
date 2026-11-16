@@ -1,8 +1,7 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// HUD de jogo (Earthset 4.0): barra superior, barra de ferramentas, painel lateral por sistema e tela de fim.
-// Só lê o estado do motor e mostra; ações vão para main.ts por eventos. Sem regra de jogo aqui.
 import type { GameState } from '../engine/game';
 import { outcomeOf } from '../engine/game';
+import { RESOURCE_ALERT_PERCENT } from '../engine/resource-alerts';
 import { MAX_PANELS, MAX_QUEUE, TASK_HOURS, isWorking, type TaskKind } from '../engine/robot';
 import { MATCH_HOURS } from '../engine/clock';
 import { deriveFlow, isGreenhouseOn, type GreenhouseMode } from '../engine/resources';
@@ -23,7 +22,6 @@ export type Tool = 'base' | 'rover' | 'crew' | 'energy' | 'greenhouse' | 'missio
 
 export interface HudContext {
   readonly weather: SpaceWeatherSample;
-  /** Horas até a tempestade (aviso da antena) ou null. */
   readonly alert: AlertView;
   readonly lit: boolean;
   readonly mode: ModeConfig;
@@ -59,15 +57,11 @@ export const ui = {
   toast: el('toast'),
 };
 
-// ---------- Idioma ----------
-
 const langListeners: Array<() => void> = [];
-/** Quem precisa redesenhar texto ao trocar de idioma (LUMA, capítulos da história). */
 export function onLanguage(fn: () => void): void {
   langListeners.push(fn);
 }
 
-/** Troca o idioma de tudo o que está na tela. A cena 3D não tem texto. */
 export function applyLanguage(lang: Lang): void {
   setLang(lang);
   applyStatic();
@@ -80,8 +74,6 @@ export function applyLanguage(lang: Lang): void {
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-lang-toggle]')) {
   button.addEventListener('click', () => applyLanguage(getLang() === 'en' ? 'pt' : 'en'));
 }
-
-// ---------- Painel lateral ----------
 
 let openTool: Tool | null = null;
 const toolListeners: Array<(tool: Tool | null) => void> = [];
@@ -100,7 +92,6 @@ export function setTool(tool: Tool | null): void {
   for (const fn of toolListeners) fn(openTool);
 }
 
-/** Abre o painel (sem alternar). */
 export function openPanel(tool: Tool): void {
   if (openTool !== tool) setTool(tool);
 }
@@ -114,19 +105,14 @@ for (const b of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
 }
 el('side-close').addEventListener('click', () => setTool(null));
 
-// ---------- Utilitários ----------
-
 function pct(value: number, max: number): number {
   return Math.max(0, Math.min(100, (value / max) * 100));
 }
 
-/** Abaixo desses valores (em %), o recurso pisca em coral (alerta). */
-const LOW_ALERT_PERCENT = { battery: 20, air: 30, water: 20, food: 20 } as const;
-
-function setChip(res: keyof typeof LOW_ALERT_PERCENT, percent: number, text: string): void {
+function setChip(res: keyof typeof RESOURCE_ALERT_PERCENT, percent: number, text: string): void {
   el(`bar-${res}`).style.width = `${percent.toFixed(1)}%`;
   el(`val-${res}`).textContent = text;
-  document.querySelector(`.chip[data-res="${res}"]`)?.classList.toggle('low', percent < LOW_ALERT_PERCENT[res]);
+  document.querySelector(`.chip[data-res="${res}"]`)?.classList.toggle('low', percent < RESOURCE_ALERT_PERCENT[res]);
 }
 
 function li(label: string, value: string, tone: '' | 'ok' | 'warn' | 'bad' = ''): HTMLLIElement {
@@ -140,7 +126,6 @@ function li(label: string, value: string, tone: '' | 'ok' | 'warn' | 'bad' = '')
   return item;
 }
 
-/** Explicação "o quê / por quê / fonte" (modo escola), para o modo Explorador ou a configuração. */
 function explanation(key: string, lang: Lang): HTMLParagraphElement | null {
   const text = EXPLANATIONS[key]?.[lang];
   if (!text) return null;
@@ -154,11 +139,7 @@ function explanation(key: string, lang: Lang): HTMLParagraphElement | null {
   return p;
 }
 
-// ---------- Mapa de luz (noite longa) ----------
-
-/** Recebe a luz por hora (tabela real) para mostrar a longa noite na barra do relógio e no painel de energia. */
 export function setLightMap(map: readonly boolean[]): void {
-  // Maior trecho de sombra = longa noite.
   let best: [number, number] = [0, 0];
   let start = -1;
   for (let h = 0; h <= map.length; h++) {
@@ -174,8 +155,6 @@ export function setLightMap(map: readonly boolean[]): void {
   ui.nightMark.style.width = `${((best[1] - best[0]) / MATCH_HOURS) * 100}%`;
 }
 let night: [number, number] = [0, 0];
-
-// ---------- Desenho ----------
 
 let lastKey = '';
 let lastQueue: unknown = null;
@@ -231,7 +210,6 @@ function renderTop(state: GameState, ctx: HudContext): void {
   if (ui.chapterName.textContent !== chName) ui.chapterName.textContent = chName;
   ui.chapterChip.title = t(`chapter.${ch}.goal`);
 
-  // HUD técnico (Comandante): fluxos por hora do motor.
   ui.flows.hidden = !ctx.mode.technicalHud;
   if (ctx.mode.technicalHud) {
     const working = isWorking(state.robot, vitals.battery) && !ctx.weather.radiation;
@@ -247,9 +225,9 @@ function renderToolbar(state: GameState, ctx: HudContext): void {
   ui.roverBadge.textContent = String(n);
   const attn = (tool: Tool, on: boolean) => document.querySelector(`[data-tool="${tool}"]`)?.classList.toggle('attn', on);
   const batteryPct = pct(state.vitals.battery, state.installation.batteryCapacity);
-  attn('energy', batteryPct < LOW_ALERT_PERCENT.battery);
-  attn('rover', state.vitals.water < LOW_ALERT_PERCENT.water);
-  attn('greenhouse', state.vitals.food < LOW_ALERT_PERCENT.food);
+  attn('energy', batteryPct < RESOURCE_ALERT_PERCENT.battery);
+  attn('rover', state.vitals.water < RESOURCE_ALERT_PERCENT.water);
+  attn('greenhouse', state.vitals.food < RESOURCE_ALERT_PERCENT.food);
   attn('crew', ctx.weather.radiation && state.crewOrder === 'auto');
 }
 
@@ -323,7 +301,6 @@ function renderRover(state: GameState, ctx: HudContext): void {
     ui.queue.appendChild(item);
   });
 
-  // Do gelo à água: etapas reais do processo, ligadas à fase da missão de gelo em andamento.
   const ice = r.queue[0]?.kind === 'ice' ? r.queue[0] : null;
   ui.process.hidden = !ice;
   if (ice) {
@@ -409,7 +386,6 @@ function renderGreenhouse(state: GameState): void {
   );
 }
 
-/** Lista de capítulos (painel Missões e tela de história). */
 export function renderChapters(list: HTMLElement, state: GameState | null): void {
   const chapters = state ? chaptersOf(state) : null;
   const current = state ? currentChapter(state) : 0;
@@ -443,7 +419,6 @@ export function renderChapters(list: HTMLElement, state: GameState | null): void
 export function renderHud(state: GameState, ctx: HudContext): void {
   renderTop(state, ctx);
   renderToolbar(state, ctx);
-  // O painel aberto é redesenhado só quando algo visível muda (chave), não a cada atualização.
   const key = `${getLang()}|${openTool}|${Math.floor(state.clock.hour * 4)}|${state.robot.queue.length}|${state.crewOrder}|${state.installation.greenhouse}|${state.installation.panels}|${ctx.lit}|${ctx.weather.radiation}|${ctx.explanations}`;
   if (openTool === 'rover') renderRover(state, ctx);
   if (key === lastKey) return;
@@ -455,7 +430,6 @@ export function renderHud(state: GameState, ctx: HudContext): void {
   if (openTool === 'missions') renderChapters(el('chapters'), state);
 }
 
-/** Aviso grande e curto no topo (capítulo novo). */
 let toastTimer = 0;
 export function clearToast(): void {
   window.clearTimeout(toastTimer);
@@ -475,7 +449,6 @@ export function showToast(small: string, big: string): void {
   toastTimer = window.setTimeout(() => (ui.toast.hidden = true), 4200);
 }
 
-/** Tela de fim: vitória ou derrota, com o resumo da partida. */
 export function renderEnd(state: GameState, mode: ModeConfig): void {
   const outcome = outcomeOf(state);
   const won = outcome === 'won';
@@ -504,12 +477,10 @@ export function renderEnd(state: GameState, mode: ModeConfig): void {
   );
 }
 
-/** Valor do modo da estufa a partir do botão. */
 export function greenhouseFrom(button: HTMLElement): GreenhouseMode | null {
   const v = button.dataset.gh;
   return v === 'off' || v === 'always' || v === 'surplus' ? v : null;
 }
 
-// Ao carregar: idioma guardado (padrão inglês) e ícones.
 applyLanguage(loadLang());
 mountHudLayout();

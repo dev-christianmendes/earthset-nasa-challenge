@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Introdução animada (≈16 s) feita na própria cena: aproximação, pouso do módulo de descida, a base, o
-// astronauta e a LUMA. O relógio da simulação fica parado; a partida começa no fim (ou ao pular).
 // Sem atmosfera: o pouso levanta poeira em arcos balísticos, sem fumaça.
 import * as THREE from 'three';
 import { camera, crewObject, crewWave, emitDust } from './scene';
@@ -25,7 +23,6 @@ const TOUCHDOWN = 8.4;
 const DESCENT_FROM = 4.2;
 const DESCENT_HEIGHT = 34;
 
-/** Trilha de câmera: posição e ponto de mira por tempo (s). Entre chaves, interpolação suave. */
 function keys(): Key[] {
   const pad = FOCUS.pad;
   const hab = FOCUS.habitat;
@@ -56,7 +53,6 @@ let lastCaption = '';
 let lastLuma = '';
 let dusted = false;
 let waved = false;
-/** Só para capturas de tela (servidor de desenvolvimento): congela a introdução neste segundo. */
 let frozenAt: number | null = null;
 export function freezeCinematic(seconds: number | null): void {
   frozenAt = seconds;
@@ -112,7 +108,6 @@ export function updateCinematic(nowMs: number): void {
     finish();
     return;
   }
-  // Câmera.
   let i = 0;
   while (i < path.length - 2 && s >= path[i + 1].t) i++;
   const a = path[i];
@@ -120,14 +115,12 @@ export function updateCinematic(nowMs: number): void {
   const k = reducedMotion ? 0 : ease(Math.min(1, Math.max(0, (s - a.t) / Math.max(0.001, b.t - a.t))));
   camera.position.lerpVectors(a.pos, b.pos, k);
   const look = new THREE.Vector3().lerpVectors(a.look, b.look, k);
-  // Durante a descida, a mira acompanha o módulo (sem perder o chão do quadro).
   if (!reducedMotion && s > DESCENT_FROM - 0.6 && s < TOUCHDOWN + 1.2) {
     const w = Math.min(1, (s - (DESCENT_FROM - 0.6)) / 0.8) * Math.min(1, (TOUCHDOWN + 1.2 - s) / 0.8);
     look.lerp(lander.position.clone().add(new THREE.Vector3(0, 1.5, 0)), w);
   }
   camera.lookAt(look);
 
-  // Pouso: descida com desaceleração, motor aceso até tocar o solo; poeira balística no toque.
   if (!reducedMotion) {
     const d = Math.min(1, Math.max(0, (s - DESCENT_FROM) / (TOUCHDOWN - DESCENT_FROM)));
     const before = s < DESCENT_FROM ? 1 : 1 - (1 - Math.pow(1 - d, 2.2));
@@ -147,7 +140,6 @@ export function updateCinematic(nowMs: number): void {
   }
   if (waved && s >= 13) crewWave(0, false);
 
-  // Textos.
   const [cap, big] = captionAt(s);
   if ((cap ?? '') !== lastCaption) {
     lastCaption = cap ?? '';

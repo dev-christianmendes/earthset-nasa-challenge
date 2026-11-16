@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Direção de câmera: planos (visão da base, astronauta, rover, gelo, vitrine do menu), transições suaves,
-// seguir um objeto em movimento e órbita livre com limites. Só apresentação.
 import * as THREE from 'three';
 import { camera, controls, crewObject, robot } from './scene';
 import { FOCUS } from './base-layout';
@@ -9,7 +7,6 @@ import { surfaceHeight } from './terrain-height';
 import { earthDirection } from './sky';
 import { CAMERA_KEYS, FOLLOW_LOST_SECONDS, KEY_SPEED, PLAY_AREA, SHOT_LIMITS, clampToArea, keyIntent, type CamMode } from './camera-rules';
 
-// ---------- Obstrução e chão ----------
 // A câmera que segue não pode entrar nas estruturas nem no relevo. Volumes = pegadas da navegação (crew-nav.ts)
 // com a altura de cada estrutura medida nos modelos v4. Peças baixas ou finas (painéis, plataforma, torres, garagem) ficam de fora.
 const OCCLUDER_HEIGHT: Record<string, number> = { habitat: 5.4, airlock: 3.6, greenhouse: 2.6, antenna: 3.4, power: 2.1, processor: 2.2, tanks: 2.8, storage: 1.6 };
@@ -30,7 +27,6 @@ const MIN_FOLLOW_DISTANCE = 2.2;
 /** Espaço livre (m) que o desvio de obstrução procura antes de aceitar uma elevação. */
 const CLEAR_TARGET = 14;
 
-/** Menor distância livre entre o alvo e a câmera ao longo da direção atual (Infinity se nada tapa). */
 function freeDistance(target: THREE.Vector3, dir: THREE.Vector3, max: number): number {
   ray.set(target, dir);
   let best = Infinity;
@@ -51,7 +47,6 @@ const tryDir = new THREE.Vector3();
 let liftAngle = 0;
 const MAX_LIFT = 1.15;
 
-/** Afasta a câmera de obstruções e do chão. Só quando segue um alvo (astronauta ou rover). */
 function avoidOcclusion(dt: number): void {
   offset.copy(camera.position).sub(controls.target);
   const current = offset.length();
@@ -62,11 +57,9 @@ function avoidOcclusion(dt: number): void {
   // A direção do jogador é a atual sem a elevação extra que nós mesmos aplicamos no quadro anterior.
   axis.crossVectors(offset, UP);
   if (axis.lengthSq() > 1e-8) offset.applyAxisAngle(axis.normalize(), -liftAngle);
-  // Procura a menor elevação extra em que a câmera cabe inteira; se a direção do jogador cabe, nenhuma.
   let wantLift = MAX_LIFT;
   let wantDist = MIN_FOLLOW_DISTANCE;
-  // Pede um espaço livre de verdade (até CLEAR_TARGET m), não só o mínimo: com o astronauta rente ao processador,
-  // levantar só o bastante para caber 3 m travava o zoom em 3 m mesmo com o jogador pedindo 26 m (achado no teste de teclado).
+  // Exigir folga até CLEAR_TARGET evita que o mínimo de 3 m prenda o zoom junto às estruturas.
   const need = Math.min(preferredDistance, CLEAR_TARGET);
   let bestFree = -1;
   let bestLift = 0;
@@ -87,7 +80,6 @@ function avoidOcclusion(dt: number): void {
     }
   }
   if (!found) {
-    // Nenhuma elevação dá o espaço pedido: usa a que dá mais, sem passar do que ela permite.
     wantLift = bestLift;
     wantDist = Math.max(MIN_FOLLOW_DISTANCE, Math.min(preferredDistance, bestFree - CAMERA_MARGIN));
   }
@@ -121,15 +113,12 @@ let follow: THREE.Object3D | null = null;
 const lastFollow = new THREE.Vector3();
 let reduced = false;
 let enabled = true;
-/** Plano atual (ou 'free') e o modo correspondente para a interface. */
 let currentShot: Shot | 'free' = 'overview';
 
-/** Movimento reduzido: troca de plano sem voo. */
 export function setReducedMotion(on: boolean): void {
   reduced = on;
 }
 
-/** Liga ou desliga a direção (a introdução assume a câmera). Desligada, a margem livre dos painéis é desfeita. */
 export function setDirectorEnabled(on: boolean): void {
   enabled = on;
   controls.enabled = on;
@@ -141,7 +130,6 @@ export function setDirectorEnabled(on: boolean): void {
   }
 }
 
-/** Visão geral: do sul, um pouco a leste, alta o bastante para ver todas as áreas e o local do gelo. */
 const OVERVIEW_TARGET = new THREE.Vector3(3, 0, -5);
 const OVERVIEW_OFFSET = new THREE.Vector3(9, 27, 42);
 
@@ -186,7 +174,6 @@ function shotFor(name: Shot): { pos: THREE.Vector3; target: THREE.Vector3; follo
   }
 }
 
-/** Aplica os limites de zoom e inclinação do plano (CAM-02). O OrbitControls impõe cada um a todo quadro. */
 function applyLimits(name: Shot | 'free'): void {
   const l = SHOT_LIMITS[name];
   controls.minDistance = l.min;
@@ -195,7 +182,6 @@ function applyLimits(name: Shot | 'free'): void {
   controls.maxPolarAngle = THREE.MathUtils.degToRad(l.polarMax);
 }
 
-/** Vai para o plano: voo suave (ou corte, com movimento reduzido). */
 export function goTo(name: Shot, nowMs: number, seconds = 1.4): void {
   applyLimits(name);
   currentShot = name;
@@ -219,10 +205,6 @@ export function goTo(name: Shot, nowMs: number, seconds = 1.4): void {
   tween = { fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: s.pos, toTarget: s.target, start: nowMs, dur: seconds * 1000 };
 }
 
-/**
- * Câmera livre (CAM-02): para de seguir e de voar, mantém a posição e solta os limites (mais zoom e inclinação).
- * É explícita: só entra por `C` ou pelo botão de câmera, nunca sozinha.
- */
 export function goFree(): void {
   tween = null;
   follow = null;
@@ -233,20 +215,17 @@ export function goFree(): void {
   applyLimits('free');
 }
 
-/** Alterna entre a câmera livre e a visão geral. */
 export function toggleFree(nowMs: number): void {
   if (currentShot === 'free') goTo('overview', nowMs, 1.0);
   else goFree();
 }
 
-/** Modo para a interface: visão geral, acompanhando alguém, foco em equipamento ou câmera livre. */
 export function cameraMode(): CamMode {
   if (currentShot === 'free') return 'free';
   if (follow) return 'follow';
   return currentShot === 'overview' || currentShot === 'showcase' ? 'overview' : 'focus';
 }
 
-/** Plano atual ou 'free'. */
 export function currentCameraShot(): Shot | 'free' {
   return currentShot;
 }
@@ -263,12 +242,9 @@ controls.addEventListener('end', () => {
   appliedDistance = camera.position.distanceTo(controls.target);
 });
 
-// ---------- Teclado (CAM-01) ----------
-
 const heldKeys = new Set<string>();
 let heldFast = false;
 
-/** Tecla de câmera apertada ou solta (o main filtra por foco e tela). Shift acelera. */
 export function setCameraKey(key: string, down: boolean, shift = false): void {
   if (!CAMERA_KEYS.has(key)) return;
   if (down) heldKeys.add(key);
@@ -276,14 +252,12 @@ export function setCameraKey(key: string, down: boolean, shift = false): void {
   heldFast = shift;
 }
 
-/** Solta todas as teclas (a janela perdeu o foco: sem isto a câmera continuaria girando). */
 export function clearCameraKeys(): void {
   heldKeys.clear();
 }
 
 const sph = new THREE.Spherical();
 
-/** Aplica as teclas seguradas: giro e inclinação em torno do alvo e zoom, independentes do FPS. */
 function applyKeys(dt: number): void {
   const intent = keyIntent(heldKeys);
   if (intent.yaw === 0 && intent.pitch === 0 && intent.zoom === 0) return;
@@ -302,10 +276,6 @@ function applyKeys(dt: number): void {
     appliedDistance = sph.radius;
   }
 }
-
-// ---------- Margem livre diante dos painéis (CAM-02) ----------
-// Quando um painel cobre parte da tela, a vista é deslocada para o alvo aparecer no centro da área livre
-// (camera.setViewOffset): nada de acompanhar alguém que está atrás do painel lateral.
 
 const inset = { x: 0, y: 0 };
 const insetGoal = { x: 0, y: 0 };
@@ -333,17 +303,13 @@ function applyInset(dt: number): void {
   } else camera.setViewOffset(w, h, ix, iy, w, h);
 }
 
-// ---------- Recuperação automática (CAM-02) ----------
-
 let lostFor = 0;
 let notice: ((lost: Shot) => void) | null = null;
 
-/** Quem quiser avisar o jogador (toast) quando a câmera volta sozinha: recebe o plano que tinha sido perdido. */
 export function setCameraNotice(fn: ((lost: Shot) => void) | null): void {
   notice = fn;
 }
 
-/** Alvo fora da área de jogo, câmera abaixo do chão ou valores inválidos: volta a um enquadramento válido. */
 function recoverFraming(nowMs: number): void {
   const p = camera.position;
   const t = controls.target;
@@ -376,7 +342,6 @@ export function updateDirector(nowMs: number): void {
     if (k >= 1) tween = null;
   }
   if (follow) {
-    // Segue o objeto: câmera e alvo andam junto com ele; o jogador ainda pode orbitar.
     const delta = follow.position.clone().sub(lastFollow);
     lastFollow.copy(follow.position);
     if (tween) {
@@ -386,7 +351,6 @@ export function updateDirector(nowMs: number): void {
       camera.position.add(delta);
       controls.target.add(delta);
     }
-    // Quem é acompanhado some (o astronauta entra no abrigo): depois de um instante a câmera volta à visão geral.
     lostFor = !follow.visible ? lostFor + dt : 0;
     if (lostFor > FOLLOW_LOST_SECONDS) {
       const lost = followShot;
@@ -402,23 +366,19 @@ export function updateDirector(nowMs: number): void {
 
 let lastDirectorMs = 0;
 
-/** Está acompanhando o astronauta ou o rover (o jogador escolheu seguir: ordens não trocam a câmera). */
 export function isFollowing(): boolean {
   return follow !== null;
 }
 
 let followShot: Shot | null = null;
-/** Plano que está sendo acompanhado ('crew', 'crew1' ou 'rover'), ou null. */
 export function followingShot(): Shot | null {
   return follow ? followShot : null;
 }
 
-/** Para de seguir (por exemplo, ao abrir a visão geral). */
 export function stopFollow(): void {
   follow = null;
 }
 
-/** Inspeção astronômica opcional pela Ciência. Não desloca a base nem os equipamentos. */
 export function lookAtSky(az: number, el: number): void {
   tween = null;
   follow = null;

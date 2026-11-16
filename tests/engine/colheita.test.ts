@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// D-18: cultivo da estufa. Cresce com a estufa ligada, cuidados trocam consumo por ritmo,
-// o desgaste reduz a eficiência e a comida só entra com a colheita do astronauta.
 import { describe, expect, it } from 'vitest';
 import {
   GROW_HOURS,

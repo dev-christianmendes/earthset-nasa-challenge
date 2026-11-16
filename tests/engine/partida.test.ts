@@ -1,7 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Partidas completas com o motor: base passiva perde; plano com robô vence.
 // Sol real: tabela do JPL Horizons (src/data/sun-south-pole.json) e horizonte medido no LOLA (src/data/terrain-sites.json).
-// Sem robô, a base perde; com plano razoável, vence com folga (ver asserções).
 import { describe, expect, it } from 'vitest';
 import { MATCH_HOURS } from '../../src/engine/clock';
 import { advance, createGame, dispatch, outcomeOf, type GameState } from '../../src/engine/game';
@@ -35,7 +33,6 @@ function enqueue(g: GameState, kind: TaskKind): GameState {
   return r.ok ? r.state : g;
 }
 
-/** Plano simples: mantém água, instala todos os painéis e a antena, e reabastece gelo. */
 function planHour(g: GameState): GameState {
   const queued = (k: TaskKind): number => g.robot.queue.filter((t) => t.kind === k).length;
   let s = g;
@@ -46,7 +43,6 @@ function planHour(g: GameState): GameState {
   return s;
 }
 
-/** O plano de referência mais o cuidado da estufa: colhe quando pronta e faz manutenção com desgaste alto. */
 function planWithCrew(g: GameState): GameState {
   let s = planHour(g);
   const order = (kind: 'harvest' | 'maintain'): void => {
@@ -58,10 +54,6 @@ function planWithCrew(g: GameState): GameState {
   return s;
 }
 
-/**
- * O plano de referência mais calibração dos painéis e ajuste da antena (D-19), mas só com Sol: calibrar na noite
- * longa gasta energia sem render nada (o equilíbrio é apertado, a hora da ordem é a decisão).
- */
 function planWithFacilities(g: GameState, onlyLit = true): GameState {
   let s = planHour(g);
   if (onlyLit && !sunlit(g.clock.hour)) return s;
@@ -76,7 +68,6 @@ function play(plan: ((g: GameState) => GameState) | null, sun: SunTable = SUN): 
   let g = createGame({ installation: INSTALLATION });
   while (outcomeOf(g) === 'playing') {
     if (plan) g = plan(g);
-    // Clima real do cenário (DONKI), igual ao da tela.
     g = advance(g, 1, isSunlit(sun, g.clock.hour, INSTALLATION.site, TERRAIN), weatherAt(WEATHER, g.clock.hour));
   }
   return g;
@@ -108,8 +99,6 @@ describe('partida completa', () => {
   it('com astronautas colhendo e fazendo manutenção, o plano mantém o resultado e rende muitas colheitas (D-18)', () => {
     const g = play(planWithCrew);
     expect(outcomeOf(g)).toBe('won');
-    // A manutenção custa 15 de energia; com capacidade 1000 (equilíbrio apertado) isso pode custar 1 coração.
-    // Só colher (sem manutenção) mantém os 2 corações: a decisão de gastar energia é real.
     expect(g.hearts).toBeGreaterThanOrEqual(1);
     expect(g.crop.harvests).toBeGreaterThan(15);
     expect(g.agentTasksDone.harvest).toBe(g.crop.harvests);

@@ -7,7 +7,6 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, unquote
 
-
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self, *_args): pass
 
@@ -24,7 +23,6 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
         else:
             super().do_GET()
-
 
 if __name__ == '__main__':
     ThreadingHTTPServer(('127.0.0.1', int(sys.argv[1]) if len(sys.argv) > 1 else 5189), partial(Handler, directory='dist')).serve_forever()

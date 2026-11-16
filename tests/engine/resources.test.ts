@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { applyFlow, deriveFlow, startingVitals, type Installation, type Vitals } from '../../src/engine/resources';
 
 const base: Installation = { rank: 'explorador', site: 'peak', panels: 2, batteryCapacity: 100, greenhouse: 'off' };
-const calm: Vitals = { battery: 50, air: 100, water: 50, food: 50 }; // ar cheio: eletrólise desligada
+const calm: Vitals = { battery: 50, air: 100, water: 50, food: 50 };
 
 describe('energia por hora', () => {
   it('soma geração com Sol e subtrai carga da base e aquecimento', () => {
@@ -35,7 +35,7 @@ describe('ar, água e comida por patente', () => {
   it('eletrólise liga com ar abaixo de 90, com água e bateria acima de 5%', () => {
     const f = deriveFlow({ battery: 50, air: 80, water: 50, food: 50 }, base, true);
     expect(f.electrolysisOn).toBe(true);
-    expect(f.air).toBeCloseTo(-1 + 2); // +1 líquido
+    expect(f.air).toBeCloseTo(-1 + 2);
     expect(f.water).toBeCloseTo(-0.2 - 0.4);
   });
 

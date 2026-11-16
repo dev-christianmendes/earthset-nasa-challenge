@@ -1,5 +1,4 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-"""Testes do horizonte LOLA: projeção, faixa de bytes e escolha das posições (sem rede)."""
 
 import math
 import sys
@@ -9,7 +8,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import fetch_lola as lola  # noqa: E402
-
 
 class FlatDem:
     """Terreno plano, em metros, com um muro opcional em x = wall_x de altura wall_h."""
@@ -23,7 +21,6 @@ class FlatDem:
         if self.wall_x is not None and abs(x_m - self.wall_x) < lola.PIXEL_M:
             return self.wall_h
         return 0.0
-
 
 class ProjecaoTest(unittest.TestCase):
     def test_polo_fica_no_centro_da_projecao(self):
@@ -40,7 +37,6 @@ class ProjecaoTest(unittest.TestCase):
         s, _ = lola.xy_to_pixel(20.0, 0.0)
         self.assertAlmostEqual(s - lola.CENTER_PX, 1.0)
 
-
 class FaixaTest(unittest.TestCase):
     def test_faixa_tem_2001_linhas_em_volta_do_polo(self):
         first, last = lola.band_rows()
@@ -54,7 +50,6 @@ class FaixaTest(unittest.TestCase):
         self.assertEqual((end + 1) % (lola.SIZE_PX * 2), 0)
         rows = (end + 1 - start) // (lola.SIZE_PX * 2)
         self.assertEqual(rows, 2 * lola.BAND_HALF_PX + 1)
-
 
 class HorizonteTest(unittest.TestCase):
     def test_terreno_plano_tem_horizonte_zero(self):
@@ -75,7 +70,6 @@ class HorizonteTest(unittest.TestCase):
         # Sem relevo, a queda da curvatura não aparece como horizonte: o resultado é zero.
         self.assertEqual(lola.horizon_deg(FlatDem(), 0.0, 0.0, 0.0), 0.0)
 
-
 class EscolhaDePosicoesTest(unittest.TestCase):
     def test_escolhe_exposto_mediano_e_sombreado(self):
         scored = [
@@ -92,7 +86,6 @@ class EscolhaDePosicoesTest(unittest.TestCase):
         pts = lola.candidates()
         self.assertTrue(all(math.hypot(x, y) <= lola.CANDIDATE_RADIUS_M + 1e-6 for x, y in pts))
         self.assertIn((0.0, 0.0), pts)
-
 
 if __name__ == "__main__":
     unittest.main()

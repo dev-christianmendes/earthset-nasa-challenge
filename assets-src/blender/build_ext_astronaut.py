@@ -29,7 +29,6 @@ UAL2 = os.path.join(EXT, "quaternius-universal-animation-library-2", "x",
 OUT_DIR = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else os.path.join(ROOT, "public", "models", "ext")
 OUT = os.path.join(OUT_DIR, "astronaut.glb")
 
-# nome no jogo -> clipe original
 CLIPS = {
     "idle": "Idle_Loop",
     "walk": "Walk_Loop",
@@ -48,12 +47,10 @@ CLIPS = {
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
 
-
 def import_glb(path):
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=path)
     return [o for o in bpy.data.objects if o not in before]
-
 
 objs = import_glb(UAL1)
 arm = next(o for o in objs if o.type == "ARMATURE")
@@ -72,8 +69,6 @@ arm.animation_data_clear()
 arm.data.pose_position = "REST"
 bpy.context.view_layer.update()
 
-# ---------- materiais do traje ----------
-
 def mat(name, rgb, rough=0.6, metal=0.0, emit=None):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
@@ -85,7 +80,6 @@ def mat(name, rgb, rough=0.6, metal=0.0, emit=None):
         p.inputs["Emission Color"].default_value = (*emit, 1)
         p.inputs["Emission Strength"].default_value = 2.0
     return m
-
 
 SUIT = mat("suit_white", (0.82, 0.82, 0.80), 0.65)
 SEAM = mat("suit_seam", (0.20, 0.21, 0.23), 0.55)
@@ -102,11 +96,9 @@ for m in (SUIT, SEAM, GLOVE):
 # índices originais: 0 = M_Main, 1 = M_Joints (preservados pelo clear/append na mesma ordem)
 vg_names = {g.index: g.name for g in body.vertex_groups}
 
-
 def dominant(v):
     best = max(v.groups, key=lambda g: g.weight, default=None)
     return vg_names.get(best.group, "") if best else ""
-
 
 GLOVE_KEYS = ("hand_", "index_", "middle_", "ring_", "pinky_", "thumb_", "foot_", "ball_")
 head_pts = []
@@ -132,7 +124,6 @@ for f in bm.faces:
 torso_pts = [body.matrix_world @ v.co for v in bm.verts
              if v[deform] and vg_names.get(max(v[deform].items(), key=lambda kv: kv[1])[0], "") in ("spine_02", "spine_03")]
 bmesh.ops.delete(bm, geom=head_faces, context="FACES")
-# traje mais volumoso: empurra os vértices ao longo da normal (menos nas mãos)
 bm.normal_update()
 for v in bm.verts:
     d = v[deform]
@@ -144,20 +135,16 @@ for v in bm.verts:
 bm.to_mesh(me)
 bm.free()
 
-
 def bbox(pts):
     lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
     hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     return lo, hi
-
 
 hlo, hhi = bbox(head_pts)
 tlo, thi = bbox(torso_pts)
 hc = (hlo + hhi) / 2
 hr = max(hhi - hlo) / 2 * 1.08
 print("HEAD", hlo, hhi, "TORSO", tlo, thi)
-
-# ---------- peças rígidas presas aos ossos ----------
 
 def attach(obj, bone):
     mw = obj.matrix_world.copy()
@@ -166,7 +153,6 @@ def attach(obj, bone):
     obj.parent_bone = bone
     bpy.context.view_layer.update()
     obj.matrix_world = mw
-
 
 def finish(obj, material, bevel=None, smooth=True):
     obj.data.materials.append(material)
@@ -181,7 +167,6 @@ def finish(obj, material, bevel=None, smooth=True):
             p.use_smooth = True
     return obj
 
-
 def sphere(name, loc, scale, material, segs=28, rings=16):
     bpy.ops.mesh.primitive_uv_sphere_add(segments=segs, ring_count=rings, radius=1, location=loc)
     o = bpy.context.active_object
@@ -189,7 +174,6 @@ def sphere(name, loc, scale, material, segs=28, rings=16):
     o.scale = scale
     bpy.ops.object.transform_apply(scale=True)
     return finish(o, material)
-
 
 def box(name, loc, size, material, bevel=0.015):
     bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
@@ -199,13 +183,11 @@ def box(name, loc, size, material, bevel=0.015):
     bpy.ops.object.transform_apply(scale=True)
     return finish(o, material, bevel=bevel, smooth=False)
 
-
 def cyl(name, loc, r, depth, material, rot=(0, 0, 0), verts=20):
     bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=r, depth=depth, location=loc, rotation=rot)
     o = bpy.context.active_object
     o.name = name
     return finish(o, material, bevel=min(r, depth) * 0.25, smooth=True)
-
 
 front = tlo.y  # personagem olha para -Y no Blender
 back = thi.y
@@ -240,15 +222,12 @@ chest_btn2 = box("chest_accent", (tw * 0.10, front - 0.071, pz - 0.04), (0.035, 
 for o in (chest, chest_btn, chest_btn2):
     attach(o, "spine_03")
 
-# ---------- clipes ----------
 arm.data.pose_position = "POSE"
 arm.animation_data_create()
 ad = arm.animation_data
 
-
 def slot_of(action):
     return action.slots[0]
-
 
 def make_wave():
     idle = by_name["Idle_Loop"]
@@ -260,7 +239,6 @@ def make_wave():
     for fc in list(cb.fcurves):
         if any(f'pose.bones["{b}"]' in fc.data_path for b in bones):
             cb.fcurves.remove(fc)
-        # dedos da mão direita voltam à pose de repouso (mão aberta)
         elif any(f'pose.bones["{k}' in fc.data_path and '_r"]' in fc.data_path
                  for k in ("index_", "middle_", "ring_", "pinky_", "thumb_")):
             cb.fcurves.remove(fc)
@@ -303,7 +281,6 @@ def make_wave():
     ad.action = None
     return wave
 
-
 wave = make_wave()
 chosen = {k: by_name[v] for k, v in CLIPS.items()}
 chosen["wave"] = wave
@@ -318,7 +295,6 @@ for name, act in chosen.items():
     tr.mute = False
 ad.action = None
 
-# ---------- exportação ----------
 for o in list(bpy.context.scene.objects):
     o.select_set(o == arm or o.parent == arm)
 os.makedirs(OUT_DIR, exist_ok=True)

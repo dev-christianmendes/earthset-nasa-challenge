@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Textos da interface: as duas línguas têm as mesmas chaves e os mesmos {marcadores}.
 import { describe, expect, it } from 'vitest';
 import { DICT_FOR_TESTS } from '../src/i18n';
 

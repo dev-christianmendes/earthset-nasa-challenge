@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Geometria do céu e apresentação científica, sem DOM/Three e sem mudar regras de energia.
 import { sampleAt, isSunlit, type SunTable } from '../engine/sun';
 import { horizonAt, type TerrainTable } from '../engine/terrain';
 import type { Site } from '../engine/resources';

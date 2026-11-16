@@ -1,8 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Regressão dos defeitos E01 a E05 do parecer de julgamento (revisão 2ebfee6, 15/11/2026).
 import { TASK_HOURS } from '../../src/engine/robot';
-// Cada teste reproduz o cenário do parecer e falha se o defeito voltar.
-// E06 (teste Python de metadado angular) é coberto em data-pipeline/tests.
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch, type GameState } from '../../src/engine/game';
 import type { Installation } from '../../src/engine/resources';

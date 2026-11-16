@@ -18,11 +18,9 @@ SECONDS = float(sys.argv[2]) if len(sys.argv) > 2 else 4.0
 OUT = Path('.scratch-agent/sol-continuo')
 OUT.mkdir(parents=True, exist_ok=True)
 
-
 def angle_deg(a, b):
     dot = max(-1.0, min(1.0, sum(x * y for x, y in zip(a, b))))
     return math.degrees(math.acos(dot))
-
 
 with sync_playwright() as p:
     browser = p.chromium.launch(args=['--no-sandbox', '--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist'])
@@ -31,7 +29,7 @@ with sync_playwright() as p:
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(f'http://localhost:{PORT}/?autostart=cadet&nointro&hour=60&lang=en')
     page.wait_for_function('() => window.__earthset && window.__earthset.sunDirection', timeout=60000)
-    page.wait_for_timeout(1500)  # deixa a partida começar
+    page.wait_for_timeout(1500)
 
     samples = []
     t0 = time.perf_counter()

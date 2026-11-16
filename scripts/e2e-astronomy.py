@@ -16,13 +16,11 @@ failures = []
 checks = []
 source_sun = {s['hour']: s['az'] for s in json.loads(Path('tests/fixtures/sky-horizons-peak-2024.json').read_text())['samples']['sun']}
 
-
 def check(name, condition, detail=None):
     checks.append({'name': name, 'ok': bool(condition), 'detail': detail})
     if not condition:
         failures.append(name)
     print(('ok ' if condition else 'FAIL ') + name, detail if detail is not None else '', flush=True)
-
 
 with sync_playwright() as p:
     browser = p.chromium.launch(args=['--no-sandbox', '--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist'])
@@ -55,7 +53,6 @@ with sync_playwright() as p:
     metrics = page.evaluate('''async()=>{const s=await auditImport('/src/render/scene.ts');let samples=[];await new Promise(resolve=>{let last=performance.now(),end=last+3000;function f(n){samples.push({dt:n-last,draws:s.renderer.info.render.calls});last=n;if(n<end)requestAnimationFrame(f);else resolve()}requestAnimationFrame(f)});samples=samples.slice(1);const sorted=samples.map(x=>x.dt).sort((a,b)=>a-b);return{fps:1000/(sorted.reduce((a,b)=>a+b,0)/sorted.length),p95:sorted[Math.floor(sorted.length*.95)],max:sorted.at(-1),drawsMin:Math.min(...samples.map(s=>s.draws)),drawsMax:Math.max(...samples.map(s=>s.draws)),memory:s.renderer.info.memory}}''')
     check('medição GPU executada', 'SwiftShader' not in state['gpu'], state['gpu'])
     print('PERFORMANCE', json.dumps(metrics), flush=True)
-    # Repetir a medição no mesmo contexto para expor variação, sem escolher apenas a melhor amostra.
     trials = [metrics]
     for _ in range(2):
         trials.append(page.evaluate('''()=>new Promise(resolve=>{let d=[],last=performance.now(),end=last+3000;function f(t){d.push(t-last);last=t;if(t<end)requestAnimationFrame(f);else{d=d.slice(1).sort((a,b)=>a-b);resolve({fps:1000/(d.reduce((a,b)=>a+b,0)/d.length),p95:d[Math.floor(d.length*.95)],max:d.at(-1)})}}requestAnimationFrame(f)})'''))
@@ -75,7 +72,6 @@ with sync_playwright() as p:
         if hour in source_sun:
             displayed = float(page.locator('#sky-panel tbody tr').first.locator('td').first.inner_text().split('°')[0])
             check(f'hora {hour}: azimute geográfico da interface confere com Horizons', abs(((displayed-source_sun[hour]+180)%360)-180) < .006)
-    # Detalhe de limbo solar e fase terrestre, sem modificar posições ou iluminação via console.
     open_hour(0,'&sky=sun')
     page.screenshot(path=str(OUT/'sun-limb-hour-0.png'))
     visible = 360
@@ -91,7 +87,6 @@ with sync_playwright() as p:
     check('exposição opcional não altera geração', page.evaluate("async()=>{const s=await auditImport('/src/render/scene.ts');return s.sun.intensity}") == observations[1]['intensity'])
     page.locator('#sky-panel [data-sky-body=sun]').click()
     page.screenshot(path=str(OUT/'science-sun-desktop.png'))
-    # Troca pública de idioma pelo menu de pausa; o HUD não tem botão de idioma permanente.
     page.click('#pause-btn')
     page.locator('#pause [data-open=settings]').click()
     page.locator('[data-lang-toggle]:visible').first.click()

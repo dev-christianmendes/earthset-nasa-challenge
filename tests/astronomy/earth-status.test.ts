@@ -2,7 +2,6 @@
 import { describe, expect, it } from 'vitest';
 import { earthStatus, type EarthSample } from '../../src/astronomy/earth-status';
 
-// Terra abaixo do horizonte nas horas 0 a 4, acima nas 5 a 7, abaixo de novo a partir de 8.
 const series: EarthSample[] = [
   -3, -2, -1, -0.5, -0.2, 1, 2, 3, -1, -2,
 ].map((el) => ({ el, horizon: 0 }));

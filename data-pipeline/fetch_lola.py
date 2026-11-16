@@ -54,9 +54,8 @@ ROOT = Path(__file__).resolve().parent.parent
 RAW_PATH = ROOT / "data-pipeline" / "raw" / "lola_south_pole_band.bin"
 OUT_PATH = ROOT / "src" / "data" / "terrain-sites.json"
 MESH_PATH = ROOT / "src" / "data" / "terrain-mesh.json"
-MESH_N = 160  # vértices por lado da malha da cena
-MESH_SIZE_M = 400.0  # lado da malha, em metros, centrada no morro (site peak)
-
+MESH_N = 160
+MESH_SIZE_M = 400.0
 
 def band_rows() -> tuple[int, int]:
     """Primeira e última linha (0-based, inclusive) da faixa baixada."""
@@ -64,16 +63,13 @@ def band_rows() -> tuple[int, int]:
     last = int(CENTER_PX) + BAND_HALF_PX
     return first, last
 
-
 def byte_range() -> tuple[int, int]:
     """Bytes da faixa no arquivo IMG (linhas de SIZE_PX amostras de 16 bits)."""
     first, last = band_rows()
     row_bytes = SIZE_PX * 2
     return first * row_bytes, (last + 1) * row_bytes - 1
 
-
 def download_band(dest: Path, url: str = IMG_URL) -> Path:
-    """Baixa só a faixa, por HTTP Range. Não baixa o arquivo inteiro."""
     start, end = byte_range()
     dest.parent.mkdir(parents=True, exist_ok=True)
     request = urllib.request.Request(url, headers={"Range": f"bytes={start}-{end}"})
@@ -84,7 +80,6 @@ def download_band(dest: Path, url: str = IMG_URL) -> Path:
         raise RuntimeError(f"faixa incompleta: {len(data)} de {expected} bytes")
     dest.write_bytes(data)
     return dest
-
 
 class Dem:
     """Elevação de uma faixa de linhas do LDEM, em metros relativos ao raio de referência."""
@@ -106,14 +101,11 @@ class Dem:
             raise ValueError("pixel fora da faixa")
         return self.values[row * SIZE_PX + sample] * HEIGHT_SCALE
 
-
 def xy_to_pixel(x_m: float, y_m: float) -> tuple[float, float]:
     """Coordenadas da projeção (x para leste, y para norte, metros) para (sample, line)."""
     return CENTER_PX + x_m / PIXEL_M, CENTER_PX - y_m / PIXEL_M
 
-
 def horizon_deg(dem: Dem, x0: float, y0: float, az_deg: float) -> float:
-    """Maior ângulo de elevação do relevo visto de (x0, y0) na direção de azimute az_deg."""
     h0 = dem.height(*map(round, xy_to_pixel(x0, y0)))
     sin_a = math.sin(math.radians(az_deg))
     cos_a = math.cos(math.radians(az_deg))
@@ -133,14 +125,10 @@ def horizon_deg(dem: Dem, x0: float, y0: float, az_deg: float) -> float:
         d += RAY_STEP_M
     return max(best, 0.0)
 
-
 def horizon_profile(dem: Dem, x0: float, y0: float) -> list[float]:
-    """Horizonte em todas as direções, a cada AZ_STEP_DEG graus."""
     return [round(horizon_deg(dem, x0, y0, az), 2) for az in range(0, 360, AZ_STEP_DEG)]
 
-
 def candidates() -> list[tuple[float, float]]:
-    """Pontos num disco de CANDIDATE_RADIUS_M em volta do polo, em passo de CANDIDATE_STEP_M."""
     pts: list[tuple[float, float]] = []
     steps = int(CANDIDATE_RADIUS_M // CANDIDATE_STEP_M)
     for i in range(-steps, steps + 1):
@@ -149,7 +137,6 @@ def candidates() -> list[tuple[float, float]]:
             if math.hypot(x, y) <= CANDIDATE_RADIUS_M:
                 pts.append((x, y))
     return pts
-
 
 def pick_sites(scored: list[tuple[float, tuple[float, float], list[float]]]) -> dict[str, tuple[float, float, list[float]]]:
     """Escolhe peak (mais exposto), slope (mediano) e rim (mais sombreado) pelo horizonte médio."""
@@ -163,9 +150,7 @@ def pick_sites(scored: list[tuple[float, tuple[float, float], list[float]]]) -> 
         "rim": (shadowed[1][0], shadowed[1][1], shadowed[2]),
     }
 
-
 def bilinear(dem: Dem, sample: float, line: float) -> float:
-    """Elevação interpolada entre os 4 pixels vizinhos (sample e line fracionários)."""
     s0, l0 = math.floor(sample), math.floor(line)
     fs, fl = sample - s0, line - l0
     h00 = dem.height(s0, l0)
@@ -173,7 +158,6 @@ def bilinear(dem: Dem, sample: float, line: float) -> float:
     h01 = dem.height(s0, l0 + 1)
     h11 = dem.height(s0 + 1, l0 + 1)
     return (h00 * (1 - fs) + h10 * fs) * (1 - fl) + (h01 * (1 - fs) + h11 * fs) * fl
-
 
 def build_mesh(dem: Dem, cx_m: float, cy_m: float) -> dict:
     """Malha de MESH_N x MESH_N pontos sobre MESH_SIZE_M metros, centrada em (cx_m, cy_m).
@@ -199,7 +183,6 @@ def build_mesh(dem: Dem, cx_m: float, cy_m: float) -> dict:
         "heights_m": heights,
     }
 
-
 def build(dem: Dem) -> dict:
     scored = []
     for x, y in candidates():
@@ -222,7 +205,6 @@ def build(dem: Dem) -> dict:
         },
     }
 
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--from-raw", type=Path, help="reprocessa uma faixa já baixada")
@@ -241,7 +223,6 @@ def main(argv: list[str] | None = None) -> int:
     MESH_PATH.write_text(json.dumps(mesh, separators=(",", ":"), ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"gravado: {MESH_PATH}", file=sys.stderr)
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

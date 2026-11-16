@@ -1,5 +1,5 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-"""Posição do Sol vista da base no polo sul lunar, pela API do JPL Horizons.
+"""Pipeline legado do Sol regional, pela API do JPL Horizons.
 
 Fonte: NASA/JPL Horizons, efemérides DE441, observador na superfície da Lua
 (centro 301) em 0° de longitude e -89,5° de latitude. Saída: azimute e elevação
@@ -11,7 +11,9 @@ Uso:
 
 Saídas:
   data-pipeline/raw/horizons_sun_south_pole.txt   resposta crua do Horizons (para auditoria)
-  src/data/sun-south-pole.json                    tabela usada pelo jogo
+  data-pipeline/generated/sun-regional-legacy.json  tabela regional de comparação
+
+O cenário ativo é gerado por fetch_sky.py --activate.
 
 Só biblioteca padrão do Python 3.10 ou mais novo. Testes: python3 -m unittest discover -s data-pipeline/tests
 """
@@ -32,13 +34,12 @@ SITE_LON_DEG = 0.0
 SITE_LAT_DEG = -89.5  # base ilustrativa perto do polo sul; ver docs/data-sources.md
 SITE_ALT_KM = 0.0
 START_UTC = "2024-10-09 09:00"  # nascer do Sol no morro (hora 33 de 09/10/2024), início do cenário (D1)
-HOURS = 708  # um dia lunar de jogo
+HOURS = 708
 STEP = "1 h"
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW_PATH = ROOT / "data-pipeline" / "raw" / "horizons_sun_south_pole.txt"
 OUT_PATH = ROOT / "data-pipeline" / "generated" / "sun-regional-legacy.json"  # Histórico; o cenário ativo vem de fetch_sky.py --activate.
-
 
 def build_params() -> dict[str, str]:
     """Parâmetros da consulta: Sol observado da superfície lunar, quantidade 4 (azimute e elevação)."""
@@ -61,12 +62,10 @@ def build_params() -> dict[str, str]:
         "CSV_FORMAT": "'YES'",
     }
 
-
 def fetch_raw(timeout_s: int = 90) -> str:
     url = HORIZONS_URL + "?" + urllib.parse.urlencode(build_params())
     with urllib.request.urlopen(url, timeout=timeout_s) as resp:  # noqa: S310 - URL fixa, da NASA
         return resp.read().decode("utf-8", errors="replace")
-
 
 def parse_ephemeris(text: str) -> list[dict[str, float | str]]:
     """Extrai as linhas entre $$SOE e $$EOE. Cada linha: data, flag, vazio, azimute, elevação."""
@@ -92,7 +91,6 @@ def parse_ephemeris(text: str) -> list[dict[str, float | str]]:
         raise ValueError("bloco $$SOE/$$EOE vazio")
     return rows
 
-
 def build_table(rows: Iterable[dict[str, float | str]], generated: str) -> dict:
     rows = list(rows)
     samples = [
@@ -111,7 +109,6 @@ def build_table(rows: Iterable[dict[str, float | str]], generated: str) -> dict:
         "note": "Sem sombra de relevo: o Sol é considerado visível quando a elevação é maior que zero.",
         "samples": samples,
     }
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -134,7 +131,6 @@ def main(argv: list[str] | None = None) -> int:
     OUT_PATH.write_text(json.dumps(table, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"ok: {len(rows)} amostras, fração com Sol = {table['sunlit_fraction']} -> {OUT_PATH}")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

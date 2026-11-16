@@ -1,6 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Recursos por hora: energia, ar, água e comida. Motor puro.
-// Valores e regras: docs/regras-recursos.md. Todos ajustáveis.
+// Fluxos são parâmetros de jogo; ver docs/regras-recursos.md.
 import { IRRIGATION, LIGHTING, type Care } from './greenhouse';
 import { ROBOT_LOAD_PER_HOUR } from './robot';
 
@@ -17,7 +16,6 @@ export interface Vitals {
   readonly food: number;
 }
 
-/** Entradas que o cálculo por hora precisa, sem o relógio nem os corações. */
 export interface Installation {
   readonly rank: Rank;
   readonly site: Site;
@@ -26,9 +24,7 @@ export interface Installation {
   readonly greenhouse: GreenhouseMode;
 }
 
-/** Geração de cada painel com Sol, em unidades por hora. */
 export const PANEL_OUTPUT_PER_HOUR = 0.9;
-/** Consumo fixo da base, por hora. */
 export const BASE_LOAD_PER_HOUR = 0.8;
 /** Aquecimento por hora, com Sol e sem Sol, por local. */
 export const HEATING_PER_HOUR: Record<Site, { sun: number; shade: number }> = {
@@ -38,7 +34,6 @@ export const HEATING_PER_HOUR: Record<Site, { sun: number; shade: number }> = {
 };
 export const GREENHOUSE = { energy: 1.0, water: 0.08, food: 0.38 } as const;
 export const ELECTROLYSIS = { energy: 0.6, water: 0.4, air: 2 } as const;
-/** Fator de consumo de ar, água e comida por patente. */
 export const RANK_FACTOR: Record<Rank, number> = { cadete: 0.75, explorador: 1, comandante: 1.15 };
 /** Limites de ativação (fração da bateria ou valor de 0 a 100). */
 export const RULES = {
@@ -60,7 +55,6 @@ export interface HourlyFlow {
   readonly economy: boolean;
 }
 
-/** A estufa está ligada neste momento? Regra dos equipamentos automáticos (docs/regras-recursos.md). */
 export function isGreenhouseOn(vitals: Vitals, inst: Installation): boolean {
   const batteryFraction = vitals.battery / inst.batteryCapacity;
   if (batteryFraction < RULES.economyBelowBattery) return false;
@@ -69,7 +63,6 @@ export function isGreenhouseOn(vitals: Vitals, inst: Installation): boolean {
   return false;
 }
 
-/** Decide quais equipamentos estão ligados, a partir do estado no início do passo. */
 export function deriveFlow(
   vitals: Vitals,
   inst: Installation,
@@ -114,7 +107,6 @@ export function deriveFlow(
   };
 }
 
-/** Aplica o fluxo de um passo de `dtHours` e limita os valores aos limites físicos. */
 export function applyFlow(vitals: Vitals, flow: HourlyFlow, inst: Installation, dtHours: number): Vitals {
   return {
     battery: clamp(vitals.battery + flow.energy * dtHours, 0, inst.batteryCapacity),

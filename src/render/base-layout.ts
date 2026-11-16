@@ -1,7 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Base lunar composta por áreas (habitação, energia, ciência, logística, comunicação, pouso) e seus estados
-// visuais. Só lê o estado do motor; nenhum recurso nasce aqui. Modelos: public/models/v4 (Blender, D-16) com
-// recuo para os modelos anteriores ou formas simples enquanto carregam.
 import * as THREE from 'three';
 import { attachModel, loadModel } from './assets';
 import { groundFor, surfaceHeight } from './terrain-height';
@@ -28,25 +25,21 @@ import { MAX_PANELS } from '../engine/robot';
 const mat = (color: number, extra: THREE.MeshStandardMaterialParameters = {}) =>
   new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.2, ...extra });
 
-/** Coloca o grupo no ponto, pousado no relevo medido, com a rotação do ponto. */
 function place(group: THREE.Object3D, spot: Spot, radius = 1, lift = 0): void {
   group.position.set(spot.x, groundFor(spot.x, spot.z, radius) + lift, spot.z);
   group.rotation.y = spot.rot ?? 0;
 }
 
-/** Primeiro modelo que carregar da lista (v4, depois o anterior). Null se nenhum existir. */
 async function attachFirst(group: THREE.Object3D, names: readonly string[]): Promise<THREE.Object3D | null> {
   for (const name of names) {
     try {
       return await attachModel(group, name);
     } catch {
-      // tenta o próximo
     }
   }
   return null;
 }
 
-/** Materiais do modelo por nome (o mesmo material pode aparecer em várias malhas). */
 function materialsNamed(root: THREE.Object3D, name: string): THREE.MeshStandardMaterial[] {
   const out = new Set<THREE.MeshStandardMaterial>();
   root.traverse((node) => {
@@ -72,8 +65,6 @@ function ownMaterial(root: THREE.Object3D, name: string): THREE.MeshStandardMate
   return copy;
 }
 
-// ---------- Peças ----------
-
 export const base = new THREE.Group();
 base.name = 'base';
 
@@ -97,7 +88,6 @@ export const panelUnits: THREE.Group[] = PANEL_SLOTS.map((_, i) => group(`panel_
 const towers: THREE.Group[] = LIGHT_TOWERS.map((_, i) => group(`tower_${i}`));
 const iceSite = group('ice-site');
 
-// Formas provisórias (aparecem só se o GLB não carregar).
 function box(w: number, h: number, d: number, m: THREE.Material, y = h / 2): THREE.Mesh {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
   mesh.position.y = y;
@@ -110,7 +100,6 @@ const grey = mat(0x6f7782, { metalness: 0.5 });
 const dark = mat(0x2a2e35);
 // Comprimento no eixo x do modelo: a rotação do ponto (π/2) o deixa ao longo da crista (z).
 habitat.add(box(12, 3.2, 3.4, white, 2.2));
-// Provisório (só se o GLB não carregar): casco cilíndrico do módulo, eixo ao longo de z, a 2,75 m da base do habitat.
 const ghProvisional = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, GREENHOUSE_LENGTH, 24, 1, true), mat(0x9fe8b0, { transparent: true, opacity: 0.35, roughness: 0.1 }));
 ghProvisional.rotation.x = Math.PI / 2;
 ghProvisional.position.y = 2.75;
@@ -154,7 +143,6 @@ for (let i = 0; i < 4; i++) {
   flag.position.y = surfaceHeight(ICE_SITE.x + flag.position.x, ICE_SITE.z + flag.position.z) - iceSite.position.y + 0.45;
   iceSite.add(flag);
 }
-// Mancha escura do regolito com gelo (decalque simples no chão).
 const icePatch = new THREE.Mesh(
   new THREE.CircleGeometry(3, 32),
   new THREE.MeshStandardMaterial({ color: 0x3a4250, roughness: 1, transparent: true, opacity: 0.55, depthWrite: false }),
@@ -163,9 +151,8 @@ icePatch.rotation.x = -Math.PI / 2;
 icePatch.position.y = 0.05;
 iceSite.add(icePatch);
 
-// ---------- Luzes operacionais (preenchimento artístico, não é simulação física) ----------
+// Preenchimento artístico; não interfere na energia da simulação.
 
-/** Luzes pontuais sem sombra: deixam a base legível na sombra e dão leitura de "instalação em operação". */
 const habitatLight = new THREE.PointLight(0xffd7a0, 30, 18, 1.8);
 habitatLight.position.set(5.5, 3.4, 0);
 base.add(habitatLight);
@@ -177,9 +164,6 @@ fieldLight.position.set(-11, 4.5, 0);
 base.add(fieldLight);
 for (const l of [habitatLight, yardLight, fieldLight]) l.position.y += surfaceHeight(l.position.x, l.position.z);
 
-// ---------- Pedras (instanciadas) ----------
-
-/** Gerador determinístico: a mesma paisagem a cada carga (sem Math.random). */
 function seeded(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
@@ -249,8 +233,6 @@ function scatterRocks(geos: THREE.BufferGeometry[], material: THREE.Material): v
 }
 scatterRocks([rockGeometry(1), rockGeometry(2), rockGeometry(3)], rockMat);
 
-// ---------- Cabos de energia (tubos finos sobre o chão) ----------
-
 const cableMat = new THREE.MeshStandardMaterial({ color: 0x1d2128, roughness: 0.7 });
 function cable(points: Array<[number, number]>): void {
   const pts = points.map(([x, z]) => new THREE.Vector3(x, surfaceHeight(x, z) + 0.06, z));
@@ -261,8 +243,6 @@ function cable(points: Array<[number, number]>): void {
 }
 cable([[-5.5, -4], [-2, -3], [-1.6, -1]]);
 
-// Cabos do campo solar: só existem para painéis montados. Tronco da unidade de energia até cada coluna
-// e um ramal por painel, ao longo da coluna (leve deslocamento por linha, como um feixe de cabos).
 function cableMesh(points: Array<[number, number]>): THREE.Mesh {
   const pts = points.map(([x, z]) => new THREE.Vector3(x, surfaceHeight(x, z) + 0.06, z));
   const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(8, pts.length * 10), 0.05, 5, false), cableMat);
@@ -273,16 +253,12 @@ function cableMesh(points: Array<[number, number]>): THREE.Mesh {
 }
 const FIELD_TRUNK_Z = POWER_UNIT.z;
 const fieldColumns = [...new Set(PANEL_SLOTS.map((s) => s.x))];
-/** Tronco até cada coluna (índice = coluna). */
 const columnTrunks = fieldColumns.map((x) => cableMesh([[POWER_UNIT.x, FIELD_TRUNK_Z], [(POWER_UNIT.x + x) / 2, FIELD_TRUNK_Z], [x, FIELD_TRUNK_Z]]));
-/** Ramal de cada vaga: do tronco ao painel. */
 const slotCables = PANEL_SLOTS.map((slot, i) => {
   const dx = 0.12 * (Math.floor(i / fieldColumns.length) - 1.5);
   return cableMesh([[slot.x + dx, FIELD_TRUNK_Z], [slot.x + dx, (FIELD_TRUNK_Z + slot.z) / 2], [slot.x + dx, slot.z]]);
 });
 cable([[10, 4.5], [12.5, 3.5], [14, 3]]);
-
-// ---------- Trilhas do rover (marcas no regolito) ----------
 
 const trackMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false });
 function track(points: Array<[number, number]>): void {
@@ -312,8 +288,6 @@ function track(points: Array<[number, number]>): void {
 track(ICE_ROUTE.map((p) => [p.x, p.z] as [number, number]));
 track([[DOCK.x, DOCK.z], [10, 1.5]]);
 
-// ---------- Estados visuais ----------
-
 const handles = {
   windowLight: [] as THREE.MeshStandardMaterial[],
   extLight: [] as THREE.MeshStandardMaterial[],
@@ -323,28 +297,23 @@ const handles = {
   lamp: [] as THREE.MeshStandardMaterial[],
   padLight: [] as THREE.MeshStandardMaterial[],
   engineGlow: [] as THREE.MeshStandardMaterial[],
-  /** Estufa (PER-02): poeira no vidro pelo desgaste, ventiladores, farol de status e porta de serviço. */
   dust: null as THREE.MeshStandardMaterial | null,
   fans: [] as THREE.Object3D[],
   ghStatus: null as THREE.MeshStandardMaterial | null,
   ghDoor: null as THREE.Object3D | null,
   yoke: null as THREE.Object3D | null,
   dish: null as THREE.Object3D | null,
-  /** Peças de dano da antena (PER-01): visíveis só até o reparo. */
   damage: [] as THREE.Object3D[],
   damageCable: null as THREE.Object3D | null,
   tuneRing: null as THREE.Object3D | null,
   tuneGlow: null as THREE.MeshStandardMaterial | null,
-  /** Medidores de nível dos tanques (PER-03): barras com origem na base, escala em y de 0 a 1. */
   gauges: [] as Array<{ node: THREE.Object3D; mat: THREE.MeshStandardMaterial | null; kind: 'water' | 'air'; index: number }>,
   antennaLight: new THREE.MeshStandardMaterial({ color: 0xe47767, emissive: 0xe47767, emissiveIntensity: 2 }),
 };
 
-// Luz de status da antena (vermelha: precisa de reparo; verde: operando).
 const antennaStatus = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), handles.antennaLight);
 antennaStatus.position.set(0, 0.5, 1.0);
 antenna.add(antennaStatus);
-// Faróis de alerta no habitat (recurso crítico).
 const alertMat = new THREE.MeshStandardMaterial({ color: 0xe47767, emissive: 0xe47767, emissiveIntensity: 0 });
 const alertLights: THREE.Mesh[] = [];
 for (const x of [-5, 5]) {
@@ -355,10 +324,8 @@ for (const x of [-5, 5]) {
 }
 
 let lastBaseT = -1;
-/** Ganchos chamados quando o modelo da estufa carrega (as plantas se ligam aos leitos do modelo: crop.ts). */
 export const greenhouseModelHooks: Array<(model: THREE.Object3D) => void> = [];
 
-// Plataforma de carga ao sul da estufa, assentada no relevo, com uma caixa por colheita (consequência persistente).
 const HARVEST_MAX = 12;
 const harvestPad = new THREE.Group();
 harvestPad.name = 'harvest-pad';
@@ -387,7 +354,6 @@ function buildHarvestCrates(source: THREE.Object3D): void {
   }
 }
 
-/** Painéis guardados no depósito (caixas): um por painel ainda não instalado. */
 const storedCrates: THREE.Object3D[] = [];
 function buildStoredCrates(source: THREE.Object3D | null): void {
   for (const c of storedCrates) {
@@ -409,16 +375,12 @@ function buildStoredCrates(source: THREE.Object3D | null): void {
 }
 buildStoredCrates(null);
 
-// ---------- Modelos ----------
-
-/** Carrega os modelos v4 (com recuo). Os nomes de material e nó seguem assets-src/blender/build_v4.py. */
 export function loadBaseLayoutModels(): Promise<unknown> {
   const jobs: Array<Promise<unknown>> = [
     attachFirst(habitat, ['v4/habitat_v4', 'habitat']).then((m) => {
       if (!m) return;
       handles.windowLight = materialsNamed(m, 'window_light');
       handles.extLight = materialsNamed(m, 'ext_light');
-      // O habitat antigo era alinhado em x; o v4 também: a rotação do ponto o põe ao longo da crista.
     }),
     attachFirst(greenhouse, ['v4/greenhouse_v4', 'greenhouse']).then((m) => {
       if (!m) return;
@@ -507,10 +469,7 @@ export function loadBaseLayoutModels(): Promise<unknown> {
   return Promise.allSettled(jobs);
 }
 
-// ---------- Atualização ----------
-
 export interface BaseView {
-  /** Estufa (PER-02): desgaste 0 a 100, cultura pronta, colheitas feitas, cuidado de luz e porta de serviço aberta. */
   readonly greenhouseWear: number;
   readonly greenhouseReady: boolean;
   readonly harvests: number;
@@ -528,7 +487,6 @@ export interface BaseView {
   readonly greenhouseOn: boolean;
   readonly greenhouseVisible: boolean;
   readonly antennaOnline: boolean;
-  /** Antena em reparo (fase de operação da missão). */
   readonly antennaRepairing: boolean;
   /** Reparo já feito à vista (fim da operação, volta e entrega): as peças de dano somem antes de o motor concluir. */
   readonly antennaFixed: boolean;
@@ -565,8 +523,6 @@ function setInstalled(obj: THREE.Object3D, installed: boolean, now: number): voi
 
 export function updateBase(v: BaseView): void {
   const { t } = v;
-  // Painéis: instalados aparecem com transição; a vaga em montagem mostra o painel crescendo (só visual;
-  // a contagem de painéis muda só na conclusão da tarefa, no motor).
   panelUnits.forEach((unit, i) => {
     const installed = i < v.panels;
     if (installed) {
@@ -581,17 +537,13 @@ export function updateBase(v: BaseView): void {
       unit.visible = false;
       unit.userData.installed = false;
     }
-    // Células acesas só em painel ligado (contado pelo motor); o painel recém-montado fica apagado até a conclusão.
     for (const m of (unit.userData.cells as THREE.MeshStandardMaterial[] | undefined) ?? []) m.emissiveIntensity = installed ? v.panelGlow : 0;
-    // Ramal aparece quando o painel está montado e sendo ligado, e fica enquanto ele existir.
     slotCables[i].visible = installed || (!!v.building && v.building.slot === i && v.building.k >= 1);
   });
   columnTrunks.forEach((trunk, c) => (trunk.visible = PANEL_SLOTS.some((slot, i) => slot.x === fieldColumns[c] && slotCables[i].visible)));
-  // Caixas de painéis guardados: uma a menos a cada painel instalado ou em montagem.
   const stored = MAX_PANELS - v.panels - (v.building ? 1 : 0);
   storedCrates.forEach((c, i) => (c.visible = i < stored));
 
-  // Habitat: janelas acesas com bateria; piscam com bateria muito baixa.
   const flicker = v.batteryPct < 8 ? (Math.sin(t * 23) > 0 ? 1 : 0.15) : 1;
   const windows = v.batteryPct > 0 ? 2.2 * flicker : 0;
   for (const m of handles.windowLight) m.emissiveIntensity = windows;
@@ -605,24 +557,18 @@ export function updateBase(v: BaseView): void {
     m.emissive.setHex(v.batteryPct < 20 ? 0xe47767 : 0x56b9a4);
     m.emissiveIntensity = 2;
   }
-  // Alerta: recurso crítico acende os faróis vermelhos do habitat.
   alertMat.emissiveIntensity = v.anyCritical ? (Math.sin(t * 6) > 0 ? 4 : 0.3) : 0;
 
-  // Estufa: luz de cultivo quando está produzindo.
   greenhouse.visible = true;
   const wear = Math.min(100, Math.max(0, v.greenhouseWear));
   const lightLevel = v.greenhouseLighting === 'high' ? 3.4 : v.greenhouseLighting === 'low' ? 1.5 : 2.4;
-  // Desgaste alto: a luz falha de vez em quando (queda curta), sinal de que pede manutenção.
   const lightDip = wear > 70 && Math.sin(t * 31) + Math.sin(t * 5.3) > 1.55 ? 0.3 : 1;
   for (const m of handles.growLight) m.emissiveIntensity = v.greenhouseOn ? (lightLevel + 0.3 * Math.sin(t * 1.5)) * lightDip : v.greenhouseVisible ? 0.15 : 0;
-  // Poeira no vidro sobe com o desgaste e some na manutenção (consequência persistente da ação).
   if (handles.dust) handles.dust.opacity = 0.62 * Math.pow(wear / 100, 1.15);
-  // Ventiladores giram com a estufa ligada, mais devagar e falhando com o desgaste.
   const dt = lastBaseT >= 0 ? Math.min(0.1, Math.max(0, t - lastBaseT)) : 0;
   lastBaseT = t;
   const fanSpeed = v.greenhouseOn ? 5.5 * (1 - 0.6 * (wear / 100)) * (wear > 85 && Math.sin(t * 3) > 0.6 ? 0.2 : 1) : 0;
   for (const fan of handles.fans) fan.rotation.y += fanSpeed * dt;
-  // Farol de status: verde (bem), âmbar (desgaste), vermelho piscando (muito desgastado), azul-petróleo (pronta para colher).
   if (handles.ghStatus) {
     const critical = wear >= 85;
     const warn = wear >= 60;
@@ -631,12 +577,9 @@ export function updateBase(v: BaseView): void {
     handles.ghStatus.emissive.setHex(hex);
     handles.ghStatus.emissiveIntensity = !v.greenhouseOn ? 0.2 : critical ? (Math.sin(t * 8) > 0 ? 3 : 0.3) : v.greenhouseReady ? 2 + Math.sin(t * 4) : 2;
   }
-  // Porta de serviço abre quando alguém trabalha ali.
   if (handles.ghDoor) handles.ghDoor.rotation.y += ((v.greenhouseDoorOpen ? -1.6 : 0) - handles.ghDoor.rotation.y) * 0.12;
-  // Caixas de colheita na plataforma: uma por colheita feita (até 12).
   for (let i = 0; i < harvestCrates.length; i++) harvestCrates[i].visible = i < v.harvests;
 
-  // Antena: apontada para baixo e luz vermelha até o reparo; depois orienta para a Terra e fica verde.
   const dishTarget = v.antennaOnline ? v.earthEl : -35;
   const yawTarget = v.antennaOnline ? -THREE.MathUtils.degToRad(v.earthAz) - antenna.rotation.y : 0.6;
   if (handles.yoke) {
@@ -647,7 +590,6 @@ export function updateBase(v: BaseView): void {
   handles.antennaLight.color.setHex(v.antennaOnline ? 0x6fe39a : 0xe47767);
   handles.antennaLight.emissive.setHex(v.antennaOnline ? 0x6fe39a : 0xe47767);
   handles.antennaLight.emissiveIntensity = v.antennaRepairing ? (Math.sin(t * 12) > 0 ? 3 : 0.2) : 2;
-  // Dano à vista até o reparo; o cabo solto balança. Anel de ajuste acende e esmaece com o ajuste restante.
   const fixedLook = v.antennaOnline || v.antennaFixed;
   for (const o of handles.damage) o.visible = !fixedLook;
   if (handles.damageCable && !fixedLook) {
@@ -657,7 +599,6 @@ export function updateBase(v: BaseView): void {
   if (handles.tuneRing) handles.tuneRing.visible = v.antennaOnline && v.antennaTune > 0;
   if (handles.tuneGlow) handles.tuneGlow.emissiveIntensity = 0.5 + 2.5 * v.antennaTune * (0.85 + 0.15 * Math.sin(t * 3));
 
-  // Tanques (PER-03): dois de água (50 cada) e um de ar; barra sobe e desce suave, e pisca quando está baixa.
   for (const g of handles.gauges) {
     const target = g.kind === 'air' ? v.airLevel / 100 : Math.min(1, Math.max(0, (v.waterLevel - 50 * g.index) / 50));
     g.node.scale.y += (Math.max(0.002, target) - g.node.scale.y) * 0.08;
@@ -669,23 +610,18 @@ export function updateBase(v: BaseView): void {
     g.mat.emissiveIntensity = low ? (Math.sin(t * 6) > 0 ? 2.4 : 0.5) : 1.5;
   }
 
-  // Processador de gelo: tela acesa e pulsando durante a entrega (aquecimento e condensação).
   for (const m of handles.screen) m.emissiveIntensity = v.processing ? 2 + Math.sin(t * 5) : 0.5;
-  // Local do gelo: farol mais forte com missão de gelo na fila.
   iceBeaconMat.emissiveIntensity = v.iceActive ? 2.5 + 1.5 * Math.sin(t * 4) : 0.6;
 }
 
-/** Brilho do motor do módulo de descida (introdução). */
 export function setEngineGlow(k: number): void {
   for (const m of handles.engineGlow) m.emissiveIntensity = 6 * k;
 }
 
-/** Altura do módulo de descida acima da plataforma (0 = pousado). */
 export function setLanderAltitude(h: number): void {
   lander.position.y = groundFor(LANDING_PAD.x, LANDING_PAD.z, 2) + 0.15 + h;
 }
 
-/** Ponto central de cada área, para a câmera. */
 export const FOCUS = {
   greenhouse: new THREE.Vector3(GREENHOUSE.x, habitat.position.y + 2.2, GREENHOUSE.z),
   habitat: new THREE.Vector3(HABITAT.x, surfaceHeight(HABITAT.x, HABITAT.z) + 2, HABITAT.z),

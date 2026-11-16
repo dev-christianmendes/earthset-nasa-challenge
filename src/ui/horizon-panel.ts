@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Painel polar: horizonte medido no LOLA e trajetória do Sol de 709 h (JPL Horizons).
-// Só lê o motor (isSunlit, horizonAt) e as tabelas; não altera regra.
 import { isSunlit, sampleAt, type SunTable } from '../engine/sun';
 import type { TerrainTable } from '../engine/terrain';
 import type { Site } from '../engine/resources';
@@ -30,10 +28,6 @@ function el(tag: string, attrs: Record<string, string | number>, text?: string):
   return node as SVGElement;
 }
 
-/**
- * Monta o painel no elemento `root` e devolve a função de atualização (hora inteira da partida).
- * Ponto amarelo: Sol acima do horizonte no momento. Cinza: Sol tapado pelo relevo.
- */
 export function mountHorizonPanel(
   root: HTMLElement,
   sun: SunTable,
@@ -47,7 +41,6 @@ export function mountHorizonPanel(
   svg.append(el('circle', { cx: C, cy: C, r: R, fill: 'rgba(10,14,24,0.6)', stroke: 'rgba(255,255,255,0.18)' }));
   svg.append(el('circle', { cx: C, cy: C, r: radiusFor(30), fill: 'none', stroke: 'rgba(255,255,255,0.10)', 'stroke-dasharray': '2 3' }));
 
-  // Relevo que tapa o Sol: a curva do horizonte medido, em todas as direções.
   const profile = terrain.sites[site].horizon_deg;
   const step = terrain.azimuth_step_deg;
   const shape = profile
@@ -58,7 +51,6 @@ export function mountHorizonPanel(
     .join(' ');
   svg.append(el('polygon', { points: shape, fill: 'rgba(127,209,255,0.28)', stroke: '#7fd1ff', 'stroke-width': 1 }));
 
-  // Trajetória do Sol em 709 horas, na borda: amarelo quando chega ao morro, cinza quando não.
   // Um elemento por cor (não 709): menos trabalho de repintura a cada mudança de hora.
   let litHours = 0;
   let litD = '';
@@ -75,7 +67,6 @@ export function mountHorizonPanel(
   svg.append(el('path', { d: unlitD, stroke: '#3a4150', 'stroke-width': 3.8, 'stroke-linecap': 'round', fill: 'none' }));
   svg.append(el('path', { d: litD, stroke: '#ffcf6b', 'stroke-width': 3.8, 'stroke-linecap': 'round', fill: 'none' }));
 
-  // Marcadores: norte e a posição do Sol na hora atual.
   svg.append(el('text', { x: C, y: 12, 'text-anchor': 'middle', fill: '#9aa6b8', 'font-size': 10 }, 'N'));
   const marker = el('circle', { cx: C, cy: C, r: 5, fill: '#ffffff', stroke: '#03050a', 'stroke-width': 1.5 });
   svg.append(marker);

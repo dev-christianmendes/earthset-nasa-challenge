@@ -36,7 +36,6 @@ CATALOG_URL = 'https://cdsarc.cds.unistra.fr/ftp/V/50/catalog.gz'
 README_URL = 'https://cdsarc.cds.unistra.fr/ftp/V/50/ReadMe'
 CATALOG_MIRROR = 'https://www-kpno.kpno.noirlab.edu/Info/Caches/Catalogs/BSC5/catalog5.html'
 
-
 @dataclass(frozen=True)
 class Scenario:
     start: str = START_UTC
@@ -57,7 +56,6 @@ class Scenario:
     def key(self):
         return f'{self.site}-{datetime.strptime(self.start, "%Y-%m-%d %H:%M"):%Y%m%d%H}-{self.hours}'
 
-
 def params(target: str, scenario=Scenario()) -> dict[str, str]:
     stop = datetime.strptime(scenario.start, '%Y-%m-%d %H:%M') + timedelta(hours=scenario.hours)
     o = scenario.observer
@@ -69,14 +67,12 @@ def params(target: str, scenario=Scenario()) -> dict[str, str]:
             'CSV_FORMAT': "'YES'", 'ANG_FORMAT': "'DEG'", 'APPARENT': "'AIRLESS'",
             'EXTRA_PREC': "'YES'"}
 
-
 def download(url: str, dest: Path) -> None:
     request = urllib.request.Request(url, headers={'User-Agent': 'Earthset-science-pipeline/1.0'})
     with urllib.request.urlopen(request, timeout=45) as response:
         data = response.read()
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
-
 
 def parse_rows(text: str) -> list[dict]:
     if '$$SOE' not in text or '$$EOE' not in text:
@@ -113,27 +109,22 @@ def parse_rows(text: str) -> list[dict]:
         raise ValueError('Efeméride vazia')
     return rows
 
-
 def unit(ra: float, dec: float) -> list[float]:
     ra, dec = math.radians(ra), math.radians(dec)
     return [math.cos(dec)*math.cos(ra), math.cos(dec)*math.sin(ra), math.sin(dec)]
-
 
 def local(az: float, el: float) -> list[float]:
     az, el = math.radians(az), math.radians(el)
     return [math.sin(az)*math.cos(el), math.sin(el), -math.cos(az)*math.cos(el)]
 
-
 def dot(a, b):
     return sum(x*y for x, y in zip(a, b))
-
 
 def normalize(a):
     norm = math.sqrt(dot(a, a))
     if norm < 1e-8:
         raise ValueError('Vetores degenerados para orientar o céu')
     return [v/norm for v in a]
-
 
 def basis(a, b):
     a = normalize(a)
@@ -142,22 +133,18 @@ def basis(a, b):
     c = [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]
     return [a, b, c]
 
-
 def rotation(first, second):
     inertial = basis(unit(first['ra'], first['dec']), unit(second['ra'], second['dec']))
     horizon = basis(local(first['az'], first['el']), local(second['az'], second['el']))
     return [sum(horizon[k][i]*inertial[k][j] for k in range(3)) for i in range(3) for j in range(3)]
 
-
 def transform(matrix, vector):
     return [dot(matrix[i:i+3], vector) for i in (0, 3, 6)]
-
 
 def angular_error(a, b):
     a, b = normalize(a), normalize(b)
     cross = [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]
     return math.degrees(math.atan2(math.sqrt(dot(cross, cross)), dot(a, b)))
-
 
 def parse_catalog(text: str, max_magnitude=4.5) -> list[dict]:
     """BSC5, CDS V/50: colunas 76–90 (J2000), 103–107 (V), 149–160 (movimento próprio)."""
@@ -177,7 +164,6 @@ def parse_catalog(text: str, max_magnitude=4.5) -> list[dict]:
         raise ValueError('Catálogo estelar vazio/inválido')
     return stars
 
-
 def parse_catalog_mirror(text: str, max_magnitude=4.5) -> list[dict]:
     """Listagem BSC5 usada nos telescópios Kitt Peak (NOIRLab), época/equinócio J2000."""
     plain = html.unescape(re.sub(r'<[^>]+>', '', text))
@@ -192,7 +178,6 @@ def parse_catalog_mirror(text: str, max_magnitude=4.5) -> list[dict]:
     if not stars:
         raise ValueError('Listagem NOIRLab vazia/inválida')
     return stars
-
 
 def build(raw: Path, scenario=Scenario()) -> dict:
     expected = {name: params(target, scenario) for name, target in BODIES.items()}
@@ -244,7 +229,6 @@ def build(raw: Path, scenario=Scenario()) -> dict:
                       'samples': stars},
             'validation': {'max_frame_error_deg': max(errors), 'max_legacy_sun_error_deg': delta}}
 
-
 def pack(table):
     """Colunas numéricas, sem chaves repetidas/proveniência volumosa no JavaScript.
 
@@ -281,7 +265,6 @@ def pack(table):
     result['stars']['samples'] = [[s[k] for k in result['stars']['columns']] for s in table['stars']['samples']]
     return result
 
-
 def ensure_raw(raw, scenario):
     raw.mkdir(parents=True, exist_ok=True)
     expected = {name: params(target, scenario) for name, target in BODIES.items()}
@@ -296,8 +279,7 @@ def ensure_raw(raw, scenario):
         if not dest.exists():
             print(f'Consultando {scenario.key}: {name}...', flush=True)
             download(HORIZONS_URL+'?'+urllib.parse.urlencode(query), dest)
-        parse_rows(dest.read_text())  # Resposta de erro nunca vira tabela válida.
-
+        parse_rows(dest.read_text())
 
 def ensure_catalog():
     if (CATALOG_RAW/'catalog.gz').exists() or (CATALOG_RAW/'bsc5-noirlab.html').exists():
@@ -311,7 +293,6 @@ def ensure_catalog():
             download(CATALOG_MIRROR, CATALOG_RAW/'bsc5-noirlab.html')
         except Exception as fallback:
             print(f'Catálogo indisponível; sem estrelas inventadas: {fallback}', flush=True)
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -363,7 +344,6 @@ def main():
                'start_utc': scenario.start, 'step_hours': 1, 'hours': scenario.hours,
                'observer': scenario.observer, 'observers': {site: site_observer(site) for site in by_site},
                'samples': samples, 'samples_by_site': by_site}
-        # Os outros dois observadores podem ter acabado de ser baixados.
         provenance['raw_sha256'].update({p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                                        for p in sorted(raw.iterdir()) if p.is_file()})
     # Validar todas as entradas antes de publicar qualquer tabela ativa.
@@ -374,7 +354,6 @@ def main():
         (ROOT/'src/data/sun-south-pole.json').write_text(json.dumps(sun, separators=(',', ':'))+'\n')
     print(json.dumps({'scenario': scenario.key, 'bodies': len(table['bodies']), 'stars': len(table['stars']['samples']),
                       'validation': table['validation'], 'bytes': args.output.stat().st_size}))
-
 
 if __name__ == '__main__':
     main()

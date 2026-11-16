@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// D-18: astronautas com tarefas reais. Máquina de estados, ordens válidas e inválidas, cancelamento,
-// pausa (tempo zero), velocidade (passos diferentes, mesmo resultado) e abrigo.
 import { describe, expect, it } from 'vitest';
 import {
   PREP_HOURS,

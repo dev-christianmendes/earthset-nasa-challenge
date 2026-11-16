@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// CAM-01 e CAM-02: regras puras da câmera (limites por plano, teclas, margem livre, área de jogo).
 import { describe, expect, it } from 'vitest';
 import { CAMERA_KEYS, PLAY_AREA, SHOT_LIMITS, cameraCommand, clampToArea, insetFor, keyIntent } from '../../src/render/camera-rules';
 
@@ -70,7 +69,6 @@ describe('margem livre quando um painel cobre a tela', () => {
 
   it('painel à direita centra o alvo na área livre à esquerda', () => {
     const inset = insetFor(desktop, [{ left: 928, top: 88, right: 1268, bottom: 704 }]);
-    // A área livre é de 0 a 928: o centro dela fica 176 px à esquerda do centro da tela (640 → 464).
     expect(inset.x).toBeCloseTo((1280 - 928) / 2, 6);
     expect(inset.y).toBe(0);
   });

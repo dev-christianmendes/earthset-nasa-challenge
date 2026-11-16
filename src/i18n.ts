@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Textos da interface em inglês (padrão, para o vídeo e os jurados) e em português do Brasil.
-// Chaves iguais nos dois idiomas (tests/i18n.test.ts). Motivos de recusa vêm do motor como códigos (reason.*).
 
 export type Lang = 'en' | 'pt';
 
@@ -132,7 +130,6 @@ const DICT: Record<string, Record<Lang, string>> = {
     en: 'The antenna is already installed or queued.',
     pt: 'A antena já está instalada ou na fila.',
   },
-  // ---------- Earthset 4.0 ----------
   'load.text': { en: 'Preparing the lunar surface…', pt: 'Preparando a superfície lunar…' },
   'load.models': { en: 'Loading the base…', pt: 'Carregando a base…' },
   'load.ready': { en: 'Ready', pt: 'Pronto' },
@@ -598,29 +595,24 @@ const DICT: Record<string, Record<Lang, string>> = {
   'footnote': { en: 'Real NASA data: Sun, terrain, space weather. Story, rover and consumption: game.', pt: 'Dados reais da NASA: Sol, relevo, clima espacial. História, rover e consumo: jogo.' },
 };
 
-/** Só para os testes: o dicionário completo. */
 export const DICT_FOR_TESTS = DICT;
 
 const STORAGE_KEY = 'earthset-lang';
 let current: Lang = 'en';
 
-/** Idioma atual. Padrão: inglês (ver docs/arquitetura.md, R-LANG). */
 export function getLang(): Lang {
   return current;
 }
 
-/** Troca o idioma e guarda a escolha, se o navegador deixar (pode falhar em janela privada). */
 export function setLang(lang: Lang): void {
   current = lang;
   try {
     localStorage.setItem(STORAGE_KEY, lang);
   } catch {
-    // sem armazenamento: a escolha vale só nesta página
   }
   document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
 }
 
-/** Lê a escolha guardada; sem escolha, usa inglês. */
 export function loadLang(): Lang {
   let saved: string | null = null;
   try {
@@ -632,11 +624,7 @@ export function loadLang(): Lang {
   return current;
 }
 
-/** Texto da chave no idioma atual, com {variáveis} substituídas. Chave ausente devolve a própria chave. */
-/**
- * Valores padrão de textos que vêm de constantes do motor (horas e água das missões). Os textos fixos do HTML são
- * traduzidos sem variáveis; sem isto, mostravam `{w}` e `{h}` literais. Quem passa uma variável explícita ganha.
- */
+/** Defaults vêm do motor para os textos fixos do HTML; variáveis explícitas têm precedência. */
 const DEFAULT_VARS: Record<string, string | number> = {};
 export function setI18nDefaults(vars: Record<string, string | number>): void {
   Object.assign(DEFAULT_VARS, vars);
@@ -652,7 +640,6 @@ export function t(key: string, vars: Record<string, string | number> = {}): stri
   return text;
 }
 
-/** Aplica os textos a elementos marcados com data-i18n (texto), data-i18n-title e data-i18n-aria. */
 export function applyStatic(root: ParentNode = document): void {
   for (const node of root.querySelectorAll<HTMLElement>('[data-i18n]')) {
     node.textContent = t(node.dataset.i18n ?? '');

@@ -1,5 +1,3 @@
-# Verificação automática do Earthset: tipos, testes, build, auditoria e fronteira do motor.
-# Regras do projeto: AGENTS.md (seção 6, Verificação).
 name: CI
 
 on:

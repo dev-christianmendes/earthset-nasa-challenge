@@ -1,15 +1,10 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Corpo animado de um astronauta (three.js). Recebe o estado da locomoção (crew-gait.ts) e só desenha:
-// posição no relevo, giro e inclinação do corpo, e mistura dos clipes do GLB.
-// Um AnimationMixer por astronauta, criado uma vez. Caminhada e passo saltado têm o tempo controlado pela fase
-// da passada (pé apoiado sem deslizar); as poses (parado, trabalho, aceno) tocam no próprio ritmo com transição.
 // Os pesos sempre somam 1: sem isso o three.js mistura a pose de amarração (T) do esqueleto.
 import * as THREE from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { buildGaitProfile, clipPhase, nominalProfile, type GaitProfile, type Walker } from './crew-gait';
 
-/** Poses fora da locomoção. Sem o clipe no modelo, a pose cai para `idle`. */
 export type PoseClip = 'idle' | 'interact' | 'work' | 'harvest' | 'plant' | 'wave';
 const POSES: readonly PoseClip[] = ['idle', 'interact', 'work', 'harvest', 'plant', 'wave'];
 
@@ -29,7 +24,6 @@ function findFoot(root: THREE.Object3D, side: 'l' | 'r'): THREE.Object3D | null 
   return found;
 }
 
-/** Mede o perfil da passada amostrando o clipe num mixer temporário (uma vez por clipe). */
 function measureProfile(root: THREE.Object3D, clip: THREE.AnimationClip, nominalSpeed: number): GaitProfile {
   const cached = profileCache.get(clip);
   if (cached) return cached;
@@ -77,7 +71,6 @@ function clipKey(name: string): PoseClip | 'walk' | 'run' | null {
 }
 
 export class CrewRig {
-  /** Nó posicionado no mundo (posição, giro e inclinação). */
   readonly holder = new THREE.Group();
   private readonly mixer: THREE.AnimationMixer | null;
   private readonly walk: THREE.AnimationAction | null = null;
@@ -87,7 +80,6 @@ export class CrewRig {
   private readonly poses: Partial<Record<PoseClip, THREE.AnimationAction>> = {};
   private readonly poseWeight: Record<PoseClip, number> = { idle: 1, interact: 0, work: 0, harvest: 0, plant: 0, wave: 0 };
   private currentPose: PoseClip = 'idle';
-  /** Modelo antigo sem esqueleto: pernas e braços giram pela fase da passada. */
   private readonly legs: THREE.Object3D[] = [];
   private readonly arms: THREE.Object3D[] = [];
 
@@ -161,7 +153,6 @@ export class CrewRig {
     return new CrewRig(body, null, 1);
   }
 
-  /** Perfis medidos da caminhada e do passo saltado (null se o modelo não tem o clipe). */
   get walkGait(): GaitProfile | null {
     return this.walkProfile;
   }
@@ -174,13 +165,11 @@ export class CrewRig {
     return !!this.poses.wave;
   }
 
-  /** Clipe dominante (verificação em desenvolvimento). */
   dominantClip(w: Walker): string {
     if (w.moveWeight > 0.5) return w.hopWeight > 0.4 && this.run ? 'run' : this.walk ? 'walk' : 'run';
     return this.currentPose;
   }
 
-  /** Desenha o astronauta: `ground` é a altura do relevo sob ele; `pose` vale quando parado. */
   update(w: Walker, pose: PoseClip, ground: number, dt: number): void {
     this.holder.position.set(w.x, ground + w.lift, w.z);
     this.holder.rotation.set(w.pitch, w.heading, w.roll);
@@ -192,7 +181,6 @@ export class CrewRig {
     }
     const want: PoseClip = this.poses[pose] ? pose : 'idle';
     if (want !== this.currentPose) {
-      // Pose que volta do zero recomeça do início (o aceno e o trabalho não entram pela metade).
       const action = this.poses[want];
       if (action && this.poseWeight[want] < 0.05) action.time = 0;
       this.currentPose = want;

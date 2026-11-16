@@ -1,16 +1,10 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Trajetória do rover (só matemática 2D, sem three.js, testada no Vitest). Três camadas (D-22):
-//  1. Rota: o planejador de navegação (crew-nav.ts) com a folga do veículo, contornando estruturas;
-//     no campo solar, um corredor entre as colunas até a vaga.
-//  2. Geometria: cantos trocados por arcos de raio mínimo (curvatura contínua por trecho, como um veículo).
-//  3. Tempo: perfil de velocidade que freia antes das curvas (aceleração lateral limitada, pouca tração no regolito)
-//     e acelera nas retas. O perfil é esticado para caber exatamente nas horas do motor (`TASK_PHASE_HOURS`).
-// Números de veículo ilustrativos, guiados pelo rover das Apollo (13 km/h de projeto); não são medição.
+// O perfil é esticado para caber nas horas do motor (TASK_PHASE_HOURS).
+// Parâmetros de veículo ilustrativos, não medidos; fonte em docs/data-sources.md (D-22).
 import type { TaskKind } from '../engine/robot';
 import { OBSTACLES, planRoute, type Obstacle, type Point, type PolyPath } from './crew-nav';
 import { ANTENNA_WORK, DOCK, ICE_PROCESSOR, ICE_SITE, PANEL_SLOTS, type Spot } from './layout';
 
-/** Onde o rover descarrega o regolito com gelo, na frente do processador. */
 export const PROCESSOR_FRONT: Spot = { x: ICE_PROCESSOR.x, z: ICE_PROCESSOR.z - 2.6 };
 /** Meia largura do rover (~0,95 m) mais margem: folga do centro do rover às estruturas. */
 export const ROVER_CLEARANCE = 1.3;
@@ -19,9 +13,7 @@ export const MIN_TURN_RADIUS = 2.6;
 /** Limites do perfil (forma da curva de velocidade; o tempo total é o do motor). */
 export const PROFILE = { vMax: 3, aLat: 0.8, accel: 1.2, decel: 1.4 } as const;
 
-/** Obstáculos para o rover: os da base sem a própria garagem (ele sai e chega a ela). */
 const ROVER_OBSTACLES: readonly Obstacle[] = OBSTACLES.filter((o) => o.name !== 'dock');
-/** Linha ao norte do campo solar por onde o rover entra nos corredores. */
 const FIELD_ENTRY_Z = -10.2;
 
 /**
@@ -36,7 +28,6 @@ function corridorX(slotX: number): number {
   return c <= 1 ? gap(0) : gap(1);
 }
 
-/** Rota de ida (garagem → local) por tipo de missão; o painel depende da vaga. */
 export function roverRoute(kind: TaskKind, panelSlot: number): readonly Point[] {
   if (kind === 'ice') return planRoute(DOCK, ICE_SITE, ROVER_OBSTACLES, ROVER_CLEARANCE);
   if (kind === 'antenna') return planRoute(DOCK, ANTENNA_WORK, ROVER_OBSTACLES, ROVER_CLEARANCE);
@@ -46,16 +37,11 @@ export function roverRoute(kind: TaskKind, panelSlot: number): readonly Point[] 
   return [...planRoute(DOCK, entry, ROVER_OBSTACLES, ROVER_CLEARANCE), { x, z: slot.z }];
 }
 
-/** Rota de volta: no gelo, do local até a frente do processador (para descarregar); nas outras, a ida ao contrário. */
 export function roverReturn(kind: TaskKind, panelSlot: number): readonly Point[] {
   if (kind === 'ice') return planRoute(ICE_SITE, PROCESSOR_FRONT, ROVER_OBSTACLES, ROVER_CLEARANCE);
   return [...roverRoute(kind, panelSlot)].reverse();
 }
 
-/**
- * Troca cada canto por um arco de círculo tangente aos dois trechos (raio mínimo, reduzido só se o trecho for curto).
- * Resultado amostrado: arcos a cada ~0,1 rad, retas pelas pontas.
- */
 export function filletRoute(route: readonly Point[], radius = MIN_TURN_RADIUS): Point[] {
   const pts = route.filter((p, i) => i === 0 || Math.hypot(p.x - route[i - 1].x, p.z - route[i - 1].z) > 1e-6);
   if (pts.length < 3) return [...pts];
@@ -85,7 +71,6 @@ export function filletRoute(route: readonly Point[], radius = MIN_TURN_RADIUS): 
     const ux = inX / lin;
     const uz = inZ / lin;
     const start = { x: c.x - ux * tangent, z: c.z - uz * tangent };
-    // Centro: perpendicular ao trecho de entrada, para o lado da curva.
     const side = Math.sign(turn);
     const nx = uz * side;
     const nz = -ux * side;
@@ -102,7 +87,6 @@ export function filletRoute(route: readonly Point[], radius = MIN_TURN_RADIUS): 
   return out.filter((p, i) => i === 0 || Math.hypot(p.x - out[i - 1].x, p.z - out[i - 1].z) > 1e-6);
 }
 
-/** Trajetória pronta: caminho reamostrado, curvatura, e tempo acumulado do perfil de velocidade. */
 export interface RoverTrack {
   readonly path: PolyPath;
   /** Tempo do perfil (s) em cada ponto do caminho; o último é a duração total do perfil. */
@@ -117,7 +101,6 @@ const STEP = 0.25;
 
 function buildTrack(route: readonly Point[]): RoverTrack {
   const dense = filletRoute(route);
-  // Reamostra a cada STEP metros para o perfil ter resolução uniforme.
   const acc: number[] = [0];
   for (let i = 1; i < dense.length; i++) acc.push(acc[i - 1] + Math.hypot(dense[i].x - dense[i - 1].x, dense[i].z - dense[i - 1].z));
   const length = acc[acc.length - 1];
@@ -135,7 +118,6 @@ function buildTrack(route: readonly Point[]): RoverTrack {
     zs[i] = dense[seg].z + (dense[seg + 1].z - dense[seg].z) * f;
     ss[i] = s;
   }
-  // Curvatura pela variação de rumo entre pontos vizinhos.
   const curvature = new Float64Array(n);
   for (let i = 1; i < n - 1; i++) {
     const h0 = Math.atan2(xs[i] - xs[i - 1], zs[i] - zs[i - 1]);
@@ -143,7 +125,6 @@ function buildTrack(route: readonly Point[]): RoverTrack {
     const ds = (ss[i + 1] - ss[i - 1]) / 2;
     curvature[i] = ds > 0 ? Math.abs(Math.atan2(Math.sin(h1 - h0), Math.cos(h1 - h0))) / ds : 0;
   }
-  // Perfil: limite de curva, depois aceleração (ida) e frenagem (volta), parado nas pontas.
   const v = new Float64Array(n);
   for (let i = 0; i < n; i++) v[i] = curvature[i] > 1e-6 ? Math.min(PROFILE.vMax, Math.sqrt(PROFILE.aLat / curvature[i])) : PROFILE.vMax;
   v[0] = 0;
@@ -160,7 +141,6 @@ function buildTrack(route: readonly Point[]): RoverTrack {
 
 const cache = new Map<string, RoverTrack>();
 
-/** Trajetória de uma rota (calculada uma vez por rota). */
 export function roverTrack(route: readonly Point[]): RoverTrack {
   const key = route.map((p) => `${p.x.toFixed(3)},${p.z.toFixed(3)}`).join(';');
   let track = cache.get(key);
@@ -191,7 +171,6 @@ export function distanceAt(track: RoverTrack, k: number): number {
   return track.path.acc[lo] + (track.path.acc[hi] - track.path.acc[lo]) * f;
 }
 
-/** Velocidade real (m/s) no pico do trecho, quando o perfil é esticado para `legSeconds` segundos. */
 export function peakSpeed(track: RoverTrack, legSeconds: number): number {
   const total = track.time[track.time.length - 1];
   let peak = 0;

@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Seleção de objetos da base direto na cena 3D (raycasting) e destaque discreto (anel no chão).
-// Só identifica o que foi tocado; o que acontece depois é decidido pela interface e pelo motor.
 import * as THREE from 'three';
 import { antenna, greenhouse, habitat, panelUnits, powerUnit, processor, storage } from './base-layout';
 import { camera, crewObject, renderer, robot, scene } from './scene';
@@ -32,7 +30,6 @@ function visibleChain(object: THREE.Object3D): boolean {
   return true;
 }
 
-/** Objeto interativo sob o ponto da tela (coordenadas do cliente), ou null. */
 export function pickAt(clientX: number, clientY: number): SelectableId | null {
   const rect = renderer.domElement.getBoundingClientRect();
   ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
@@ -65,8 +62,6 @@ export function pickAt(clientX: number, clientY: number): SelectableId | null {
   return best ? best.id : null;
 }
 
-// ---------- Destaque ----------
-
 const ringMat = new THREE.MeshBasicMaterial({ color: 0x7fe0c8, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide });
 const ring = new THREE.Mesh(new THREE.RingGeometry(0.88, 1, 48), ringMat);
 ring.rotation.x = -Math.PI / 2;
@@ -80,7 +75,6 @@ const box = new THREE.Box3();
 const size = new THREE.Vector3();
 const center = new THREE.Vector3();
 
-/** Seleciona (ou limpa) o destaque. */
 export function setHighlight(id: SelectableId | null): void {
   selectedRoots = [];
   ring.visible = false;
@@ -97,7 +91,6 @@ export function setHighlight(id: SelectableId | null): void {
   ring.visible = true;
 }
 
-/** Posição e brilho do anel (segue o rover e os astronautas). Barato: sem cálculo de caixa por quadro. */
 export function updateHighlight(t: number): void {
   if (!ring.visible || selectedRoots.length === 0) return;
   const obj = selectedRoots[0];

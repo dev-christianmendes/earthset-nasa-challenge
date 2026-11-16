@@ -1,5 +1,4 @@
 # Uso: python3 scripts/e2e-tempestade.py [porta]   (precisa de `npm run dev` e GPU: Vulkan)
-# Cenário histórico NASA DONKI de 09/10/2024: alerta, monitoramento (antena), abrigo e recuperação, pelo navegador.
 # Usa os atalhos de captura do servidor de desenvolvimento: &clockAt=<hora> e &antenna=base|tuned.
 import json, sys
 from playwright.sync_api import sync_playwright
@@ -26,7 +25,6 @@ with sync_playwright() as p:
     b = p.chromium.launch(args=["--no-sandbox", "--use-angle=vulkan", "--enable-features=Vulkan", "--ignore-gpu-blocklist"])
     errs = []
 
-    # 1. Abertura do cenário: o EP-01 já está em curso na hora 0 (janela mantida pelo autor).
     pg = open_game(b, "nointro")
     pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
     c = chip(pg); ok("ALERT" in c or "SHELTER" in c, "hora 0: o jogo abre em ALERTA ou ABRIGO (radiação em curso)", c)
@@ -36,7 +34,6 @@ with sync_playwright() as p:
     l = luma(pg); ok("DONKI" in l and "2024-10-09" in l, "a LUMA cita o registro SEP e o horário UTC", l[:160])
     ok("24 h" in l, "a LUMA diz que a duração de 24 h é suposição do jogo")
 
-    # 2. Tripulação abrigada: a ordem é aceita, mas a tarefa fica pausada no abrigo
     CREW = "document.getElementById('ctx').innerText.replace(/\\s+/g,' ')"
     pg.keyboard.press("4"); pg.wait_for_timeout(500)
     ok("In the shelter (task paused)" in pg.evaluate(CREW), "astronauta aparece no abrigo durante a radiação", pg.evaluate(CREW)[:70])
@@ -45,11 +42,9 @@ with sync_playwright() as p:
     ok("Task Inspect" in t and "task paused" in t, "ordem dada durante a radiação fica registrada e pausada no abrigo", t[:110])
     pg.keyboard.press("Escape")
 
-    # 3. Pausa e aceleração durante o evento
     h0 = hour(pg); pg.click("#pause-btn"); pg.wait_for_timeout(1500); h1 = hour(pg)
     ok(h0 == h1, "em pausa a hora não avança", f"{h0}->{h1}")
     pg.evaluate("document.getElementById('resume').click()")
-    # 4. Recuperação e volta ao normal
     pg.close()
     pg = open_game(b, "nointro&clockAt=22")
     pg.keyboard.press("4"); pg.wait_for_timeout(500)
@@ -69,7 +64,6 @@ with sync_playwright() as p:
     ok("task paused" not in t and ("Task Inspect" in t or "Inspect" in t.split("ASSIGN")[0]), "terminado o evento, o astronauta retoma a tarefa (ou a conclui)", t[:120])
     pg.close()
 
-    # 5. Monitoramento: só com a antena ajustada; sem ajuste e sem antena o estado segue calmo
     for mode, expect in (("&antenna=tuned", True), ("&antenna=base", False), ("", False)):
         pg = open_game(b, f"nointro&clockAt=409{mode}")
         pg.wait_for_timeout(800); c = chip(pg)
@@ -85,7 +79,6 @@ with sync_playwright() as p:
             ok(got, "ao chegar o SEP registrado, o estado vira ALERTA ou ABRIGO", chip(pg))
         pg.close()
 
-    # 7. Painel científico: o chip do HUD abre; histórico só com o passado; limites e proveniência visíveis
     SCI = "document.querySelector('#space-panel')?.innerText.replace(/\\s+/g,' ') || ''"
     pg = open_game(b, "nointro")
     pg.evaluate("document.getElementById('space').click()"); pg.wait_for_timeout(800)
@@ -105,7 +98,6 @@ with sync_playwright() as p:
     ok(n1 > n0, "o histórico cresce com o tempo (não mostra o futuro)", f"{n0} -> {n1}")
     pg.close()
 
-    # 8. Decisão do jogador: continuar fora (risco explícito) e voltar atrás
     CTX = "document.getElementById('ctx').innerText.replace(/\\s+/g,' ')"
     def exposure(pg):
         m = __import__("re").search(r"Radiation exposure ([\d.]+) of", pg.evaluate(CTX)); return float(m.group(1)) if m else -1
@@ -126,7 +118,6 @@ with sync_playwright() as p:
     ok(got, "mudar de ideia e abrigar leva ao estado ABRIGO", chip(pg))
     pg.close()
 
-    # 9. Rover distante da base: modo seguro, espera, recomeço da ida.
     # SEP registrado em 415,75 h; a radiação começa na hora cheia seguinte (416 h, E02). Em 411,5 h o rover
     # ainda está na ida ou na operação quando a radiação começa, por isso entra em modo seguro.
     pg = open_game(b, "nointro&clockAt=411.5&task=antenna")
@@ -152,7 +143,6 @@ with sync_playwright() as p:
     ok(done and "Safe mode" not in tx, "depois do evento o rover sai do modo seguro e retoma a missão", f"hora {hour(pg)} · {tx[:80]}")
     pg.close()
 
-    # 6. Reinício da partida: menu → nova missão volta à hora 0 e ao cenário
     pg = b.new_page(viewport={"width": 1280, "height": 800}); pg.goto(f"http://localhost:{port}/"); pg.wait_for_timeout(3000)
     for label in ["New mission", "Cadet", "Begin mission", "Skip intro"]:
         pg.get_by_role("button", name=label).first.click(); pg.wait_for_timeout(1200)

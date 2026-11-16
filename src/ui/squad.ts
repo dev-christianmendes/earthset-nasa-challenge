@@ -1,7 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Equipe na tela (passo 2 da interface): barra com Astronauta 1, Astronauta 2 e Rover (UX-04), etiquetas de tarefa
-// sobre cada um na cena (UX-05) e a orientação curta da primeira partida (UX-07).
-// Só lê o estado do motor e envia escolhas por callbacks; nenhuma regra de jogo aqui.
 import { agentStatus, taskFraction } from '../engine/astronaut';
 import type { GameState } from '../engine/game';
 import { missionPhase, taskProgress } from '../engine/mission';
@@ -18,10 +15,8 @@ export interface SquadInfo {
   /** Horas de jogo até a radiação passar. */
   radiationLeft: number;
   speed: number;
-  /** Quem está selecionado no painel e quem a câmera acompanha. */
   selected: string | null;
   following: SquadId | null;
-  /** Previsão da água (ROV-04): o cartão do rover avisa quando a fila deixa a base sem água. */
   water?: { zeroIn: number | null; risk: boolean };
 }
 
@@ -36,13 +31,11 @@ interface Entry {
   progress: number;
   waiting: boolean;
   busy: boolean;
-  /** Rótulo da etiqueta na cena (vazio: sem etiqueta). */
   tag: string;
 }
 
 const seconds = (hours: number, speed: number): number => Math.max(1, Math.round(hours / Math.max(1, speed)));
 
-/** Estado de cada membro, em palavras de jogo. */
 export function squadEntries(state: GameState, info: SquadInfo): Record<SquadId, Entry> {
   const out = {} as Record<SquadId, Entry>;
   const sheltered = info.radiation || state.crewOrder === 'shelter';
@@ -76,7 +69,6 @@ export function squadEntries(state: GameState, info: SquadInfo): Record<SquadId,
     const more = state.robot.queue.length > 1 ? ` · +${state.robot.queue.length - 1}` : '';
     out.rover = { status: `${mission} · ${why ?? phaseText}${more}`, progress: taskProgress(head), waiting: !!why, busy: true, tag: why ? `${mission} · ${why}` : mission };
   }
-  // ROV-04: risco de ficar sem água antes do próximo gelo aparece no cartão do rover (com ou sem missão).
   if (info.water?.risk && info.water.zeroIn !== null) {
     const warn = t('squad.water', { s: seconds(info.water.zeroIn, info.speed) });
     out.rover = { ...out.rover, status: `⚠ ${warn} · ${out.rover.status}`, waiting: true };
@@ -84,14 +76,11 @@ export function squadEntries(state: GameState, info: SquadInfo): Record<SquadId,
   return out;
 }
 
-// ---------- Barra da equipe (UX-04) ----------
-
 let bar: HTMLElement | null = null;
 const cards = new Map<SquadId, { root: HTMLButtonElement; status: HTMLElement; fill: HTMLElement }>();
 
 const ICON: Record<SquadId, string> = { crew0: 'crew', crew1: 'crew', rover: 'rover' };
 
-/** Monta a barra (uma vez). Toque seleciona; tocar de novo no selecionado passa a acompanhar com a câmera. */
 export function mountSquad(root: HTMLElement, handlers: SquadHandlers): void {
   bar = root;
   root.replaceChildren();
@@ -124,7 +113,6 @@ export function mountSquad(root: HTMLElement, handlers: SquadHandlers): void {
   relabelSquad();
 }
 
-/** Nomes no idioma atual. */
 export function relabelSquad(): void {
   if (!bar) return;
   for (const id of IDS) {
@@ -133,7 +121,6 @@ export function relabelSquad(): void {
   }
 }
 
-/** Atualiza textos, progresso e destaque (chamado no ritmo do HUD). */
 export function renderSquad(state: GameState, info: SquadInfo): Record<SquadId, Entry> {
   const entries = squadEntries(state, info);
   for (const id of IDS) {
@@ -152,8 +139,6 @@ export function renderSquad(state: GameState, info: SquadInfo): Record<SquadId, 
   }
   return entries;
 }
-
-// ---------- Etiquetas na cena (UX-05) ----------
 
 let tagLayer: HTMLElement | null = null;
 const tags = new Map<SquadId, { root: HTMLElement; label: HTMLElement; ring: HTMLElement }>();
@@ -194,14 +179,11 @@ export function placeTags(entries: Record<SquadId, Entry> | null, screen: Record
   }
 }
 
-// ---------- Orientação da primeira partida (UX-07) ----------
-
 const COACH_KEY = 'earthset-coach';
 type CoachStep = 'select' | 'order' | 'camera' | 'done';
 let coachStep: CoachStep = 'done';
 let coachEl: HTMLElement | null = null;
 
-/** Evita dicas redundantes enquanto a orientação inicial está ativa. */
 export function coachActive(): boolean {
   return coachStep !== 'done';
 }
@@ -218,11 +200,9 @@ function saveCoachDone(): void {
   try {
     localStorage.setItem(COACH_KEY, 'done');
   } catch {
-    // sem armazenamento: vale só nesta página
   }
 }
 
-/** Começa a orientação (só na primeira partida, ou de novo se `force`). */
 export function startCoach(root: HTMLElement, force = false): void {
   coachEl = root;
   if (!force && coachDone()) {
@@ -261,7 +241,6 @@ function renderCoach(): void {
   coachEl.append(step, text, actions);
 }
 
-/** Avança a orientação pelos atos do jogador: selecionou alguém → escolher tarefa → câmera. */
 export function coachEvent(event: 'selected' | 'ordered'): void {
   if (coachStep === 'select' && event === 'selected') coachStep = 'order';
   else if ((coachStep === 'order' || coachStep === 'select') && event === 'ordered') coachStep = 'camera';

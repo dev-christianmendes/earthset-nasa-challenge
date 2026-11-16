@@ -1,5 +1,4 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-"""Testes do clima espacial DONKI: janela, Kp e radiação (sem rede)."""
 
 import json
 import sys
@@ -10,11 +9,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import fetch_donki as donki  # noqa: E402
 
-
 def at(hours: float) -> str:
-    """Horário da DONKI, a `hours` horas do início do cenário (independe da data escolhida)."""
     return (donki.START_UTC + donki.timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%MZ")
-
 
 class JanelaTest(unittest.TestCase):
     def test_hora_zero_e_o_inicio_do_cenario(self):
@@ -27,7 +23,6 @@ class JanelaTest(unittest.TestCase):
         samples = donki.build_samples([], [])
         self.assertEqual(len(samples), donki.HOURS + 1)
 
-
 class KpTest(unittest.TestCase):
     def test_kp_marcado_em_t_cobre_as_3_horas_anteriores(self):
         # Kp às 18:00 UTC do dia 10 vale para 15:00 a 18:00 (convenção NOAA).
@@ -37,14 +32,12 @@ class KpTest(unittest.TestCase):
         self.assertEqual(horas, [15, 16, 17])
 
     def test_kp_maior_vence_quando_ha_sobreposicao(self):
-        # Duas fontes com o mesmo horário: a hora fica com o Kp maior.
         gst = [
             {"allKpIndex": [{"kpIndex": 5.0, "observedTime": at(18)}]},
             {"allKpIndex": [{"kpIndex": 9.0, "observedTime": at(18)}]},
         ]
         samples = donki.build_samples(gst, [])
         self.assertEqual(samples[15]["kp"], 9.0)
-
 
 class RadiacaoTest(unittest.TestCase):
     def test_sep_marca_radiacao_por_24_horas(self):
@@ -53,11 +46,9 @@ class RadiacaoTest(unittest.TestCase):
         marcadas = [i for i, s in enumerate(samples) if s["radiation"]]
         self.assertEqual(marcadas, list(range(6, 30)))
 
-
 def sep_record(sep_id: str, when: str, linked=None, alerts=None) -> dict:
     return {"sepID": sep_id, "eventTime": when, "instruments": [{"displayName": "GOES-P: SEISS >100 MeV"}],
             "link": "https://ccmc.gsfc.nasa.gov/DONKI/view/SEP/1/-1", "linkedEvents": linked, "sentNotifications": alerts}
-
 
 class CatalogoTest(unittest.TestCase):
     def test_id_da_donki_vira_horario_e_tipo(self):
@@ -113,7 +104,6 @@ class CatalogoTest(unittest.TestCase):
         covered = {h for e in episodes for h in range(e["start_hour"], e["end_hour"]) if 0 <= h <= donki.HOURS}
         self.assertEqual(covered, {i for i, x in enumerate(samples) if x["radiation"]})
 
-
 class DadosVersionadosTest(unittest.TestCase):
     """Confere o catálogo gravado contra as respostas cruas da NASA versionadas (sem rede)."""
 
@@ -139,7 +129,6 @@ class DadosVersionadosTest(unittest.TestCase):
         table = json.loads(donki.OUT_PATH.read_text(encoding="utf-8"))["samples"]
         covered = {h for e in self.catalog["radiation_episodes"] for h in range(e["start_hour"], e["end_hour"]) if 0 <= h <= donki.HOURS}
         self.assertEqual(covered, {i for i, x in enumerate(table) if x["radiation"]})
-
 
 if __name__ == "__main__":
     unittest.main()

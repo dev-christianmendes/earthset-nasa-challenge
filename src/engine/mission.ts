@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Fases de uma missão do robô, derivadas do progresso real da tarefa no motor (camada de apresentação pura).
 // Não concede recurso: o efeito (água, painel, antena) continua só na conclusão da tarefa em game.ts.
 import { TASK_HOURS, TASK_PHASE_HOURS, type RobotTask, type TaskKind } from './robot';
 
@@ -25,13 +24,11 @@ export const PHASE_BOUNDS_BY_KIND: Readonly<Record<TaskKind, Readonly<Record<Mis
 
 export const PHASES: readonly MissionPhase[] = ['prep', 'travel', 'operate', 'return', 'deliver'];
 
-/** Fração concluída da tarefa (0 a 1), a partir das horas restantes no motor. */
 export function taskProgress(task: RobotTask): number {
   const total = TASK_HOURS[task.kind];
   return Math.min(1, Math.max(0, 1 - task.hoursLeft / total));
 }
 
-/** Fase atual da tarefa. */
 export function missionPhase(task: RobotTask): MissionPhase {
   const p = taskProgress(task);
   for (const phase of PHASES) {
@@ -40,7 +37,6 @@ export function missionPhase(task: RobotTask): MissionPhase {
   return 'deliver';
 }
 
-/** Progresso dentro da fase atual (0 a 1), para animar cada etapa. */
 export function phaseProgress(task: RobotTask): number {
   const p = taskProgress(task);
   const [a, b] = PHASE_BOUNDS_BY_KIND[task.kind][missionPhase(task)];

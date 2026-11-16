@@ -1,13 +1,11 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 // Catálogo de eventos de clima espacial (NASA DONKI), gerado por data-pipeline/fetch_donki.py. Motor puro.
-// Cada campo tem proveniência: observed (registro da DONKI), from-id (horário lido do ID de um evento ligado),
-// computed (conta do pipeline) ou game-rule (regra de jogo). Nada aqui é previsão.
+// Proveniência: observed=DONKI, from-id=horário no ID, computed=pipeline, game-rule=simulação. Não é previsão.
 
 export type Provenance = 'observed' | 'from-id' | 'computed' | 'game-rule';
 
 export interface LinkedEvent {
   readonly id: string;
-  /** Tipo lido do ID: FLR (erupção), CME (ejeção de massa coronal), IPS (choque interplanetário), MPC etc. */
   readonly type: string;
   readonly time_utc: string;
   /** Horas desde o início da partida (negativo = antes do início da janela). */
@@ -37,7 +35,6 @@ interface EventBase {
   readonly provenance: 'observed';
 }
 
-/** SEP: partículas solares energéticas. É o que importa para a radiação na superfície lunar. */
 export interface SepEvent extends EventBase {
   readonly type: 'SEP';
   readonly instruments: readonly string[];
@@ -75,7 +72,6 @@ export interface SpaceEventCatalog {
   readonly radiation_episodes: readonly RadiationEpisode[];
 }
 
-/** Catálogo vazio: janela sem eventos ou dados indisponíveis. O jogo continua, sem radiação. */
 export const EMPTY_CATALOG: SpaceEventCatalog = {
   source: 'sem dados',
   start_utc: '',
@@ -90,25 +86,21 @@ function checkHour(hour: number): void {
   if (!Number.isFinite(hour)) throw new RangeError(`hora inválida para o catálogo de eventos: ${hour}`);
 }
 
-/** Episódio de radiação em curso na hora `hour`, ou null. */
 export function episodeAt(catalog: SpaceEventCatalog, hour: number): RadiationEpisode | null {
   checkHour(hour);
   return catalog.radiation_episodes.find((e) => hour >= e.start_hour && hour < e.end_hour) ?? null;
 }
 
-/** Eventos já registrados até a hora `hour` (inclusive), do mais antigo ao mais novo. Não mostra o futuro. */
 export function eventsUntil(catalog: SpaceEventCatalog, hour: number): readonly SpaceEvent[] {
   checkHour(hour);
   return catalog.events.filter((e) => e.hour <= hour);
 }
 
-/** Eventos ligados (notificações e referências) já registrados até a hora `hour`. */
 export function linkedEventsUntil(event: SpaceEvent, hour: number): SpaceEvent['linked_events'] {
   checkHour(hour);
   return event.linked_events.filter((l) => l.hour <= hour);
 }
 
-/** Alertas emitidos pela NASA já conhecidos até a hora `hour`. */
 export function alertsUntil(event: SpaceEvent, hour: number): SpaceEvent['alerts'] {
   checkHour(hour);
   return event.alerts.filter((a) => a.hour <= hour);

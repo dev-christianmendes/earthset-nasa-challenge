@@ -1,6 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Painel científico do clima espacial (aba Ciência): histórico dos eventos NASA DONKI já ocorridos,
-// o que é observado e o que é regra do jogo, limites dos dados. Só mostra o passado da partida.
+// DONKI: mostrar apenas registros já disponíveis na hora da missão.
 import type { AlertView } from '../engine/alert';
 import { alertsUntil, eventsUntil, linkedEventsUntil, type SpaceEvent, type SpaceEventCatalog } from '../engine/space-events';
 import { t } from '../i18n';
@@ -46,7 +45,6 @@ function eventHtml(ev: SpaceEvent, activeId: string | null, hour: number): strin
   </li>`;
 }
 
-/** Monta o painel; devolve a função de atualização (só redesenha quando algo muda). */
 export function mountSpacePanel(root: HTMLElement, catalog: SpaceEventCatalog): (hour: number, alert: AlertView, lang: string) => void {
   let last = '';
   return (hour, alert, lang) => {

@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Invariantes de causalidade apontados na auditoria independente de 15/11/2026 (E01 a E05).
 import { ICE_HELP_HOURS } from '../../src/engine/robot';
 import { describe, expect, it } from 'vitest';
 import { SPACE_EVENTS } from '../../src/data/space-weather-events';
@@ -85,7 +84,6 @@ describe('E05 · quem está ocupado não ajuda o rover', () => {
     let busy = ok(g, { type: 'ASSIGN_AGENT_TASK', kind: 'inspect', agent: 0 });
     busy = ok(busy, { type: 'ASSIGN_AGENT_TASK', kind: 'calibrate', agent: 1 });
     const occupied = advance(busy, Math.ceil(ICE_HELP_HOURS), true, CALM);
-    // Com um astronauta livre, a ajuda encurta a viagem; ocupados, não.
     expect(free.missionsDone.ice).toBeGreaterThanOrEqual(occupied.missionsDone.ice);
     expect(occupied.missionsDone.ice).toBe(0);
     expect(free.missionsDone.ice).toBe(1);

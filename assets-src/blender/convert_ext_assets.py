@@ -25,7 +25,6 @@ OUT_DIR = args[0] if args else os.path.join(ROOT, "public", "models", "ext")
 ONLY = set(args[1:])
 KK_SCALE = 3.0
 
-# nome de saída: (arquivo, tipo, opções)
 JOBS = {
     "habitat_a": (f"{KK}/basemodule_A.gltf", "kaykit", {}),
     "habitat_b": (f"{KK}/basemodule_B.gltf", "kaykit", {}),
@@ -61,17 +60,13 @@ JOBS = {
     "dome": (f"{QS}/T7Ge6maWq4.glb", "quaternius", {"height": 4.0}),
 }
 
-
 def reset():
     bpy.ops.wm.read_factory_settings(use_empty=True)
-
 
 def meshes():
     return [o for o in bpy.context.scene.objects if o.type == "MESH"]
 
-
 def flatten():
-    """Tira a hierarquia (mantendo a transformação) e apaga vazios."""
     for o in list(bpy.context.scene.objects):
         if o.type == "MESH" and o.parent:
             mw = o.matrix_world.copy()
@@ -81,7 +76,6 @@ def flatten():
         if o.type != "MESH":
             bpy.data.objects.remove(o, do_unlink=True)
 
-
 def apply_all(loc=False):
     bpy.ops.object.select_all(action="DESELECT")
     for o in meshes():
@@ -89,18 +83,15 @@ def apply_all(loc=False):
     bpy.context.view_layer.objects.active = meshes()[0]
     bpy.ops.object.transform_apply(location=loc, rotation=True, scale=True)
 
-
 def world_bbox(objs):
     pts = [o.matrix_world @ v.co for o in objs for v in o.data.vertices]
     lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
     hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     return lo, hi
 
-
 def transform_all(m):
     for o in meshes():
         o.matrix_world = m @ o.matrix_world
-
 
 def remap_uv(obj, cond, new_u0, new_v_shift=0.0):
     """Move UVs para outra célula do atlas 8x4 do KayKit (cores lisas por célula)."""
@@ -114,13 +105,11 @@ def remap_uv(obj, cond, new_u0, new_v_shift=0.0):
             frac = (u * 8) % 1.0
             uv[li].uv = (new_u0 + frac / 8, v + new_v_shift)
 
-
 def origin_to_center(o):
     bpy.ops.object.select_all(action="DESELECT")
     o.select_set(True)
     bpy.context.view_layer.objects.active = o
     bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
-
 
 def name_wheels(prefix):
     wheels = [o for o in meshes() if o.name.startswith(prefix)]
@@ -135,7 +124,6 @@ def name_wheels(prefix):
         w.name = f"wheel_{row}{side}"
     return sorted(w.name for w in wheels)
 
-
 def join_body(keep):
     rest = [o for o in meshes() if o not in keep]
     if len(rest) > 1:
@@ -147,14 +135,12 @@ def join_body(keep):
     body = [o for o in meshes() if o not in keep][0]
     return body
 
-
 def export(name):
     path = os.path.join(OUT_DIR, f"{name}.glb")
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_yup=True,
                               export_apply=True, export_animations=False, export_image_format="AUTO")
     return path
-
 
 def run(name, src, kind, opt):
     reset()
@@ -207,7 +193,6 @@ def run(name, src, kind, opt):
     tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in meshes())
     print(f"OUT {name} {os.path.getsize(path)} bytes tris={tris} size_m={[round(x, 2) for x in (hi - lo)]} "
           f"lo={[round(x, 2) for x in lo]} nodes={sorted(o.name for o in meshes())} {notes}")
-
 
 os.makedirs(OUT_DIR, exist_ok=True)
 for name, (src, kind, opt) in JOBS.items():

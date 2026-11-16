@@ -1,40 +1,38 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Gerenciador de ativos: carrega cada GLB uma vez (public/models, gerado por assets-src/blender)
-// e anexa uma cópia ao grupo que recebe o modelo. Formas provisórias do código são escondidas.
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
-const cache = new Map<string, Promise<THREE.Object3D>>();
-const gltfCache = new Map<string, Promise<GLTF>>();
+interface ModelResource {
+  gltf: Promise<GLTF>;
+  scene?: Promise<THREE.Object3D>;
+}
+const resources = new Map<string, ModelResource>();
 
-/** Carrega o GLTF completo (cena e animações), uma vez por nome. */
-export function loadGltf(name: string): Promise<GLTF> {
-  let pending = gltfCache.get(name);
-  if (!pending) {
+function modelResource(name: string): ModelResource {
+  let resource = resources.get(name);
+  if (!resource) {
     const url = `${import.meta.env.BASE_URL}models/${name}.glb`;
-    pending = loader.loadAsync(url);
-    gltfCache.set(name, pending);
+    resource = { gltf: loader.loadAsync(url) };
+    resources.set(name, resource);
   }
-  return pending;
+  return resource;
 }
 
-/** Carrega um modelo pelo nome (sem extensão). Uma única requisição por nome. */
+export function loadGltf(name: string): Promise<GLTF> {
+  return modelResource(name).gltf;
+}
+
 export function loadModel(name: string): Promise<THREE.Object3D> {
-  let pending = cache.get(name);
-  if (!pending) {
-    const url = `${import.meta.env.BASE_URL}models/${name}.glb`;
-    pending = loader.loadAsync(url).then((gltf) => gltf.scene);
-    cache.set(name, pending);
-  }
-  return pending;
+  const resource = modelResource(name);
+  return resource.scene ??= resource.gltf.then((gltf) => gltf.scene);
 }
 
 const TINY_SHADOW_SIZE = 0.3;
 const tinyBox = new THREE.Box3();
 const tinySize = new THREE.Vector3();
 
-/** Peças menores que ~30 cm param de projetar sombra: o ganho é desenho, a perda visual é imperceptível. */
+/** Limiar de detalhes para sombras, em metros. */
 export function pruneTinyShadows(root: THREE.Object3D): void {
   root.updateMatrixWorld(true);
   root.traverse((node) => {
@@ -44,11 +42,7 @@ export function pruneTinyShadows(root: THREE.Object3D): void {
   });
 }
 
-/**
- * Adiciona uma cópia do modelo ao grupo e esconde os objetos provisórios que ele substitui.
- * Filhos com `userData.persistent` (peças desenhadas por código, como as plantas) não são escondidos.
- * Devolve o nó do modelo, para o chamador ligar animações ou materiais por nome.
- */
+/** Filhos com userData.persistent sobrevivem à substituição do modelo provisório. */
 export async function attachModel(group: THREE.Object3D, name: string): Promise<THREE.Object3D> {
   const source = await loadModel(name);
   const model = source.clone(true);

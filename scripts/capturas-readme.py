@@ -1,8 +1,5 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-# Capturas de tela para o README (docs/img/). Usa Playwright (Python) contra `npm run dev`.
 # Uso: npx vite --port 5190 --strictPort &  e depois  python3 scripts/capturas-readme.py [porta] [pasta-de-saida]
-# Cada captura abre uma rota com os ganchos de captura de src/main.ts (autostart, hour, tool, shot...)
-# ou executa um passo de interface (clique na cena, abertura de aba). Falhas de passo são registradas.
 import json, os, sys
 from playwright.sync_api import sync_playwright
 
@@ -15,16 +12,13 @@ ARGS = ["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"
 os.makedirs(OUT, exist_ok=True)
 log = []
 
-
 def note(name, ok, detail=""):
     log.append({"captura": name, "ok": ok, "detalhe": detail})
     print(("ok   " if ok else "FALHA ") + name + (f"  [{detail}]" if detail else ""))
 
-
 def wait_game(pg):
     pg.wait_for_selector("[data-tool=rover]", state="visible", timeout=90000)
     pg.wait_for_timeout(2500)
-
 
 def click_object(pg, who):
     pos = pg.evaluate("(w) => window.__earthset.screenOf(w)", who)
@@ -33,10 +27,8 @@ def click_object(pg, who):
     pg.mouse.click(pos[0], pos[1])
     pg.wait_for_timeout(900)
 
-
 def shot(pg, name):
     pg.screenshot(path=os.path.join(OUT, name), type="jpeg", quality=86)
-
 
 def capture(browser, name, query, viewport=DESKTOP, steps=None, wait="game", lang_storage=None, delay=0):
     ctx = browser.new_context(viewport=viewport, device_scale_factor=1)
@@ -58,18 +50,16 @@ def capture(browser, name, query, viewport=DESKTOP, steps=None, wait="game", lan
             pg.wait_for_timeout(delay)
         shot(pg, name)
         note(name, not errs, "; ".join(errs) if errs else f"query={query}")
-    except Exception as e:  # registra e segue
+    except Exception as e:
         note(name, False, str(e)[:200])
     finally:
         ctx.close()
     return name
 
-
 with sync_playwright() as p:
     b = p.chromium.launch(args=ARGS)
     G = "?autostart=cadet&nointro&hour=30"
 
-    # Menu e telas do início
     capture(b, "01-menu.jpg", "", wait="[data-go=modes]")
     capture(b, "02-modos.jpg", "?screen=modes", wait="[data-mode=cadet]")
     capture(b, "03-como-jogar.jpg", "?screen=howto", wait="#howto")
@@ -78,15 +68,12 @@ with sync_playwright() as p:
     capture(b, "06-creditos.jpg", "?screen=credits", wait="#credits")
     capture(b, "07-historia.jpg", "?screen=story", wait="#story")
 
-    # Introdução (cinemática)
     capture(b, "08-introducao.jpg", "?autostart=cadet&cineAt=7", wait="other", delay=500)
 
-    # Base e estados do dia
     capture(b, "09-base-dia.jpg", G)
     capture(b, "10-base-noite.jpg", "?autostart=cadet&nointro&clockAt=400")
     capture(b, "11-base-pt.jpg", G + "&lang=pt")
 
-    # Painéis contextuais (aba lateral)
     capture(b, "12-painel-rover.jpg", G + "&hour=30&task=ice&after=3&tool=rover&shot=rover")
     capture(b, "13-painel-estufa.jpg", G + "&tool=greenhouse")
     capture(b, "14-painel-tripulacao.jpg", G + "&tool=crew")
@@ -95,24 +82,19 @@ with sync_playwright() as p:
     capture(b, "17-painel-ciencia.jpg", G + "&tool=science")
     capture(b, "18-tempestade-alerta.jpg", "?autostart=cadet&nointro&hour=30&clockAt=406&tool=science")
 
-    # Seleção por toque na cena
     capture(b, "19-selecao-habitat.jpg", G, steps=[lambda pg: click_object(pg, "habitat")])
     capture(b, "20-selecao-rover.jpg", G, steps=[lambda pg: click_object(pg, "rover")])
     capture(b, "21-selecao-astronauta.jpg", G, steps=[lambda pg: click_object(pg, "crew0")])
 
-    # Antena e painéis (instalações)
     capture(b, "22-antena-selecionada.jpg", G + "&antenna=tuned", steps=[lambda pg: click_object(pg, "antenna")])
 
-    # LUMA e pausa
     capture(b, "23-luma-historico.jpg", G, steps=[lambda pg: pg.click("#luma-history-btn")])
     capture(b, "24-pausa.jpg", G, steps=[lambda pg: pg.click("#pause-btn")])
 
-    # Fim de partida (vitória) e celular
     capture(b, "25-fim-partida.jpg", "?autostart=cadet&nointro&hour=708", delay=800)
     capture(b, "26-celular-base.jpg", G, viewport=MOBILE)
     capture(b, "27-celular-menu.jpg", "", viewport=MOBILE, wait="[data-go=modes]")
 
-    # Modo escola (ligado nas configurações, persistido no mesmo contexto)
     ctx = b.new_context(viewport=DESKTOP, device_scale_factor=1)
     pg = ctx.new_page()
     try:

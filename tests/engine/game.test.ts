@@ -26,15 +26,12 @@ describe('partida', () => {
   });
 
   it('uma base passiva, sem robô buscando gelo, perde a água e termina derrotada', () => {
-    // Consequência esperada da regra, não um erro: sem gelo, a água acaba e a comida também.
     const g = advance(createGame({ installation: { ...inst, greenhouse: 'always' } }), MATCH_HOURS, true);
-    // A partida para no instante da derrota: o relógio não avança depois dela.
     expect(g.clock.hour).toBeLessThan(MATCH_HOURS);
     expect(outcomeOf(g)).toBe('lost');
   });
 
   it('para no fim da partida e vence com pelo menos um coração, se os recursos são repostos', () => {
-    // Simula o que o robô e a estufa farão depois (B1 não tem robô): repõe ar, água e comida a cada hora.
     let g = createGame({ installation: inst });
     while (g.clock.hour < MATCH_HOURS) {
       g = advance(g, 1, true);

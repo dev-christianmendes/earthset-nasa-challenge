@@ -19,7 +19,6 @@ def start(page):
 with sync_playwright() as p:
  b=p.chromium.launch(args=['--no-sandbox','--use-angle=vulkan','--enable-features=Vulkan','--ignore-gpu-blocklist'])
  results['environment']={'browser':b.version,'desktop':[1280,800],'mobile':[390,844],'compact':[780,493]}
- # Janela compacta: usar scroll de usuário antes de tentar idioma.
  pg=b.new_page(viewport={'width':780,'height':493});pg.goto(f'http://127.0.0.1:{PORT}/');pg.wait_for_selector('#menu:not([hidden])',timeout=60000)
  target=pg.get_by_role('button',name='Português',exact=True)
  r={'before':target.bounding_box()};shot(pg,'compact-menu')
@@ -27,7 +26,6 @@ with sync_playwright() as p:
  try:target.click(timeout=2000);r['click']='ok'
  except Exception as e:r['click']=str(e).split('Call log')[0]
  results['compact']=r;pg.close();print('COMPACT',json.dumps(r),flush=True)
- # Navegação só por controles da UI; nenhuma alteração de estado interno.
  pg=b.new_page(viewport={'width':1280,'height':800});start(pg)
  pg.get_by_role('button',name='Rover',exact=True).click()
  pg.evaluate("""()=>{window.uxTiming={};document.addEventListener('pointerdown',()=>uxTiming.pointer=performance.now(),{once:true,capture:true});const o=new MutationObserver(()=>{if(document.getElementById('toast')?.innerText.includes('ORDER RECEIVED')){uxTiming.received=performance.now();o.disconnect()}});o.observe(document.body,{childList:true,subtree:true,characterData:true});}""")

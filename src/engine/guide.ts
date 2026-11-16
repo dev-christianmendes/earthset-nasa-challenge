@@ -1,7 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// LUMA, o sistema de suporte da estação (baseado em regras, sem modelo de IA em tempo de jogo; D-12).
-// Escolhe a orientação mais urgente a partir do estado e detecta eventos entre dois estados.
-// Só devolve chaves de texto, gravidade e o sistema a abrir; o texto fica em src/i18n.ts (luma.*).
 import type { GameState } from './game';
 import type { AlertView } from './alert';
 import { currentChapter, type ChapterId } from './chapters';
@@ -9,7 +6,6 @@ import type { LumaLevel } from './modes';
 import { missionPhase } from './mission';
 import type { TaskKind } from './robot';
 
-/** Sistema da interface que resolve a orientação (atalho na mensagem). */
 export type LumaAction = 'rover' | 'energy' | 'greenhouse' | 'crew' | 'science';
 export type LumaSeverity = 'critical' | 'warning' | 'info';
 
@@ -28,8 +24,8 @@ type Resource = 'battery' | 'air' | 'water' | 'food';
 
 const RESOURCE_ACTION: Readonly<Record<Resource, LumaAction>> = {
   battery: 'energy',
-  air: 'energy', // a eletrólise usa água e bateria
-  water: 'rover', // gelo
+  air: 'energy',
+  water: 'rover',
   food: 'greenhouse',
 };
 
@@ -56,15 +52,9 @@ function advice(key: string, severity: LumaSeverity, action: LumaAction | null, 
   return { key, vars, severity, action };
 }
 
-/**
- * Orientação atual. Perigos aparecem em todos os modos; o passo da história só nos modos com dicas
- * ('full' e 'goals'). No modo 'critical' (Comandante), sem perigo, a LUMA fica em silêncio operacional.
- */
-/** Horário UTC legível: '2024-10-09T03:50Z' vira '2024-10-09 03:50 UTC'. */
 const utcLabel = (time: string): string => time.replace('T', ' ').replace('Z', ' UTC');
 
 export function lumaAdvice(state: GameState, alert: AlertView | null, level: LumaLevel = 'full'): LumaAdvice {
-  // 1. Perigo agora: decisão de ficar fora durante a radiação, radiação com a tripulação em modo automático, ou último coração.
   if (state.crewOrder === 'outside' && alert?.episode) return advice('luma.outside', 'critical', 'crew', { hours: state.crew.exposureHours.toFixed(1) });
   if (state.crewOrder === 'auto' && state.crew.prevRadiation) {
     const record = alert?.evidence;
@@ -72,34 +62,26 @@ export function lumaAdvice(state: GameState, alert: AlertView | null, level: Lum
   }
   const [worst, value] = worstResource(state);
   if (state.hearts <= 1) return advice('luma.lastHeart', 'critical', RESOURCE_ACTION[worst]);
-  // 2. Monitoramento (antena): erupção ou CME registrada pela NASA. Sem tempo restante: não há base para prever.
+  // Monitoramento usa precursores já registrados; não prevê o início do SEP.
   if (alert?.level === 'monitoring' && alert.precursor) {
     const p = alert.precursor;
     const range = alert.lagRange;
     return advice(`luma.monitor.${p.type}`, 'warning', 'crew', { id: p.id, time: utcLabel(p.time_utc), min: range ? Math.round(range[0]) : '?', max: range ? Math.round(range[1]) : '?' });
   }
   if (alert?.level === 'recovery') return advice('luma.recovery', 'warning', null, { hours: Math.ceil(alert.recoveryLeft) });
-  // 3. Recurso baixo.
   if (value < LUMA_LOW) return advice(`luma.low.${worst}`, 'warning', RESOURCE_ACTION[worst]);
-  // 4. Passo da história (capítulo atual).
   if (level === 'critical') return advice('luma.quiet', 'info', null);
   const chapter = currentChapter(state);
-  // Capítulo 1 com a primeira missão já na fila: acompanhar a operação em vez de repetir o pedido.
   if (chapter === 1 && state.robot.queue.length > 0) return advice('luma.chapter.1.wait', 'info', 'rover');
   return advice(`luma.chapter.${chapter}`, 'info', CHAPTER_ACTION[chapter]);
 }
 
-/** Evento pontual (mensagem que entra no histórico da LUMA). */
 export interface LumaEvent extends LumaAdvice {
   readonly id: string;
 }
 
 const KINDS: readonly TaskKind[] = ['ice', 'panel', 'antenna'];
 
-/**
- * Eventos entre dois estados consecutivos: missão concluída, rover voltando, capítulo novo, coração perdido,
- * início e fim de radiação (o clima vem do chamador, como em advance).
- */
 export function lumaEvents(prev: GameState, next: GameState, radiationBefore = false, radiationNow = false): readonly LumaEvent[] {
   const out: LumaEvent[] = [];
   const push = (id: string, key: string, severity: LumaSeverity, action: LumaAction | null, vars: Record<string, string | number> = {}) =>

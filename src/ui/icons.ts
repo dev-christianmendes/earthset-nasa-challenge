@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Ícones de linha próprios do projeto (SVG inline, 24×24, traço na cor do texto). Sem marcas de terceiros.
 
 const P: Record<string, string> = {
   bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
@@ -31,13 +30,11 @@ const P: Record<string, string> = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
 };
 
-/** SVG do ícone (traço em currentColor). */
 export function iconSvg(name: string): string {
   const body = P[name] ?? '';
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 }
 
-/** Preenche todo elemento com data-icon. */
 export function mountIcons(root: ParentNode = document): void {
   for (const node of root.querySelectorAll<HTMLElement>('[data-icon]')) {
     const name = node.dataset.icon ?? '';

@@ -64,7 +64,6 @@ with sync_playwright() as p:
             assert default, 'Exposição longa deve iniciar ativa'
             assert abs(profile['captures']['long']['viewElevation']-45)<.01, 'Botão deve enquadrar o céu'
             assert profile['captures']['long']['bright_pixels']>=100, 'Catálogo deve ser perceptível no campo de céu'
-        # Mostrar a opção acionável e a cena de jogo, com o valor padrão restaurado.
         checkbox.set_checked(default)
         page.screenshot(path=str(OUT/f'{name}-science.png'))
         page.locator('[data-tool=science]').click()
@@ -72,7 +71,6 @@ with sync_playwright() as p:
         results['profiles'][name]=profile
         print(name,json.dumps(profile),flush=True)
         context.close()
-    # Diagnóstico observado do Sol em movimento real de jogo, sem alterar o motor.
     page = browser.new_page(viewport={'width':1280,'height':800})
     page.goto(f'http://127.0.0.1:{PORT}/?autostart=cadet&clockAt=24')
     page.wait_for_selector('#hud:not([hidden])',timeout=60000)

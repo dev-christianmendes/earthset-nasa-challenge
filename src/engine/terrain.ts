@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Horizonte medido no relevo LOLA, por site (data-pipeline/fetch_lola.py). Motor puro.
-// Fonte e método: docs/data-sources.md, seção 2.
 import type { Site } from './resources';
 
 export interface TerrainSite {

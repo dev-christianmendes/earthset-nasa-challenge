@@ -1,7 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Navegação da tripulação na base: obstáculos (pegadas medidas nos modelos v4), rota por grafo de visibilidade
-// e curvas arredondadas. Só matemática 2D (x, z), sem three.js, para ser testada no Vitest.
-// Distâncias em metros da cena. Pegadas e folgas são escolha de apresentação (ilustrativas).
+// Coordenadas em metros da cena; folgas ilustrativas.
 import type { AgentTaskKind } from '../engine/astronaut';
 import { ANTENNA, ANTENNA_WORK, AIRLOCK, DOCK, GREENHOUSE, GREENHOUSE_DOOR, GREENHOUSE_LENGTH, ICE_PROCESSOR, LANDING_PAD, LIGHT_TOWERS, PANEL_SLOTS, POWER_UNIT, STORAGE, TANKS, type Spot } from './layout';
 
@@ -25,7 +23,6 @@ const circle = (name: string, c: Spot, r: number): Obstacle => ({ kind: 'circle'
 export const OBSTACLES: readonly Obstacle[] = [
   rect('habitat', -1.75, 1.75, -7.2, 7.2),
   rect('airlock', 1.2, AIRLOCK.x + 0.9, -1.0, 1.0),
-  // Módulo da estufa (D-25): casco de raio 1,7, degraus da porta de serviço a leste e plataforma de caixas ao sul.
   rect('greenhouse', GREENHOUSE.x - 1.8, GREENHOUSE.x + 1.8, GREENHOUSE.z - GREENHOUSE_LENGTH / 2, GREENHOUSE.z + GREENHOUSE_LENGTH / 2 + 0.05),
   rect('gh_stairs', GREENHOUSE.x + 1.8, GREENHOUSE.x + 2.8, GREENHOUSE.z - 0.75, GREENHOUSE.z + 0.75),
   rect('gh_crates', GREENHOUSE.x - 1.3, GREENHOUSE.x + 1.3, GREENHOUSE.z + GREENHOUSE_LENGTH / 2, GREENHOUSE.z + GREENHOUSE_LENGTH / 2 + 1.5),
@@ -34,15 +31,12 @@ export const OBSTACLES: readonly Obstacle[] = [
   rect('processor', 8, 12.05, ICE_PROCESSOR.z - 0.85, ICE_PROCESSOR.z + 0.85),
   around('tanks', TANKS, 0.8, 1.7),
   rect('storage', 8.8, 14.05, STORAGE.z - 3.75, STORAGE.z + 1.15),
-  // Campo solar (12 vagas, 3 colunas × 4 linhas): uma pegada única, instaladas ou não.
   rect('panels', -16.7, -7.9, -7.6, 7.1),
-  // Rover estacionado na garagem.
   around('dock', DOCK, 1.2, 1.7),
   circle('pad', LANDING_PAD, 7.2),
   ...LIGHT_TOWERS.map((t, i) => circle(`tower_${i}`, t, 0.8)),
 ];
 
-/** Folga entre o centro do astronauta e qualquer pegada (meia largura do traje e margem). */
 export const CLEARANCE = 0.55;
 /** Folga reduzida para o obstáculo onde a rota começa ou termina (posto de trabalho encostado no equipamento). */
 const NEAR_CLEARANCE = 0.12;
@@ -55,7 +49,6 @@ function distToRect(o: Extract<Obstacle, { kind: 'rect' }>, p: Point): number {
   return Math.hypot(dx, dz);
 }
 
-/** Distância de um ponto à pegada (0 dentro dela). */
 export function distanceTo(o: Obstacle, p: Point): number {
   if (o.kind === 'circle') return Math.max(0, Math.hypot(p.x - o.x, p.z - o.z) - o.r);
   return distToRect(o, p);
@@ -65,12 +58,10 @@ function insideRect(o: Extract<Obstacle, { kind: 'rect' }>, p: Point): boolean {
   return p.x > o.minX && p.x < o.maxX && p.z > o.minZ && p.z < o.maxZ;
 }
 
-/** Ponto dentro da pegada (sem folga). */
 export function isInside(o: Obstacle, p: Point): boolean {
   return o.kind === 'circle' ? Math.hypot(p.x - o.x, p.z - o.z) < o.r : insideRect(o, p);
 }
 
-/** Menor distância entre o segmento AB e a pegada, por amostragem densa (pegadas são convexas e pequenas). */
 function segmentDistance(o: Obstacle, a: Point, b: Point): number {
   if (o.kind === 'circle') {
     const vx = b.x - a.x;
@@ -79,7 +70,6 @@ function segmentDistance(o: Obstacle, a: Point, b: Point): number {
     const t = len2 > 0 ? Math.min(1, Math.max(0, ((o.x - a.x) * vx + (o.z - a.z) * vz) / len2)) : 0;
     return Math.max(0, Math.hypot(a.x + vx * t - o.x, a.z + vz * t - o.z) - o.r);
   }
-  // Retângulo: se o segmento cruza a caixa, 0; senão o mínimo está numa ponta do segmento ou num canto da caixa.
   if (segmentHitsRect(o, a, b)) return 0;
   let best = Math.min(distToRect(o, a), distToRect(o, b));
   for (const cx of [o.minX, o.maxX]) for (const cz of [o.minZ, o.maxZ]) best = Math.min(best, pointSegment(cx, cz, a, b));
@@ -119,7 +109,6 @@ function segmentHitsRect(o: Extract<Obstacle, { kind: 'rect' }>, a: Point, b: Po
   return true;
 }
 
-/** Folga exigida de cada obstáculo para uma rota entre `from` e `to`. Quem contém a ponta é ignorado. */
 function clearances(from: Point, to: Point, obstacles: readonly Obstacle[], clearance: number): number[] {
   return obstacles.map((o) => {
     if (isInside(o, from) || isInside(o, to)) return -1;
@@ -136,7 +125,6 @@ function segmentClear(a: Point, b: Point, obstacles: readonly Obstacle[], need: 
   return true;
 }
 
-/** Vértices candidatos em volta de cada pegada (cantos afastados e octógono em volta dos círculos). */
 function graphNodes(obstacles: readonly Obstacle[], clearance: number): Point[] {
   const out: Point[] = [];
   const d = clearance + NODE_MARGIN;
@@ -159,7 +147,6 @@ interface NodeGraph {
   readonly obstacles: readonly Obstacle[];
   readonly clearance: number;
   readonly nodes: Point[];
-  /** Visibilidade entre vértices fixos (folga cheia), calculada uma vez. */
   readonly vis: Uint8Array;
 }
 /** Um grafo por conjunto de obstáculos e folga (astronauta e rover usam folgas diferentes). */
@@ -215,11 +202,9 @@ export function planRoute(from: Point, to: Point, obstacles: readonly Obstacle[]
   return route.reverse();
 }
 
-/** Caminho amostrado com comprimento acumulado: posição e direção por distância percorrida. */
 export interface PolyPath {
   readonly xs: Float64Array;
   readonly zs: Float64Array;
-  /** Distância acumulada até cada ponto. */
   readonly acc: Float64Array;
   readonly length: number;
 }
@@ -227,7 +212,6 @@ export interface PolyPath {
 /** Raio máximo do arredondamento de cada canto (metros). */
 const CORNER_CUT = 1.1;
 
-/** Arredonda os cantos da rota (curva de Bézier quadrática em cada vértice interno) e amostra. */
 export function smoothPath(route: readonly Point[]): PolyPath {
   const out: Point[] = [route[0]];
   for (let i = 1; i < route.length - 1; i++) {
@@ -289,7 +273,6 @@ export function sampleInto(path: PolyPath, s: number, out: { x: number; z: numbe
   out.heading = Math.atan2(dx, dz);
 }
 
-/** Porta da câmara de descompressão, do lado de fora: quem entra ou sai do habitat passa por ela. */
 export const AIRLOCK_DOOR: Point = { x: AIRLOCK.x + 1.5, z: 0 };
 const AIRLOCK_OBSTACLE = OBSTACLES.find((o) => o.name === 'airlock') as Obstacle;
 
@@ -302,28 +285,21 @@ export function pathBetween(from: Point, to: Point, obstacles: readonly Obstacle
   return smoothPath([...planRoute(from, AIRLOCK_DOOR, obstacles), to]);
 }
 
-// ---------- Postos da tripulação ----------
-
-/** Casa de cada astronauta: ao lado da câmara de descompressão. */
 export const CREW_HOMES: readonly Spot[] = [
   { x: 5.6, z: 1.4 },
   { x: 6.2, z: -1.2 },
 ];
-/** Postos de trabalho na estufa, um por astronauta: de cada lado dos degraus da porta de serviço, a leste (D-25). */
 export const GH_WORK_SPOTS: readonly Spot[] = [
   { x: GREENHOUSE.x + 3.2, z: GREENHOUSE.z - 1.0 },
   { x: GREENHOUSE.x + 3.2, z: GREENHOUSE.z + 1.0 },
 ];
-/** Ponto de trabalho no campo solar (primeira coluna, lado norte) e para onde o astronauta olha. */
 export const PANEL_FIELD_WORK: Spot = { x: -7.2, z: -8 };
 const PANEL_FIELD_FOCUS: Spot = { x: PANEL_SLOTS[0].x, z: PANEL_SLOTS[0].z };
-/** Ajudante do gelo: ao lado do processador, fora da pegada dele. */
 export const ICE_HELPER: Spot = { x: ICE_PROCESSOR.x - 2.6, z: ICE_PROCESSOR.z - 1.3 };
 
 type Site = 'greenhouse' | 'panels' | 'antenna';
 const SITE_OF: Record<AgentTaskKind, Site> = { inspect: 'greenhouse', harvest: 'greenhouse', maintain: 'greenhouse', calibrate: 'panels', tune: 'antenna' };
 
-/** Onde o astronauta `i` faz a tarefa. */
 export function workSpot(i: number, kind: AgentTaskKind): Spot {
   const site = SITE_OF[kind];
   if (site === 'panels') return PANEL_FIELD_WORK;
@@ -331,7 +307,6 @@ export function workSpot(i: number, kind: AgentTaskKind): Spot {
   return GH_WORK_SPOTS[i] ?? GH_WORK_SPOTS[0];
 }
 
-/** Para onde o astronauta olha enquanto trabalha. */
 export function siteFocus(kind: AgentTaskKind): Spot {
   const site = SITE_OF[kind];
   return site === 'panels' ? PANEL_FIELD_FOCUS : site === 'antenna' ? ANTENNA : GREENHOUSE_DOOR;

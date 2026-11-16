@@ -1,22 +1,18 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Modo seguro do rover (V5.P3, seção 3.7): com radiação, o rover que está longe da base volta para ela,
-// espera o fim do evento e recomeça a ida. Regras de jogo (não vêm da DONKI). Motor puro.
+// Retorno de segurança é regra de jogo; a DONKI não fornece esta política.
 import { PHASE_BOUNDS_BY_KIND, missionPhase, taskProgress } from './mission';
 import { TASK_HOURS, type RobotState, type RobotTask, type TaskKind } from './robot';
 
-/** Fração do tempo da tarefa gasta em cada trecho de ida (e de volta), por tipo: ver PHASE_BOUNDS_BY_KIND. */
 const legOf = (kind: TaskKind): number => PHASE_BOUNDS_BY_KIND[kind].travel[1] - PHASE_BOUNDS_BY_KIND[kind].travel[0];
 
 export interface SafeMode {
   /** Distância da base quando o modo seguro começou (0 = na base, 1 = no local da tarefa). */
   readonly from: number;
-  /** Horas totais da volta, na mesma velocidade da ida. */
   readonly total: number;
   /** Horas que faltam para chegar à base (0 = já está no abrigo da garagem). */
   readonly returnLeft: number;
 }
 
-/** Distância atual da base (0 a 1) pelo progresso da tarefa. */
 export function distanceFromBase(task: RobotTask): number {
   const p = taskProgress(task);
   switch (missionPhase(task)) {
@@ -31,13 +27,11 @@ export function distanceFromBase(task: RobotTask): number {
   }
 }
 
-/** Longe da base e a caminho do local (ida ou operação): é aqui que a radiação exige voltar. */
 export function isAway(task: RobotTask): boolean {
   const phase = missionPhase(task);
   return phase === 'travel' || phase === 'operate';
 }
 
-/** Na volta para casa (com carga) o rover já está indo à base: termina o trajeto mesmo com radiação. */
 export function isHeadingHome(task: RobotTask): boolean {
   const phase = missionPhase(task);
   return phase === 'return' || phase === 'deliver';
@@ -51,12 +45,10 @@ export function startSafeMode(robot: RobotState): RobotState {
   return { ...robot, safe: { from, total, returnLeft: total } };
 }
 
-/** Distância atual da base durante o modo seguro. */
 export function safeDistance(safe: SafeMode): number {
   return safe.total > 0 ? safe.from * (safe.returnLeft / safe.total) : 0;
 }
 
-/** Dirige de volta por `hours`. Sem energia (`canDrive` falso) o rover fica parado onde está. */
 export function stepSafeMode(robot: RobotState, hours: number, canDrive: boolean): RobotState {
   const safe = robot.safe;
   if (!safe || !canDrive || hours <= 0) return robot;
@@ -79,7 +71,6 @@ export function endSafeMode(robot: RobotState): RobotState {
   return { ...robot, queue: [{ ...head, hoursLeft }, ...robot.queue.slice(1)], safe: null };
 }
 
-/** Estado do modo seguro para a tela: voltando, na base, ou nenhum. */
 export function safeStatus(robot: RobotState, battery: number): 'returning' | 'docked' | 'stranded' | null {
   const safe = robot.safe;
   if (!safe) return null;

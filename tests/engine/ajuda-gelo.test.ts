@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// D-06: com a tripulação livre, a tarefa de gelo anda 1,5× mais depressa (antes 6 h → 4 h; D-22 mantém a proporção).
 import { describe, expect, it } from 'vitest';
 import { advance, createGame, dispatch } from '../../src/engine/game';
 import { advanceCrew, createCrew, crewAvailableForHelp } from '../../src/engine/crew';

@@ -8,7 +8,6 @@ import { sampleAt } from '../engine/sun';
 import type { Site } from '../engine/resources';
 import { getLang, t } from '../i18n';
 
-// Padrão de apresentação para tornar o catálogo perceptível durante a partida.
 let longExposure = true;
 export const skyLongExposure = (): boolean => longExposure;
 export function mountSkyPanel(root: HTMLElement, inspect: (id: BodyId) => void, lookUp: () => void): (hour: number, site: Site) => void {

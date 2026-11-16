@@ -1,6 +1,4 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-# Fluxo real de interface do painel contextual (D-18): seleção na cena, ordem, progresso, cancelamento,
-# pausa, Esc e repetição de ordens (heap e FPS). Usa Playwright (Python) contra `npm run dev`.
 # Uso: npx vite --port 5182 --strictPort &  e depois  python3 scripts/e2e-contexto.py [porta]
 import json, sys
 from playwright.sync_api import sync_playwright
@@ -10,12 +8,10 @@ URL = f"http://localhost:{PORT}/?autostart=cadet&nointro&hour=30&shot=habitat&pe
 FRAMES = "window.__ft=[];let _l=performance.now();(function f(n){window.__ft.push(n-_l);_l=n;requestAnimationFrame(f)})(performance.now());"
 failures = []
 
-
 def check(name, ok, detail=""):
     print(("ok   " if ok else "FAIL ") + name + (f"  [{detail}]" if detail else ""))
     if not ok:
         failures.append(name)
-
 
 with sync_playwright() as p:
     b = p.chromium.launch(args=["--no-sandbox", "--use-angle=vulkan", "--enable-features=Vulkan", "--ignore-gpu-blocklist"])
@@ -45,13 +41,11 @@ with sync_playwright() as p:
     def click_task(label):
         pg.evaluate("(l)=>[...document.querySelectorAll('#ctx-body .ctx-task')].find(b=>b.textContent.startsWith(l)).click()", label)
 
-    # 1. Selecionar a estufa tocando na cena (visão geral, para tudo caber na tela)
     pg.click("[data-tool=base]"); pg.click("[data-cam=overview]"); pg.click("#side-close"); pg.wait_for_timeout(1800)
     click_on('greenhouse')
     pg.wait_for_timeout(300)
     check("tocar na estufa abre o painel", title() == "Greenhouse", title())
 
-    # 2. Ordem: feedback em até 150 ms e progresso visível
     pg.evaluate("window.__t0 = performance.now(); window.__seen = null; new MutationObserver(()=>{ if(!window.__seen && document.querySelector('.ctx-progress:not([hidden])')) window.__seen = performance.now() }).observe(document.getElementById('ctx-body'), {childList:true, subtree:true, attributes:true, characterData:true})")
     click_task("Harvest")
     pg.wait_for_timeout(150)
@@ -60,15 +54,13 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     check("estado 'ordem recebida' ou 'indo'", any("Harvest" in s for s in progress()), str(progress()))
 
-    # 3. Velocidade 4x: a tarefa conclui e a comida sobe; barra some
     food0 = pg.evaluate("parseInt(document.querySelector('#hud-food, .res-food')?.textContent || '0')")
     for _ in range(2):
         pg.evaluate("document.getElementById('speed-btn').click()")
     pg.wait_for_function("!document.querySelector('.ctx-progress:not([hidden])')", timeout=90000)
     check("a colheita conclui em 4x", True)
-    pg.evaluate("document.getElementById('speed-btn').click()")  # volta a 1x
+    pg.evaluate("document.getElementById('speed-btn').click()")
 
-    # 4. Cancelamento: ordenar inspeção, esperar, cancelar -> volta
     pg.wait_for_timeout(500)
     pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].find(b=>b.textContent.startsWith('Inspect')).click()")
     pg.wait_for_timeout(2500)
@@ -77,7 +69,6 @@ with sync_playwright() as p:
     check("cancelar manda o astronauta voltar", any("Returning" in s for s in progress()), str(progress()))
     pg.wait_for_function("!document.querySelector('.ctx-progress:not([hidden])')", timeout=90000)
 
-    # 5. Selecionar rover e astronauta pela cena
     pg.keyboard.press("Escape")
     pg.wait_for_timeout(200)
     check("Esc fecha o painel sem pausar", title() == "" and not pg.evaluate("document.body.classList.contains('state-paused')"), title())
@@ -93,7 +84,6 @@ with sync_playwright() as p:
         pg.mouse.click(pos[0], pos[1]); pg.wait_for_timeout(300)
         check("tocar no astronauta seleciona o astronauta", title() == "Astronaut 1", f"{title()} em {pos}")
 
-    # 5b. Missão do rover pelo painel contextual (P2): ordem, etapas, entrega e recompensa
     click_on('rover'); pg.wait_for_timeout(300)
     water0 = pg.evaluate("parseFloat(document.getElementById('val-water').textContent)")
     pg.evaluate("window.__t0 = performance.now(); window.__seen = null; new MutationObserver(()=>{ if(!window.__seen && document.querySelector('.ctx-mission:not([hidden])')) window.__seen = performance.now() }).observe(document.getElementById('ctx-body'), {childList:true, subtree:true, attributes:true})")
@@ -110,26 +100,21 @@ with sync_playwright() as p:
     pg.wait_for_function("document.querySelector('.ctx-mission')?.hidden === true", timeout=30000)
     water1 = pg.evaluate("parseFloat(document.getElementById('val-water').textContent)")
     check("a água sobe depois da entrega do gelo", water1 > water0, f"{water0} -> {water1}")
-    # cancelar uma missão em andamento: o rover volta e a fila esvazia
     pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].find(b=>b.textContent.includes('Solar array')).click()")
     pg.wait_for_timeout(1500)
     pg.evaluate("document.querySelector('#ctx-body .ctx-queue li button').click()")
     pg.wait_for_timeout(300)
     check("cancelar a missão esvazia a fila", pg.evaluate("document.querySelectorAll('#ctx-body .ctx-queue li').length") == 0)
 
-    # 5c. Demais objetos da base (P3): cada um abre o painel certo e oferece uma decisão
     pg.click("[data-tool=base]"); pg.click("[data-cam=overview]"); pg.click("#side-close"); pg.wait_for_timeout(1800)
     for who, expected in [("habitat", "Habitat"), ("panels", "Solar panels"), ("antenna", "Antenna"), ("processor", "Ice processor"), ("storage", "Storage")]:
         pos = screen_of(who)
         pg.mouse.click(pos[0], pos[1] + (14 if who == "habitat" else 0)); pg.wait_for_timeout(350)
         check(f"tocar em {who} abre '{expected}'", title() == expected, title())
-    # armazenamento: barras e estimativas
     rows = pg.evaluate("[...document.querySelectorAll('#ctx-body .status-list li')].map(l=>l.textContent)")
     check("armazenamento mostra os quatro estoques e os painéis guardados", len(rows) >= 5, str(rows[:5]))
-    # antena: sem antena instalada, a ordem de ajuste não existe e o painel explica
     pos = screen_of("antenna"); pg.mouse.click(pos[0], pos[1]); pg.wait_for_timeout(350)
     check("antena sem instalar oferece a missão do rover, não o ajuste", pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].some(b=>b.textContent.includes('Antenna repair'))") and not pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].some(b=>b.textContent.includes('Tune antenna'))"))
-    # painéis: calibrar manda um astronauta ao campo solar
     pos = screen_of("panels"); pg.mouse.click(pos[0], pos[1]); pg.wait_for_timeout(350)
     pg.evaluate("window.__t0 = performance.now(); window.__seen = null; new MutationObserver(()=>{ if(!window.__seen && document.querySelector('.ctx-progress:not([hidden])')) window.__seen = performance.now() }).observe(document.getElementById('ctx-body'), {childList:true, subtree:true, attributes:true})")
     pg.evaluate("[...document.querySelectorAll('#ctx-body .ctx-task')].find(b=>b.textContent.startsWith('Calibrate panels')).click()")
@@ -141,7 +126,6 @@ with sync_playwright() as p:
     check("o astronauta está em tarefa fora do habitat", any("Calibrate" in s for s in progress()), str(progress()))
     pg.evaluate("document.querySelector('.ctx-progress:not([hidden]) button').click()")
     pg.wait_for_timeout(300)
-    # habitat: ordem de abrigo vira estado visível (volta à visão geral antes)
     pg.click("[data-tool=base]"); pg.click("[data-cam=overview]"); pg.click("#side-close"); pg.wait_for_timeout(1800)
     pos = screen_of("habitat"); pg.mouse.click(pos[0], pos[1] + 14); pg.wait_for_timeout(350)
     check("habitat reaberto depois da tarefa", title() == "Habitat", title())
@@ -152,12 +136,10 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     pg.keyboard.press("Escape")
 
-    # 6. Abrir uma ferramenta fecha o painel contextual
     pg.click("[data-tool=base]"); pg.wait_for_timeout(300)
     check("abrir um painel lateral (Base) fecha o contextual", title() == "", title())
     pg.click("#side-close")
 
-    # 7. Pausa: tocar na cena não seleciona
     pg.click("#pause-btn"); pg.wait_for_timeout(300)
     click_on('greenhouse'); pg.wait_for_timeout(200)
     check("em pausa, tocar na cena não seleciona", title() == "", title())
@@ -190,7 +172,6 @@ with sync_playwright() as p:
     print("heap MB:", heap, "fps:", fps)
     check("heap estável nas repetições", max(heap) - min(heap) < 25, str(heap))
     check("FPS mantido nas repetições", min(fps) > 40, str(fps))
-    # 9. Teclado: teclas 1 a 9 selecionam, o foco vai ao painel e Esc fecha
     if title() != "":
         pg.keyboard.press("Escape")
     pg.evaluate("document.getElementById('resume')?.click()")
@@ -204,7 +185,6 @@ with sync_playwright() as p:
     pg.keyboard.press("Escape"); pg.wait_for_timeout(200)
     check("Esc fecha o painel", title() == "", title())
 
-    # 10. Celular: o toque seleciona sem disparar a primeira ação do painel (clique fantasma)
     phone = b.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
     mp = phone.new_page()
     mp.goto(URL.replace("&perf=1", ""))

@@ -32,17 +32,12 @@ ONLY = set(ARGS[1:])
 PI = math.pi
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
-# ------------------------------------------------------------------ materiais
-
-
 def srgb_to_linear(c: float) -> float:
     return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-
 
 def rgb(h: str) -> tuple:
     h = h.lstrip("#")
     return tuple(srgb_to_linear(int(h[i : i + 2], 16) / 255) for i in (0, 2, 4)) + (1.0,)
-
 
 MATS: dict = {}
 
@@ -88,7 +83,6 @@ PALETTE = {
     "burn": ("#17130F", 0.0, 0.95, None, 0, 1),
 }
 
-
 def mat(name: str):
     if name in MATS:
         return MATS[name]
@@ -111,23 +105,17 @@ def mat(name: str):
     MATS[name] = m
     return m
 
-
-# ------------------------------------------------------------------ cena e peças
-
 PARTS: list = []  # (objeto, grupo)
-
 
 def clear_scene() -> None:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     MATS.clear()
     PARTS.clear()
 
-
 def _link(name, data):
     ob = bpy.data.objects.new("p_" + name, data)
     bpy.context.scene.collection.objects.link(ob)
     return ob
-
 
 def finish_mesh(name, me, m, group="body", bev=0.0, seg=2, angle=35, wn=True):
     me.materials.clear()
@@ -149,13 +137,11 @@ def finish_mesh(name, me, m, group="body", bev=0.0, seg=2, angle=35, wn=True):
     PARTS.append((ob, group))
     return ob
 
-
 def finish(name, bm, m, group="body", bev=0.0, seg=2, angle=35, wn=True):
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
     bm.free()
     return finish_mesh(name, me, m, group, bev, seg, angle, wn)
-
 
 def mtx(loc=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1)):
     if isinstance(rot, (Quaternion, Matrix, Euler)):
@@ -164,16 +150,13 @@ def mtx(loc=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1)):
         r = Euler(rot)
     return Matrix.LocRotScale(Vector(loc), r, Vector(scale))
 
-
 AXIS_ROT = {"Z": (0, 0, 0), "X": (0, PI / 2, 0), "Y": (PI / 2, 0, 0)}
-
 
 def box(name, size, loc=(0, 0, 0), rot=(0, 0, 0), m="hull", group="body", bev=0.02, seg=1):
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.transform(bm, matrix=mtx(loc, rot, size), verts=bm.verts)
     return finish(name, bm, m, group, bev, seg)
-
 
 def cyl(name, r, h, loc=(0, 0, 0), axis="Z", rot=None, m="metal", group="body",
         bev=0.0, seg=1, n=24, r2=None):
@@ -184,30 +167,25 @@ def cyl(name, r, h, loc=(0, 0, 0), axis="Z", rot=None, m="metal", group="body",
     bmesh.ops.transform(bm, matrix=mtx(loc, rot if rot is not None else AXIS_ROT[axis]), verts=bm.verts)
     return finish(name, bm, m, group, bev, seg)
 
-
 def sphere(name, r, loc=(0, 0, 0), scale=(1, 1, 1), m="metal", group="body", u=24, v=12, rot=(0, 0, 0)):
     bm = bmesh.new()
     bmesh.ops.create_uvsphere(bm, u_segments=u, v_segments=v, radius=r)
     bmesh.ops.transform(bm, matrix=mtx(loc, rot, scale), verts=bm.verts)
     return finish(name, bm, m, group, 0, 2, 80)
 
-
 def z_to(d: Vector) -> Quaternion:
     return Vector((0, 0, 1)).rotation_difference(d.normalized())
-
 
 def strut(name, p0, p1, r, m="metal", group="body", n=12, bev=0.0):
     p0, p1 = Vector(p0), Vector(p1)
     d = p1 - p0
     return cyl(name, r, d.length, (p0 + p1) / 2, rot=z_to(d), m=m, group=group, n=n, bev=bev)
 
-
 def beam(name, p0, p1, w, h, m="metal", group="body", bev=0.015):
     """Barra retangular entre dois pontos: w no Y local, h no plano do movimento."""
     p0, p1 = Vector(p0), Vector(p1)
     d = p1 - p0
     return box(name, (h, w, d.length), (p0 + p1) / 2, z_to(d), m, group, bev)
-
 
 def lathe(name, prof, loc=(0, 0, 0), rot=(0, 0, 0), m="hull", group="body", n=32,
           closed=False, bev=0.0, angle=35, cap=True, scale=(1, 1, 1), arc=None):
@@ -255,12 +233,10 @@ def lathe(name, prof, loc=(0, 0, 0), rot=(0, 0, 0), m="hull", group="body", n=32
     bmesh.ops.transform(bm, matrix=mtx(loc, rot, scale), verts=bm.verts)
     return finish(name, bm, m, group, bev, 2, angle)
 
-
 def ring(name, R, w, t, loc=(0, 0, 0), rot=(0, 0, 0), m="hull_panel", group="body", n=40):
     """Anel de seção retangular chanfrada: raio interno R, largura axial w, espessura radial t."""
     prof = [(R, -w / 2), (R + t, -w / 2), (R + t, w / 2), (R, w / 2)]
     return lathe(name, prof, loc, rot, m, group, n, closed=True, angle=30)
-
 
 def prism(name, pts_xz, width, loc=(0, 0, 0), rot=(0, 0, 0), m="hull", group="body", bev=0.02, seg=1):
     """Perfil 2D no plano XZ extrudado ao longo de Y (centrado)."""
@@ -277,14 +253,12 @@ def prism(name, pts_xz, width, loc=(0, 0, 0), rot=(0, 0, 0), m="hull", group="bo
     bmesh.ops.transform(bm, matrix=mtx(loc, rot), verts=bm.verts)
     return finish(name, bm, m, group, bev, seg)
 
-
 def _curve_to_mesh(ob):
     dg = bpy.context.evaluated_depsgraph_get()
     me = bpy.data.meshes.new_from_object(ob.evaluated_get(dg))
     me.transform(ob.matrix_world)
     bpy.data.objects.remove(ob)
     return me
-
 
 def tube(name, pts, r, m="metal", group="body", fillet=0.18, res=1):
     pts = [Vector(p) for p in pts]
@@ -312,7 +286,6 @@ def tube(name, pts, r, m="metal", group="body", fillet=0.18, res=1):
     ob = _link(name + "_curve", cu)
     return finish_mesh(name, _curve_to_mesh(ob), m, group, 0, 2, 60)
 
-
 def text(name, s, size, loc, rot, m="graphite", group="body", extrude=0.008):
     cu = bpy.data.curves.new(name, "FONT")
     cu.body = s
@@ -330,11 +303,9 @@ def text(name, s, size, loc, rot, m="graphite", group="body", extrude=0.008):
     bpy.context.view_layer.update()
     return finish_mesh(name, _curve_to_mesh(ob), m, group, 0, 2, 30, wn=False)
 
-
 def surface_frame(n: Vector, p: Vector) -> Matrix:
     """Matriz com Z local na normal n e origem em p."""
     return Matrix.LocRotScale(p, z_to(n), None)
-
 
 def round_window(name, p, n, r=0.16, group="body", frame="dark_metal", inset=0.02):
     n = Vector(n).normalized()
@@ -343,17 +314,12 @@ def round_window(name, p, n, r=0.16, group="body", frame="dark_metal", inset=0.0
     ring(name + "_frame", r, 0.07, 0.07, p + n * 0.0, q, frame, group, n=24)
     cyl(name + "_glass", r + 0.01, 0.05, p - n * inset, rot=q, m="window_light", group=group, n=24)
 
-
 def light_pod(name, p, n, group="body", size=0.12):
     n = Vector(n).normalized()
     q = z_to(n)
     p = Vector(p)
     cyl(name + "_body", size * 0.6, size * 0.6, p + n * size * 0.2, rot=q, m="dark_metal", group=group, n=16, bev=0.008)
     cyl(name + "_lens", size * 0.45, 0.03, p + n * size * 0.52, rot=q, m="ext_light", group=group, n=16)
-
-
-# ------------------------------------------------------------------ finalização e exportação
-
 
 def finalize(pivots=None):
     """Aplica modificadores, junta peças por grupo e posiciona nós com pivô.
@@ -406,7 +372,6 @@ def finalize(pivots=None):
         bpy.context.view_layer.update()
     return nodes
 
-
 def export(filename: str, extras: bool = False):
     os.makedirs(OUT_DIR, exist_ok=True)
     path = os.path.join(OUT_DIR, filename)
@@ -426,13 +391,9 @@ def export(filename: str, extras: bool = False):
     )
     print("EXPORTED", path, os.path.getsize(path))
 
-
-# ================================================================== HABITAT
-
 HAB_R = 1.7
 HAB_ZC = 2.75
-HAB_X = 4.15  # centro de cada módulo em X
-
+HAB_X = 4.15
 
 def hab_module(tag: str, cx: float, flip: float) -> None:
     """Módulo pressurizado horizontal (eixo X), 6 m x Ø3,4 m. flip=+1 à direita, -1 à esquerda."""
@@ -448,7 +409,6 @@ def hab_module(tag: str, cx: float, flip: float) -> None:
     prof.append((0.0, 3.0))
     rotx = (0, PI / 2, 0)
     lathe(f"{tag}_shell", prof, (cx, 0, zc), rotx, "hull", n=40, angle=30)
-    # anéis estruturais (costuras) e faixas pintadas
     for z in (-2.4, 0.0, 2.4):
         ring(f"{tag}_seam{z}", R - 0.01, 0.1, 0.045, (cx + z, 0, zc), rotx, "hull_panel", n=36)
     for z0, z1 in ((-1.2, 0.0), (1.2, 2.4)):
@@ -458,22 +418,19 @@ def hab_module(tag: str, cx: float, flip: float) -> None:
         lathe(f"{tag}_lowshield{z0}", [(R + 0.002, z0 - 1.13), (R + 0.018, z0 - 1.13), (R + 0.018, z0 - 0.07),
                                        (R + 0.002, z0 - 0.07)], (cx, 0, zc), rotx, "shield", n=10, closed=True,
               arc=(-1.42, -0.45), angle=30)
-    outer = cx + 1.85 * flip  # extremidade externa
+    outer = cx + 1.85 * flip
     for i, (off, col) in enumerate(((0.0, "amber"), (0.24, "graphite"))):
         lathe(f"{tag}_band{i}", [(R + 0.006, -0.09), (R + 0.006, 0.09)], (outer - flip * off, 0, zc), rotx,
               col, n=48, cap=False)
-    # tampas e colar de acoplamento na extremidade externa
     ring(f"{tag}_endring", 0.5, 0.12, 0.12, (cx + 3.0 * flip, 0, zc), rotx, "metal", n=32)
     cyl(f"{tag}_endhatch", 0.42, 0.06, (cx + 3.02 * flip, 0, zc), "X", m="dark_metal", n=32, bev=0.01)
     for k in range(6):
         a = 2 * PI * k / 6
         cyl(f"{tag}_bolt{k}", 0.03, 0.05, (cx + 3.06 * flip, 0.3 * math.cos(a), zc + 0.3 * math.sin(a)), "X",
             m="metal", n=8)
-    # colar interno (lado do nó)
     inner = cx - 3.0 * flip
     cyl(f"{tag}_collar", 0.72, 0.5, (inner + 0.1 * flip, 0, zc), "X", m="hull_panel", n=32, bev=0.02)
     ring(f"{tag}_collar_ring", 0.72, 0.1, 0.06, (inner + 0.25 * flip, 0, zc), rotx, "metal", n=32)
-    # berços e pernas
     for k, dx in enumerate((-1.9, 0.0, 1.9)):
         x = cx + dx
         zb = zc - R - 0.12
@@ -486,7 +443,6 @@ def hab_module(tag: str, cx: float, flip: float) -> None:
                   "dark_metal", n=10)
             lathe(f"{tag}_pad{k}{s}", [(0.0, 0.0), (0.34, 0.0), (0.36, 0.04), (0.28, 0.1), (0.1, 0.13), (0.0, 0.13)],
                   foot - Vector((0, 0, 0.1)), m="metal", n=14)
-    # trilho de corrimão frontal e traseiro
     for side in (-1, 1):
         phi = math.radians(52)
         y = side * (R + 0.14) * math.cos(phi)
@@ -496,7 +452,6 @@ def hab_module(tag: str, cx: float, flip: float) -> None:
             x = cx - 2.0 + k
             p_in = (x, side * (R - 0.05) * math.cos(phi), zc + (R - 0.05) * math.sin(phi))
             strut(f"{tag}_railpost{side}{k}", p_in, (x, y, z), 0.018, "metal", n=8)
-    # equipamentos no teto
     top = zc + R
     box(f"{tag}_avionics", (0.9, 0.55, 0.26), (cx - 1.3 * flip, -0.25, top + 0.06), m="hull_panel", bev=0.03)
     box(f"{tag}_avionics_lid", (0.7, 0.4, 0.04), (cx - 1.3 * flip, -0.25, top + 0.2), m="dark_metal", bev=0.01)
@@ -505,7 +460,6 @@ def hab_module(tag: str, cx: float, flip: float) -> None:
         ring(f"{tag}_tank_strap{s}", 0.2, 0.05, 0.02, (cx + 0.9 * flip + s * 0.3, 0.45, top + 0.12), (0, PI / 2, 0),
              "dark_metal", n=20)
     box(f"{tag}_conduit", (4.2, 0.16, 0.1), (cx, 0.25, top + 0.02), m="dark_metal", bev=0.02)
-    # radiador montado no teto (aletas brancas)
     mx = cx + 0.1 * flip
     for dx in (-0.9, 0.9):
         strut(f"{tag}_radpost{dx}", (mx + dx, 0.1, top - 0.05), (mx + dx, 0.1, top + 0.55), 0.04, "metal", n=10)
@@ -515,17 +469,14 @@ def hab_module(tag: str, cx: float, flip: float) -> None:
         x = mx - 1.2 + k * 0.3
         box(f"{tag}_rad_rib{k}", (0.03, 0.13, 0.76), (x, 0.1, top + 1.0), m="hull_panel", bev=0.0)
     box(f"{tag}_rad_hinge", (2.0, 0.14, 0.1), (mx, 0.1, top + 0.55), m="dark_metal", bev=0.02)
-    # luzes externas
     light_pod(f"{tag}_lamp_a", (outer + 0.7 * flip, -0.9, zc + 1.2), (0.3 * flip, -1, 0.4))
     light_pod(f"{tag}_lamp_b", (cx, -1.25, zc - 1.05), (0, -1, -0.6))
-
 
 def build_habitat() -> None:
     clear_scene()
     R, zc = HAB_R, HAB_ZC
     for tag, cx, fl in (("modA", HAB_X, 1), ("modB", -HAB_X, -1)):
         hab_module(tag, cx, fl)
-    # nó central vertical
     node_r = 1.2
     prof = [(0.0, 1.05), (node_r - 0.1, 1.05), (node_r, 1.15), (node_r, 4.0)]
     for k in range(1, 7):
@@ -535,7 +486,6 @@ def build_habitat() -> None:
     for z in (1.45, 3.95):
         ring(f"node_seam{z}", node_r - 0.01, 0.1, 0.05, (0, 0, z), m="hull_panel", n=32)
     lathe("node_band", [(node_r + 0.006, 3.35), (node_r + 0.006, 3.6)], m="teal", n=40, cap=False)
-    # cúpula de observação no topo do nó
     oct_r = 0.62
     lathe("cupola_base", [(0.0, 4.35), (0.75, 4.35), (0.75, 4.5), (0.0, 4.5)], m="hull_panel", n=8, rot=(0, 0, PI / 8))
     lathe("cupola_body", [(0.0, 4.5), (oct_r, 4.5), (oct_r, 4.85), (0.42, 5.02), (0.0, 5.02)], m="dark_metal", n=8,
@@ -561,7 +511,6 @@ def build_habitat() -> None:
         ring(f"airlock_seam{y}", 0.94, 0.08, 0.05, (0, y, az), (PI / 2, 0, 0), "hull_panel", n=32)
     lathe("airlock_band", [(0.956, -0.95), (0.956, -0.65)], (0, 0, az), (PI / 2, 0, 0), "amber", n=40, cap=False)
     yf = -2.5
-    # moldura da porta
     fw, fh, ft = 1.06, 1.56, 0.12
     box("door_frame_top", (fw, ft, 0.14), (0, yf - 0.04, az + fh / 2 - 0.07), m="dark_metal", bev=0.03)
     box("door_frame_bot", (fw, ft, 0.14), (0, yf - 0.04, az - fh / 2 + 0.07), m="dark_metal", bev=0.03)
@@ -573,7 +522,6 @@ def build_habitat() -> None:
     round_window("door_window", (0, yf - 0.05, az + 0.3), (0, -1, 0), r=0.14)
     box("door_handle", (0.06, 0.08, 0.3), (0.28, yf - 0.09, az - 0.05), m="metal", bev=0.015)
     light_pod("door_lamp", (0, yf - 0.02, az + 0.9), (0, -1, 0.3), size=0.14)
-    # plataforma e escada até o chão
     floor_z = az - fh / 2 + 0.02
     box("porch", (1.4, 0.8, 0.1), (0, yf - 0.45, floor_z - 0.05), m="metal", bev=0.02)
     steps = 6
@@ -589,7 +537,6 @@ def build_habitat() -> None:
                                 (x, y_end, 0.95), (x, y_end, 0.02)], 0.025, "amber", fillet=0.12)
         strut(f"stair_post{s}", (x, yf - 0.85, floor_z - 0.1), (x, yf - 0.85, floor_z + 0.95), 0.022, "metal", n=8)
         strut(f"porch_leg{s}", (x, yf - 0.6, floor_z - 0.1), (x, yf - 0.6, 0.0), 0.04, "metal", n=10)
-    # detalhes do nó: janela, luzes, corrimãos e garrafas de O2 do airlock
     round_window("node_window", (0.0, -node_r - 0.005, 3.75) , (0, -1, 0.0), r=0.13)
     for s in (-1, 1):
         light_pod(f"node_lamp{s}", (s * 0.85, -0.85, 4.0), (s * 0.6, -1, 0.5))
@@ -601,7 +548,6 @@ def build_habitat() -> None:
             c = Vector((s * 1.1, -1.35 - k * 0.3, az - 0.1))
             lathe(f"eva_bottle{s}{k}", capsule_prof(0.12, 0.8, 4), c, m="hull_panel" if k else "teal", n=16)
             ring(f"eva_strap{s}{k}", 0.12, 0.04, 0.015, c + Vector((0, 0, 0.15)), m="dark_metal", n=16)
-    # janelas, luzes e tomada de serviço na face traseira
     for cx in (HAB_X, -HAB_X):
         for dx in (-0.6, 0.6):
             phi = math.radians(20)
@@ -614,14 +560,12 @@ def build_habitat() -> None:
     box("service_label", (0.5, 0.085, 0.06), (0, node_r + 0.0, 2.05), m="amber", bev=0.0)
     tube("umbilical", [(0.0, node_r + 0.08, 2.45), (0.0, node_r + 0.5, 2.2), (0.2, node_r + 1.2, 0.05),
                        (0.6, node_r + 2.4, 0.05)], 0.05, "graphite", fillet=0.4)
-    # janelas na face frontal dos módulos
     for cx in (HAB_X, -HAB_X):
         for dx in (-1.0, 0.0, 1.0):
             phi = math.radians(22)
             n = Vector((0, -math.cos(phi), math.sin(phi)))
             p = Vector((cx + dx, 0, zc)) + n * (R + 0.01)
             round_window(f"win{cx}{dx}", p, n, r=0.15)
-    # letreiro e faixas no módulo A
     phi = math.radians(-12)
     text("earthset_text", "EARTHSET", 0.4, (HAB_X, -(R * math.cos(phi) + 0.03), zc + R * math.sin(phi)),
          (PI / 2, 0, 0), "graphite")
@@ -634,13 +578,9 @@ def build_habitat() -> None:
     finalize()
     export("habitat_v4.glb")
 
-
-# ================================================================== ROVER
-
 WHEEL_R = 0.3
 WHEEL_W = 0.24
 WHEEL_POS = [(0.9, 0.86), (0.0, 0.86), (-0.9, 0.86), (0.9, -0.86), (0.0, -0.86), (-0.9, -0.86)]
-
 
 def rover_wheel(idx: int, x: float, y: float) -> None:
     g = f"wheel_{idx}"
@@ -664,12 +604,10 @@ def rover_wheel(idx: int, x: float, y: float) -> None:
         p = c + Vector((math.cos(a) * 0.15, side * (w / 2 - 0.035), math.sin(a) * 0.15))
         box(f"{g}_spoke{k}", (0.06, 0.03, 0.15), p, (0, -a + PI / 2, 0), "dark_metal", g, bev=0.0)
 
-
 def build_rover() -> None:
     clear_scene()
     for i, (x, y) in enumerate(WHEEL_POS):
         rover_wheel(i, x, y)
-    # suspensão rocker-bogie
     for s in (1, -1):
         ya = s * 0.64
         piv = Vector((0.12, ya, 0.8))
@@ -690,7 +628,6 @@ def build_rover() -> None:
             if steer:
                 cyl(f"steer{s}{wx}", 0.075, 0.14, top + Vector((0, 0, 0.06)), m="graphite", n=16, bev=0.01)
                 cyl(f"steer_cap{s}{wx}", 0.05, 0.03, top + Vector((0, 0, 0.145)), m="amber", n=16)
-    # chassi: perfil lateral extrudado
     prof = [(-1.05, 0.62), (0.92, 0.62), (1.12, 0.78), (1.12, 0.94), (0.92, 1.1), (-1.05, 1.1)]
     prism("chassis_body", prof, 1.02, m="chassis", bev=0.035, seg=3)
     box("belly", (1.9, 0.86, 0.1), (-0.05, 0, 0.6), m="dark_metal", bev=0.02)
@@ -705,7 +642,6 @@ def build_rover() -> None:
         box(f"skirt{s}", (1.95, 0.025, 0.12), (-0.07, s * 0.515, 0.68), m="graphite", bev=0.008)
         for k in range(6):
             cyl(f"skirt_bolt{s}{k}", 0.015, 0.02, (-0.9 + k * 0.33, s * 0.53, 0.68), "Y", m="metal", n=8)
-    # unidade de energia traseira inclinada, com aletas
     rc = Vector((-1.2, 0.0, 0.9))
     rq = Euler((0, -0.6, 0))
     cyl("power_pod", 0.13, 0.42, rc, rot=rq, m="dark_metal", n=16, bev=0.015)
@@ -717,7 +653,6 @@ def build_rover() -> None:
     strut("pod_mount", (-1.05, 0, 0.82), rc, 0.05, "metal", n=10)
     cyl("pod_cap", 0.1, 0.04, rc + rq.to_matrix() @ Vector((0, 0, 0.23)), rot=rq, m="amber", n=14)
     box("deck", (1.95, 0.94, 0.03), (-0.08, 0, 1.11), m="hull_panel", bev=0.01)
-    # painel solar no meio
     box("solar_frame", (0.95, 0.88, 0.04), (0.08, 0, 1.17), m="metal", bev=0.012)
     for i in range(4):
         for j in range(4):
@@ -725,7 +660,6 @@ def build_rover() -> None:
                 m="rover_cell", bev=0.0)
     for s in (1, -1):
         strut(f"solar_leg{s}", (0.08, s * 0.3, 1.12), (0.08, s * 0.3, 1.16), 0.03, "metal", n=8)
-    # caçamba de carga traseira com gelo
     bx0, bx1, bz = -1.02, -0.42, 1.12
     box("bin_floor", (0.6, 0.86, 0.04), ((bx0 + bx1) / 2, 0, bz + 0.02), m="dark_metal", bev=0.01)
     for s in (1, -1):
@@ -735,7 +669,6 @@ def build_rover() -> None:
     for s in (1, -1):
         box(f"bin_rail{s}", (0.6, 0.06, 0.04), ((bx0 + bx1) / 2, s * 0.44, bz + 0.31), m="dark_metal", bev=0.01)
         box(f"bin_tag{s}", (0.2, 0.012, 0.08), ((bx0 + bx1) / 2, s * 0.452, bz + 0.17), m="amber", bev=0.0)
-    # frente: barra de sensores e câmeras de risco
     box("sensor_bar", (0.03, 0.6, 0.07), (1.125, 0, 0.98), (0, 0.9, 0), "lens", bev=0.0)
     for s in (1, -1):
         cyl(f"hazcam{s}", 0.025, 0.04, (1.13, s * 0.18, 0.72), "X", m="lens", n=12)
@@ -746,7 +679,6 @@ def build_rover() -> None:
         bmesh.ops.create_icosphere(bm, subdivisions=1, radius=r)
         bmesh.ops.transform(bm, matrix=mtx((dx, dy, bz + 0.1 + r * 0.4), (k, k * 0.7, 0), (1.2, 1, 0.8)), verts=bm.verts)
         finish(f"ice{k}", bm, "ice", angle=20)
-    # mastro de câmera
     mx, my = 0.72, 0.3
     box("mast_base", (0.16, 0.16, 0.08), (mx, my, 1.15), m="dark_metal", bev=0.015)
     cyl("mast", 0.035, 0.8, (mx, my, 1.55), m="metal", n=14)
@@ -757,17 +689,14 @@ def build_rover() -> None:
         cyl(f"cam_lens{s}", 0.04, 0.05, (mx + 0.11, my + s * 0.11, 2.09), "X", m="dark_metal", n=16, bev=0.006)
         cyl(f"cam_glass{s}", 0.03, 0.02, (mx + 0.135, my + s * 0.11, 2.09), "X", m="lens", n=16)
     cyl("cam_center", 0.025, 0.04, (mx + 0.11, my, 2.09), "X", m="lens", n=12)
-    # antena traseira
     cyl("ant_base", 0.04, 0.06, (-0.95, -0.38, 1.36), m="dark_metal", n=12)
     cyl("ant_rod", 0.012, 0.75, (-0.95, -0.38, 1.75), m="metal", n=8)
     sphere("ant_tip", 0.03, (-0.95, -0.38, 2.13), m="amber", u=12, v=6)
     lathe("ant_dish", [(0.0, 0.0), (0.12, 0.04), (0.13, 0.05), (0.12, 0.055), (0.0, 0.015)],
           (-0.82, 0.32, 1.45), (0, -PI / 3, 0), "hull", n=20)
     strut("ant_dish_post", (-0.82, 0.32, 1.13), (-0.82, 0.32, 1.44), 0.02, "metal", n=8)
-    # sinalizador (beacon)
     cyl("beacon_post", 0.025, 0.12, (0.62, -0.32, 1.18), m="dark_metal", n=12)
     sphere("beacon", 0.06, (0.62, -0.32, 1.28), m="beacon", group="beacon", u=16, v=8)
-    # braço de perfuração (pivô no suporte frontal)
     pv = Vector((1.12, 0.0, 0.8))
     cyl("drill_shoulder", 0.08, 0.26, pv, "Y", m="dark_metal", group="drill", n=20, bev=0.01)
     elbow = pv + Vector((0.42, 0, 0.12))
@@ -783,7 +712,6 @@ def build_rover() -> None:
     box("drill_scoop", (0.12, 0.16, 0.06), elbow + Vector((-0.08, 0, -0.17)), (0, 0.4, 0), "dark_metal", "drill",
         bev=0.012)
     box("drill_mount_plate", (0.06, 0.32, 0.22), (1.12, 0, 0.8), m="dark_metal", bev=0.015)
-    # pivôs
     piv = []
     for i, (x, y) in enumerate(WHEEL_POS):
         piv.append((f"wheel_{i}", Matrix.Translation((x, y, WHEEL_R)), None))
@@ -794,13 +722,8 @@ def build_rover() -> None:
     finalize(piv)
     export("rover_v4.glb")
 
-
-# ================================================================== LANDER
-
-
 def build_lander() -> None:
     clear_scene()
-    # estágio de descida octogonal, com folha térmica dourada
     z0, z1 = 1.55, 2.75
     r_oct = 1.45
     oct_pts = [(r_oct * math.cos(PI / 8 + k * PI / 4), r_oct * math.sin(PI / 8 + k * PI / 4)) for k in range(8)]
@@ -814,7 +737,6 @@ def build_lander() -> None:
         bm.faces.new((lo[i], lo[j], hi[j], hi[i]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     finish("descent_core", bm, "foil_gold", bev=0.04, seg=2)
-    # painéis de prata alternados e frisos
     for k in range(8):
         a = PI / 8 + k * PI / 4 + PI / 8
         nrm = Vector((math.cos(a), math.sin(a), 0))
@@ -825,13 +747,11 @@ def build_lander() -> None:
     lathe("deck_lo", [(0.0, z0 - 0.06), (1.5, z0 - 0.06), (1.5, z0), (0.0, z0)], m="dark_metal", n=8, rot=(0, 0, PI / 8))
     lathe("deck_hi", [(0.0, z1), (1.52, z1), (1.52, z1 + 0.08), (0.0, z1 + 0.08)], m="hull_panel", n=8,
           rot=(0, 0, PI / 8))
-    # tanques esféricos entre as pernas
     for k in range(4):
         a = k * PI / 2
         c = Vector((1.05 * math.cos(a), 1.05 * math.sin(a), 2.12))
         sphere(f"tank{k}", 0.55, c, m="hull" if k % 2 else "foil_silver", u=20, v=10)
         ring(f"tank_belt{k}", 0.55, 0.06, 0.03, c, m="dark_metal", n=28)
-    # motor: sino, garganta, estrutura de empuxo
     bell = [(0.22, 1.5), (0.18, 1.35), (0.24, 1.15), (0.38, 0.95), (0.52, 0.78), (0.62, 0.62),
             (0.6, 0.62), (0.5, 0.78), (0.36, 0.95), (0.22, 1.15), (0.15, 1.35), (0.18, 1.5)]
     lathe("engine_bell", bell, m="dark_metal", n=40, closed=True, angle=40)
@@ -842,7 +762,6 @@ def build_lander() -> None:
         strut(f"thrust_strut{k}", (0.85 * math.cos(a), 0.85 * math.sin(a), z0 - 0.05),
               (0.25 * math.cos(a), 0.25 * math.sin(a), 1.45), 0.035, "metal", n=10)
     cyl("engine_glow", 0.52, 0.02, (0, 0, 0.66), m="engine_glow", group="engine_glow", n=32)
-    # pernas com amortecedor e sapatas
     for k in range(4):
         a = PI / 4 + k * PI / 2
         u = Vector((math.cos(a), math.sin(a), 0))
@@ -858,7 +777,6 @@ def build_lander() -> None:
         lathe(f"footpad{k}", [(0.0, 0.0), (0.42, 0.0), (0.46, 0.05), (0.4, 0.12), (0.08, 0.2), (0.0, 0.2)],
               foot - Vector((0, 0, 0.22)), m="metal", n=24)
         cyl(f"foot_joint{k}", 0.08, 0.1, foot, m="dark_metal", n=14)
-    # cabine/estágio superior
     cab = [(0.0, 2.83), (1.05, 2.83), (1.15, 2.95), (1.15, 3.9), (1.05, 4.35), (0.75, 4.75), (0.5, 4.85), (0.0, 4.85)]
     lathe("cabin", cab, m="hull", n=40, angle=30)
     ring("cabin_seam", 1.14, 0.1, 0.04, (0, 0, 3.45), m="hull_panel", n=40)
@@ -867,10 +785,8 @@ def build_lander() -> None:
         n = Vector((math.cos(a), math.sin(a), 0.25))
         p = Vector((1.13 * math.cos(a), 1.13 * math.sin(a), 4.12))
         round_window(f"cab_win{k}", p, n, r=0.16)
-    # escotilha frontal no topo da escada
     box("hatch", (0.7, 0.1, 0.9), (0, -1.16, 3.35), m="hull_panel", bev=0.03)
     box("hatch_frame", (0.86, 0.06, 1.04), (0, -1.13, 3.35), m="dark_metal", bev=0.03)
-    # topo: anel de acoplamento, antena e propulsores RCS
     cyl("docking", 0.42, 0.25, (0, 0, 4.95), m="metal", n=32, bev=0.02)
     ring("docking_ring", 0.42, 0.08, 0.06, (0, 0, 5.08), m="dark_metal", n=32)
     strut("mast", (0.55, 0.35, 4.6), (0.55, 0.35, 5.7), 0.03, "metal", n=10)
@@ -882,7 +798,6 @@ def build_lander() -> None:
         box(f"rcs_block{k}", (0.18, 0.18, 0.18), p, (0, 0, a), "dark_metal", bev=0.02)
         for d in (Vector((math.cos(a), math.sin(a), 0)), Vector((0, 0, 1)), Vector((0, 0, -1))):
             cyl(f"rcs_noz{k}{d.z}", 0.03, 0.08, p + d * 0.12, rot=z_to(d), m="metal", n=10, r2=0.045)
-    # escada na perna frontal (-Y)
     lx = 0.0
     top_z, bot_z = 2.7, 0.35
     y_top, y_bot = -1.5, -2.25
@@ -902,10 +817,6 @@ def build_lander() -> None:
     finalize(piv)
     export("lander_v4.glb")
 
-
-# ================================================================== PLATAFORMA DE POUSO
-
-
 def build_landing_pad() -> None:
     clear_scene()
     R = 6.0
@@ -916,7 +827,6 @@ def build_landing_pad() -> None:
         prof = [(r0, 0.125), (r1, 0.125), (r1, 0.13), (r0, 0.13)] if r0 > 0 else [(0.0, 0.125), (r1, 0.125),
                                                                                     (r1, 0.13), (0.0, 0.13)]
         lathe(f"paint{r0}", prof, m=m, n=64, closed=r0 > 0)
-    # chevrons apontando para o centro
     for k in range(4):
         a = PI / 4 + k * PI / 2
         for j, r in enumerate((3.0, 3.6)):
@@ -932,12 +842,10 @@ def build_landing_pad() -> None:
             bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
             bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=Matrix.Rotation(a, 3, "Z"), verts=bm.verts)
             finish(f"chev{k}{j}", bm, "amber" if j == 0 else "pad_paint", angle=30, wn=False)
-    # marcas radiais (tique a cada 30 graus)
     for k in range(12):
         a = k * PI / 6
         box(f"tick{k}", (0.6, 0.08, 0.006), (5.1 * math.cos(a), 5.1 * math.sin(a), 0.128), (0, 0, a), "pad_paint",
             bev=0.0)
-    # luzes da borda
     for k in range(16):
         a = 2 * PI * k / 16 + PI / 16
         p = Vector(((R - 0.3) * math.cos(a), (R - 0.3) * math.sin(a), 0.16))
@@ -946,10 +854,6 @@ def build_landing_pad() -> None:
               p + Vector((0, 0, 0.04)), m="pad_light", n=14)
     finalize()
     export("landing_pad_v4.glb")
-
-
-# ================================================================== PROCESSADOR DE GELO
-
 
 def skid(name, L, W, z=0.12, m="dark_metal"):
     for s in (-1, 1):
@@ -962,12 +866,10 @@ def skid(name, L, W, z=0.12, m="dark_metal"):
             cyl(f"{name}_foot{x}{s}", 0.12, 0.05, (x, s * (W / 2 - 0.07), 0.025), m="metal", n=14, bev=0.01)
     box(f"{name}_deck", (L - 0.1, W - 0.12, 0.03), (0, 0, z + 0.065), m="metal", bev=0.005)
 
-
 def build_ice_processor() -> None:
     clear_scene()
     skid("skid", 4.0, 1.6)
     dz = 0.22
-    # funil (tremonha) na traseira -X
     hx = -1.45
     lathe("hopper", [(0.18, dz + 1.05), (0.75, dz + 1.75), (0.78, dz + 1.78), (0.7, dz + 1.78), (0.14, dz + 1.08)],
           (hx, 0, 0), (0, 0, PI / 4), "hull_panel", n=4, closed=True, angle=20)
@@ -978,12 +880,10 @@ def build_ice_processor() -> None:
         for sy in (-1, 1):
             strut(f"hopper_leg{sx}{sy}", (hx + sx * 0.5, sy * 0.5, dz), (hx + sx * 0.42, sy * 0.42, dz + 1.5), 0.04,
                   "dark_metal", n=10)
-    # trado (sem-fim) até o forno
     strut("auger", (hx, 0, dz + 0.6), (-0.6, 0, dz + 0.75), 0.13, "metal", n=18)
     for k in range(4):
         x = hx + 0.2 + k * 0.2
         ring(f"auger_ring{k}", 0.13, 0.04, 0.025, (x, 0, dz + 0.6 + (x - hx) * 0.1), (0, PI / 2, 0), "dark_metal", n=18)
-    # forno aquecido horizontal
     ox = -0.05
     oven = [(0.0, -0.75), (0.42, -0.75), (0.5, -0.7), (0.52, -0.6), (0.52, 0.6), (0.5, 0.7), (0.42, 0.75), (0.0, 0.75)]
     lathe("oven", oven, (ox, 0, dz + 0.72), (0, PI / 2, 0), "hull", n=32, angle=30)
@@ -992,13 +892,11 @@ def build_ice_processor() -> None:
     for s in (-1, 1):
         box(f"oven_saddle{s}", (0.18, 0.9, 0.3), (ox + s * 0.5, 0, dz + 0.17), m="dark_metal", bev=0.02)
     light_pod("oven_lamp", (ox, -0.5, dz + 0.95), (0, -1, 0.5), size=0.08)
-    # condensador vertical com aletas
     cx_ = 0.95
     cyl("condenser_core", 0.2, 1.5, (cx_, 0.25, dz + 0.85), m="metal", n=20)
     for k in range(10):
         cyl(f"cond_fin{k}", 0.36, 0.025, (cx_, 0.25, dz + 0.3 + k * 0.12), m="radiator", n=24, bev=0.0)
     cyl("cond_cap", 0.22, 0.1, (cx_, 0.25, dz + 1.62), m="dark_metal", n=20, bev=0.015)
-    # tanque de água (faixa azul)
     tx = 1.45
     tank = [(0.0, -0.45), (0.3, -0.45)]
     for k in range(1, 6):
@@ -1013,14 +911,12 @@ def build_ice_processor() -> None:
     lathe("water_band", [(0.426, 0.0), (0.426, 0.16)], (tx, -0.3, dz + 0.6), m="water_blue", n=32, cap=False)
     lathe("water_band2", [(0.426, 0.0), (0.426, 0.04)], (tx, -0.3, dz + 0.82), m="water_blue", n=32, cap=False)
     cyl("water_valve", 0.06, 0.12, (tx, -0.3, dz + 1.13), m="water_blue", n=14, bev=0.01)
-    # tubulação
     tube("pipe_oven_cond", [(ox + 0.6, 0.15, dz + 0.9), (cx_ - 0.35, 0.15, dz + 0.9), (cx_ - 0.35, 0.25, dz + 1.45),
                             (cx_ - 0.18, 0.25, dz + 1.45)], 0.05, "metal", fillet=0.12)
     tube("pipe_cond_tank", [(cx_, 0.25, dz + 0.18), (cx_ + 0.3, 0.25, dz + 0.18), (tx, -0.05, dz + 0.18),
                             (tx, -0.05, dz + 0.4)], 0.04, "water_blue", fillet=0.12)
     tube("pipe_vent", [(ox - 0.3, 0.0, dz + 1.2), (ox - 0.3, 0.0, dz + 1.55), (ox + 0.2, 0.0, dz + 1.55)], 0.035,
          "dark_metal", fillet=0.1)
-    # painel de controle com tela
     px, py = 0.35, -0.62
     box("ctrl_post", (0.12, 0.12, 0.7), (px, py, dz + 0.35), m="dark_metal", bev=0.015)
     box("ctrl_box", (0.5, 0.14, 0.36), (px, py - 0.02, dz + 0.85), (0.25, 0, 0), "hull", bev=0.025)
@@ -1029,10 +925,6 @@ def build_ice_processor() -> None:
         cyl(f"ctrl_btn{k}", 0.018, 0.02, (px - 0.12 + k * 0.12, py - 0.075, dz + 0.69), "Y", m="amber", n=10)
     finalize()
     export("ice_processor_v4.glb")
-
-
-# ================================================================== TANQUES
-
 
 def capsule_prof(r, h, k=6):
     """Perfil de cápsula vertical (raio r, altura total h), centrado em 0."""
@@ -1046,7 +938,6 @@ def capsule_prof(r, h, k=6):
         prof.append((r * math.cos(t), half + r * 0.6 * math.sin(t)))
     prof[-1] = (0.0, h / 2)
     return prof
-
 
 def build_tanks() -> None:
     clear_scene()
@@ -1088,10 +979,6 @@ def build_tanks() -> None:
     finalize(gauge_piv)
     export("tanks_v4.glb")
 
-
-# ================================================================== UNIDADE DE ENERGIA
-
-
 def build_power_unit() -> None:
     clear_scene()
     skid("skid", 2.2, 1.3)
@@ -1101,13 +988,11 @@ def build_power_unit() -> None:
     box("roof", (1.6, 0.9, 0.08), (0, 0, zb + 1.21), m="hull_panel", bev=0.025)
     for k in range(4):
         box(f"vent{k}", (0.3, 0.6, 0.04), (-0.55 + k * 0.37, 0, zb + 1.27), m="graphite", bev=0.01)
-    # aletas de radiador nas laterais (±X)
     for s in (-1, 1):
         for k in range(9):
             box(f"fin{s}{k}", (0.22, 0.02, 0.95), (s * 0.95, -0.4 + k * 0.1, zb + 0.6), m="radiator", bev=0.0)
         box(f"fin_bar{s}", (0.26, 0.92, 0.05), (s * 0.95, 0, zb + 1.1), m="metal", bev=0.01)
         box(f"fin_bar_lo{s}", (0.26, 0.92, 0.05), (s * 0.95, 0, zb + 0.12), m="metal", bev=0.01)
-    # frente (-Y): portas de módulos de bateria, faixa de status
     for k in range(3):
         x = -0.52 + k * 0.52
         box(f"bay{k}", (0.46, 0.03, 0.62), (x, -0.505, zb + 0.55), m="hull_panel", bev=0.012)
@@ -1115,7 +1000,6 @@ def build_power_unit() -> None:
         box(f"bay_label{k}", (0.3, 0.032, 0.06), (x, -0.515, zb + 0.35), m="amber", bev=0.0)
     box("status_strip_bezel", (1.4, 0.03, 0.08), (0, -0.505, zb + 1.0), m="graphite", bev=0.01)
     box("status_light", (1.32, 0.03, 0.04), (0, -0.52, zb + 1.0), m="status_light", bev=0.0)
-    # conectores e cabos traseiros
     for k, x in enumerate((-0.4, 0.4)):
         cyl(f"socket{k}", 0.08, 0.1, (x, 0.53, zb + 0.4), "Y", m="dark_metal", n=16, bev=0.01)
         tube(f"cable{k}", [(x, 0.56, zb + 0.4), (x, 0.8, zb + 0.4), (x * 1.3, 0.95, 0.05), (x * 1.6, 1.4, 0.04)],
@@ -1124,10 +1008,6 @@ def build_power_unit() -> None:
     sphere("mast_tip", 0.04, (0.65, 0.3, zb + 1.77), m="status_light", u=12, v=6)
     finalize()
     export("power_unit_v4.glb")
-
-
-# ================================================================== TORRE DE LUZ
-
 
 def build_light_tower() -> None:
     clear_scene()
@@ -1143,7 +1023,6 @@ def build_light_tower() -> None:
     cyl("mast_hi", 0.065, 1.7, (0, 0, 3.05), m="metal", n=16)
     ring("mast_band", 0.09, 0.06, 0.012, (0, 0, 1.0), m="amber", n=18)
     box("battery", (0.32, 0.24, 0.4), (0, 0.18, 0.55), m="hull_panel", bev=0.03)
-    # cabeça da lâmpada inclinada para a frente (-Y)
     head_c = Vector((0, -0.15, 3.95))
     tilt = (math.radians(-30), 0, 0)
     box("head_yoke", (0.7, 0.08, 0.14), (0, 0, 3.92), m="dark_metal", bev=0.02)
@@ -1160,10 +1039,6 @@ def build_light_tower() -> None:
     finalize()
     export("light_tower_v4.glb")
 
-
-# ================================================================== CAIXAS
-
-
 def crate_parts(prefix: str, group: str) -> None:
     s = (1.0, 0.8, 0.75)
     h = s[2]
@@ -1178,7 +1053,6 @@ def crate_parts(prefix: str, group: str) -> None:
         box(f"{prefix}_rimy{z}", (0.06, s[1], 0.06), (s[0] / 2 - 0.03, 0, z), m="dark_metal", group=group, bev=0.01)
         box(f"{prefix}_rimy2{z}", (0.06, s[1], 0.06), (-s[0] / 2 + 0.03, 0, z), m="dark_metal", group=group, bev=0.01)
     for sy in (-1, 1):
-        # faixas de estêncil diagonais
         for k in range(4):
             box(f"{prefix}_stencil{sy}{k}", (0.07, 0.006, 0.2), (-0.32 + k * 0.1, sy * (s[1] / 2 - 0.017), h * 0.6),
                 (0, 0, 0), "amber", group, bev=0.0)
@@ -1193,13 +1067,11 @@ def crate_parts(prefix: str, group: str) -> None:
         box(f"{prefix}_latch{sx}", (0.08, 0.03, 0.08), (sx * 0.3, -s[1] / 2 + 0.005, h - 0.1), m="metal", group=group,
             bev=0.01)
 
-
 def build_crates() -> None:
     clear_scene()
     crate_parts("c", "crate")
     finalize()
     export("crate_v4.glb")
-    # pilha: duplicatas ligadas (mesma malha) para instanciar
     src = bpy.data.objects["crate"]
     src.name = "crate_0"
     layout = [((0.0, 0.0, 0.0), 0.0), ((1.08, 0.12, 0.0), 0.12), ((0.45, 0.05, 0.75), -0.18),
@@ -1210,7 +1082,6 @@ def build_crates() -> None:
         bpy.context.scene.collection.objects.link(o)
         o.location = loc
         o.rotation_euler = (0, 0, rz)
-    # recentrar a pilha
     xs = [lo[0] for lo, _ in layout]
     ys = [lo[1] for lo, _ in layout]
     cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
@@ -1219,13 +1090,8 @@ def build_crates() -> None:
         o.location.y -= cy
     export("crate_stack_v4.glb")
 
-
-# ================================================================== ANTENA
-
-
 def build_antenna() -> None:
     clear_scene()
-    # pedestal fixo
     cyl("base_plate", 0.6, 0.08, (0, 0, 0.04), m="dark_metal", n=8, bev=0.02)
     cyl("pedestal", 0.22, 1.4, (0, 0, 0.8), m="hull", n=24, bev=0.02, r2=0.17)
     ring("pedestal_band", 0.2, 0.08, 0.02, (0, 0, 0.5), m="amber", n=24)
@@ -1272,10 +1138,7 @@ def build_antenna() -> None:
         strut(f"feed_strut{k}", rim_p, feed + Vector((0, 0.06, 0)), 0.018, "metal", "dish", n=8)
     cyl("feed_horn", 0.07, 0.18, feed, "Y", m="dark_metal", group="dish", n=16, bev=0.01, r2=0.045)
     cyl("feed_cap", 0.075, 0.02, feed - Vector((0, 0.1, 0)), "Y", m="amber", group="dish", n=16)
-    # ---- anel de sintonia: aro fino emissivo em volta do aro do prato (filho de dish)
     ring("tune_ring", R + 0.06, 0.05, 0.03, dish_c - Vector((0, zr - 0.01, 0)), q, "tune_glow", "tune_ring", n=40)
-    # ---- peças de dano (escondidas pelo jogo ao reparar)
-    # pétala do refletor dobrada para fora, articulada numa linha de dobra tangente em r=0.46
     a_c = math.radians(245)
     th = math.radians(-70)
     rad = Vector((math.cos(a_c), 0, math.sin(a_c)))
@@ -1312,18 +1175,15 @@ def build_antenna() -> None:
         bm.faces.new((top[i][nc - 1], bot[i][nc - 1], bot[i + 1][nc - 1], top[i + 1][nc - 1]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     finish("petal", bm, "hull_panel", "damage_petal", 0.0, 1, 40, wn=False)
-    # borda rasgada queimada na ponta da pétala
     for j in range(nc - 1):
         strut(f"petal_burn{j}", grid[nr - 1][j] - nrm * 0.01, grid[nr - 1][j + 1] - nrm * 0.01, 0.014, "burn",
               "damage_petal", n=6)
-    # cabo solto sob o garfo (pivô no ponto de fixação, para balançar)
     c0 = Vector((0.6, -0.05, zy + 0.09))
     tube("loose_cable", [c0, c0 + Vector((0.02, 0.0, -0.25)), c0 + Vector((-0.06, -0.06, -0.5)),
                          c0 + Vector((-0.1, -0.12, -0.68))], 0.028, "graphite", "damage_cable", fillet=0.12)
     cyl("cable_clamp", 0.05, 0.06, c0 + Vector((0, 0, -0.03)), m="metal", group="damage_cable", n=10)
     strut("cable_tip", c0 + Vector((-0.1, -0.12, -0.68)), c0 + Vector((-0.12, -0.15, -0.77)), 0.02, "foil_gold",
           "damage_cable", n=8)
-    # mancha de queimado no pedestal (setores achatados que acompanham o cone)
     def ped_r(z_):
         return 0.22 - 0.05 * (z_ - 0.1) / 1.4
 
@@ -1338,10 +1198,6 @@ def build_antenna() -> None:
            ("damage_cable", Matrix.Translation(c0), "yoke")]
     finalize(piv)
     export("antenna_v4.glb")
-
-
-# ================================================================== PAINEL SOLAR
-
 
 def build_solar_array() -> None:
     clear_scene()
@@ -1358,7 +1214,6 @@ def build_solar_array() -> None:
         prism(f"fork{s}", [(-0.06, 1.3), (0.06, 1.3), (0.05, zp + 0.05), (-0.05, zp + 0.05)], 0.05, (s * 0.22, 0, 0),
               (0, 0, PI / 2), "hull", bev=0.012)
     box("fork_bridge", (0.5, 0.12, 0.06), (0, 0, 1.33), m="hull", bev=0.015)
-    # painel (pivô em X): 2,0 m (X) x 1,2 m (Y)
     g = "panel_pivot"
     cyl("hinge", 0.05, 0.56, (0, 0, zp), "X", m="metal", group=g, n=14)
     box("panel_back", (2.0, 1.2, 0.04), (0, 0, zp + 0.1), m="dark_metal", group=g, bev=0.012)
@@ -1378,10 +1233,6 @@ def build_solar_array() -> None:
     finalize(piv)
     export("solar_array_v4.glb")
 
-
-# ================================================================== ESTUFA
-
-
 def build_greenhouse() -> None:
     """Módulo de estufa cilíndrico, acoplado ao colar SUL do habitat (eixo ao longo de Z glTF).
 
@@ -1391,11 +1242,11 @@ def build_greenhouse() -> None:
     clear_scene()
     R, zc = HAB_R, HAB_ZC
     Ri = R - 0.07
-    ZC0, ZC1 = -2.4, 1.3  # trecho cilíndrico (z glTF); a semiesfera sul começa em ZC1
+    ZC0, ZC1 = -2.4, 1.3
     rotx = (PI / 2, 0, 0)  # Z local da revolução -> +Z glTF (-Y Blender)
     loc0 = (0, 0, zc)
-    A0, A1 = math.radians(12), math.radians(168)  # arco da abóbada de vidro
-    B1 = A0 + 2 * PI  # casco inferior: A1 .. A0+360
+    A0, A1 = math.radians(12), math.radians(168)
+    B1 = A0 + 2 * PI
 
     def rl(z, r=R):
         return r if z <= ZC1 else math.sqrt(max(r * r - (z - ZC1) ** 2, 0.0))
@@ -1411,7 +1262,6 @@ def build_greenhouse() -> None:
         pr.append((0.0, zc1 + r))
         return pr
 
-    # ---- casco: tampa norte (colar de acoplamento macho), casco inferior espesso, abóbada de vidro
     cap = [(0.0, -2.9), (0.62, -2.9)]
     for k in range(1, 9):
         t = k / 8 * PI / 2
@@ -1425,7 +1275,6 @@ def build_greenhouse() -> None:
     lathe("dust", dome_prof(R + 0.003, ZC1 - 0.004), loc0, rotx, "dust_film", "glass_dust", n=14, arc=(A0, A1),
           angle=80)
 
-    # colar de acoplamento macho: anel metálico, junta de borracha (face em z=-3), fole, escotilha, 6 parafusos
     ring("collar_ring", 0.5, 0.04, 0.16, (0, 2.92, zc), rotx, "metal", n=22)
     ring("collar_gasket", 0.5, 0.06, 0.12, (0, 2.97, zc), rotx, "rubber", n=22)
     ring("collar_bellows", 0.43, 0.04, 0.05, (0, 2.94, zc), rotx, "graphite", n=16)
@@ -1433,10 +1282,8 @@ def build_greenhouse() -> None:
     for k in range(6):
         a = 2 * PI * k / 6
         cyl(f"collar_bolt{k}", 0.03, 0.04, (0.3 * math.cos(a), 2.98, zc + 0.3 * math.sin(a)), "Y", m="metal", n=8)
-    # escotilha interna na antepara norte
     cyl("bulk_hatch", 0.42, 0.04, (0, 2.37, zc), "Y", m="dark_metal", n=18, bev=0.0)
 
-    # arcos estruturais (nervuras de vidro) e costuras do casco
     for z in (-2.4, -1.45, -0.5, 0.45, 1.3):
         r = rl(z) - 0.01
         pr = [(r, -0.05), (r + 0.075, -0.05), (r + 0.075, 0.05), (r, 0.05)]
@@ -1445,7 +1292,7 @@ def build_greenhouse() -> None:
             continue
         lathe(f"seam{z}", [(r + 0.01, -0.05), (r + 0.04, -0.05), (r + 0.04, 0.05), (r + 0.01, 0.05)], (0, -z, zc),
               rotx, "hull_panel", n=12, closed=True, arc=(A1, B1), angle=30)
-    for a in (A0, A1):  # trilhos de borda entre vidro e casco
+    for a in (A0, A1):
         strut(f"sill{a:.2f}", P(a, ZC0, R + 0.02), P(a, ZC1, R + 0.02), 0.04, "metal", n=8)
     for a in (A0, A1, math.radians(60), math.radians(90), math.radians(120)):
         pts = [P(a, ZC1, R + 0.012)]
@@ -1460,14 +1307,12 @@ def build_greenhouse() -> None:
         r = rl(z) - 0.01
         lathe(f"hoop{z:.2f}", [(r, -0.03), (r + 0.06, -0.03), (r + 0.06, 0.03), (r, 0.03)], (0, -z, zc), rotx, "hull",
               n=10, closed=True, arc=(A0, A1), angle=30)
-    # placa e anel de topo no extremo sul
     cyl("tip_plate", 0.45, 0.08, (0, -2.945, zc), "Y", m="metal", n=24, bev=0.01)
     cyl("tip_hatch", 0.3, 0.02, (0, -2.99, zc), "Y", m="dark_metal", n=24)
     for k in range(4):
         a = PI / 4 + k * PI / 2
         cyl(f"tip_bolt{k}", 0.025, 0.03, (0.37 * math.cos(a), -2.985, zc + 0.37 * math.sin(a)), "Y", m="dark_metal", n=8)
 
-    # ---- faixas e painéis do casco inferior
     def band(name, z0, z1, m, a0=A1, a1=B1, lift=0.0):
         r0, r1 = rl(z0), rl(z1)
         lathe(name, [(r0 + 0.002 + lift, z0), (r0 + 0.014 + lift, z0), (r1 + 0.014 + lift, z1), (r1 + 0.002 + lift, z1)],
@@ -1482,7 +1327,6 @@ def build_greenhouse() -> None:
     for i, (z0, z1) in enumerate(((-2.2, -1.7), (-1.15, 1.2))):
         band(f"panel_w{i}", z0, z1, "shield", math.radians(185), math.radians(235), 0.002)
 
-    # ---- berços de apoio (4 selas) com sapatas escuras, base do casco a 1,05 m
     for k, z in enumerate((-2.0, -1.0, 1.0, 2.0)):
         rr = rl(z) - 0.02
         lathe(f"saddle{k}", [(rr, -0.14), (rr + 0.1, -0.14), (rr + 0.1, 0.14), (rr, 0.14)], (0, -z, zc), rotx, "dark_metal",
@@ -1498,7 +1342,6 @@ def build_greenhouse() -> None:
                   foot - Vector((0, 0, 0.14)), m="graphite", n=8)
         box(f"saddle_tie{k}", (3.3, 0.2, 0.08), (0, -z, 0.3), m="dark_metal", bev=0.0)
 
-    # ---- interior: piso, leitos hidropônicos em duas camadas, luzes de cultivo, tubulação
     FLOOR = 1.75
     box("floor", (2.5, 3.7, 0.1), (0, 0.55, FLOOR - 0.05), m="dark_metal", bev=0.0)
     cyl("floor_round", 1.25, 0.1, (0, -ZC1, FLOOR - 0.05), m="dark_metal", n=20, bev=0.0)
@@ -1532,11 +1375,10 @@ def build_greenhouse() -> None:
             strut(f"rack_rail{x}{sx}{z0:.2f}", (x + sx * (w / 2 + 0.01), -z0 - 0.04, top),
                   (x + sx * (w / 2 + 0.01), -z1 + 0.04, top), 0.016, "metal", n=6)
 
-    rack(0.0, -1.35, 1.35, 1, 0.44)  # ilha central: camadas 0 e 1 (bed_0, bed_1)
+    rack(0.0, -1.35, 1.35, 1, 0.44)
     for side in (1, -1):
         for z0, z1 in ((-2.0, -0.55), (0.55, 2.0)):
             rack(side * 0.95, z0, z1, -side)
-    # tubulação de nutrientes: coletor no chão e subidas até as calhas
     tube("manifold", [(-1.0, 2.2, FLOOR + 0.12), (1.0, 2.2, FLOOR + 0.12)], 0.03, "water_blue", fillet=0.1)
     for sx in (-1, 1):
         xg = sx * (0.95 - 0.27)
@@ -1562,8 +1404,7 @@ def build_greenhouse() -> None:
             box(f"{g}_blade{k}", (0.24, 0.07, 0.012), c, (0.35, 0, a), m="foil_silver", group=g, bev=0.0)
         pivots.append((g, Matrix.Translation(hub), None))
 
-    # ---- porta de serviço leste (z=0), vestíbulo, plataforma e escada
-    DZ0, DZ1 = 2.30, 3.50  # vão da porta (altura)
+    DZ0, DZ1 = 2.30, 3.50
     box("vest", (0.43, 1.1, 1.36), (1.565, 0, 2.90), m="hull_panel", bev=0.02)
     box("vest_cap", (0.47, 1.16, 0.05), (1.565, 0, 3.6), m="hull", bev=0.01)
     box("vest_stripe", (0.44, 1.12, 0.05), (1.565, 0, 2.5), m="amber", bev=0.0)
@@ -1572,7 +1413,6 @@ def build_greenhouse() -> None:
     for s in (-1, 1):
         box(f"frame_side{s}", (0.06, 0.1, 1.3), (1.81, s * 0.48, 2.9), m="dark_metal", bev=0.01)
     box("door_lamp", (0.08, 0.12, 0.1), (1.82, 0.62, 3.4), m="pad_light", bev=0.01)
-    # farol de estado (material status_light) no teto do vestíbulo
     strut("beacon_mast", (1.6, 0.4, 3.62), (1.6, 0.4, 4.0), 0.02, "metal", n=8)
     cyl("beacon_base", 0.07, 0.04, (1.6, 0.4, 3.64), m="dark_metal", n=12)
     sphere("beacon", 0.09, (1.6, 0.4, 4.07), m="status_light", u=12, v=6)
@@ -1585,7 +1425,6 @@ def build_greenhouse() -> None:
     cyl("door_hinge", 0.03, 1.1, (hx, hy, hz), m="metal", group=g, n=10)
     round_window("door_window", (hx + 0.026, 0.0, 3.15), (1, 0, 0), r=0.12, group=g)
     pivots.append((g, Matrix.Translation((hx, hy, hz)), None))
-    # plataforma e escada (x de 1,75 a 2,7), piso da porta a 2,25 m, último degrau a 1,56 m
     box("landing", (0.42, 1.2, 0.1), (1.97, 0, 2.20), m="metal", bev=0.015)
     box("landing_edge", (0.04, 1.2, 0.12), (2.18, 0, 2.2), m="amber", bev=0.0)
     treads = [(2.285, 2.02), (2.455, 1.79), (2.625, 1.56)]
@@ -1606,7 +1445,6 @@ def build_greenhouse() -> None:
         strut(f"ladder_rung{k}", (2.74, -0.3, 1.4 - k * 0.25), (2.74, 0.3, 1.4 - k * 0.25), 0.015, "metal", n=8)
     box("land_brace", (0.3, 0.1, 0.06), (1.86, 0.0, 2.12), m="dark_metal", bev=0.01)
 
-    # ---- equipamento externo (oeste): tanque de nutriente, radiador e conduítes
     tz = 0.0
     lathe("nut_tank", capsule_prof(0.38, 1.5, 4), (-2.15, tz, 0.85), m="hull", n=20, angle=30)
     lathe("nut_tank_band", [(0.386, -0.08), (0.386, 0.08)], (-2.15, tz, 0.95), m="teal", n=28, cap=False)
@@ -1617,7 +1455,7 @@ def build_greenhouse() -> None:
     tube("nut_pipe", [(-1.95, tz, 1.15), (-1.6, tz, 1.15), (-1.2, tz, 1.42)], 0.04, "water_blue", fillet=0.12)
     tube("nut_pipe2", [(-2.0, tz + 0.15, 1.5), (-1.55, tz + 0.15, 1.6), (-1.15, tz + 0.15, 1.7)], 0.03, "metal",
          fillet=0.12)
-    rz = 2.45  # radiador (z glTF = -rz no Blender fica ao norte)
+    rz = 2.45
     for dy in (-0.35, 0.35):
         strut(f"rad_leg{dy}", (-2.3, rz + dy - 0.0, 0.0), (-2.3, rz + dy, 0.55), 0.035, "metal", n=10)
     box("rad_frame", (0.1, 0.95, 1.0), (-2.3, rz, 1.0), m="metal", bev=0.02)
@@ -1638,12 +1476,7 @@ def build_greenhouse() -> None:
         ob.empty_display_size = 0.1
     export("greenhouse_v4.glb", extras=True)
 
-
-# ================================================================== ROCHAS
-
-
 def build_rocks() -> None:
-    """Rochas facetadas: icosfera com ruído, cortada por planos aleatórios (lascas) e base plana."""
     clear_scene()
     import random
 
@@ -1694,7 +1527,6 @@ def build_rocks() -> None:
     for ob in objs:
         ob.location.x -= x / 2
     export("rocks_v4.glb")
-
 
 BUILDERS = {
     "habitat": build_habitat,

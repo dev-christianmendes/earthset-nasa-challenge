@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Posiciona equipe e comunicação abaixo do HUD real, incluindo quebras de linha e mudanças de viewport.
-// ResizeObserver só reage a mudanças de tamanho; não há leituras de layout no loop de renderização.
 export function mountHudLayout(): void {
   const hud = document.getElementById('hud');
   const topbar = document.getElementById('topbar');

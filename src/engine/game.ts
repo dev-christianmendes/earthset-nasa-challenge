@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Partida: estado, ações do jogador, passagem do tempo e fim. Motor puro.
-// Regra dos corações: docs/regras-recursos.md (ajustável).
 import { MATCH_HOURS, advanceClock, createClock, type Clock } from './clock';
 import { CALM, type SpaceWeatherSample } from './space-weather';
 import { endSafeMode, isAway, isHeadingHome, startSafeMode, stepSafeMode } from './safe-mode';
@@ -50,7 +48,6 @@ import {
   type TaskKind,
 } from './robot';
 
-/** Horas seguidas com um recurso vital zerado para perder 1 coração. */
 export const HOURS_PER_HEART_LOSS = 6;
 export const MAX_HEARTS = 3;
 
@@ -60,24 +57,17 @@ export interface GameState {
   readonly vitals: Vitals;
   readonly robot: RobotState;
   readonly hearts: number;
-  /** Horas seguidas com algum recurso vital zerado. */
   readonly vitalZeroHours: number;
   /** Horas já recebidas por advance() e ainda não integradas (fração do passo fixo, DT-02). */
   readonly pendingHours: number;
-  /** Tripulação: exposição à radiação (D-05). */
   readonly crew: CrewState;
-  /** Cultivo da estufa: crescimento, desgaste e cuidados (D-18). */
   readonly crop: CropState;
-  /** Astronautas com tarefas reais (D-18). Índice 0 e 1. */
   readonly agents: readonly AgentState[];
-  /** Tarefas de astronauta concluídas, por tipo. */
   readonly agentTasksDone: Readonly<Record<AgentTaskKind, number>>;
   /** Horas restantes da calibração dos painéis e do ajuste da antena (D-19). */
   readonly calibrationLeft: number;
   readonly antennaTuneLeft: number;
-  /** Ordem do jogador para a tripulação: automática (trabalha) ou abrigar (fica dentro). */
   readonly crewOrder: CrewOrder;
-  /** Missões do robô concluídas, por tipo (capítulos e eventos da LUMA leem daqui). */
   readonly missionsDone: Readonly<Record<TaskKind, number>>;
 }
 
@@ -98,7 +88,7 @@ export type GameAction =
 
 export type DispatchResult =
   | { readonly ok: true; readonly state: GameState }
-  | { readonly ok: false; readonly reason: string };  // código do motivo (ver src/i18n.ts, chaves reason.*)
+  | { readonly ok: false; readonly reason: string };
 
 export type Outcome = 'playing' | 'won' | 'lost';
 
@@ -207,21 +197,13 @@ export function dispatch(state: GameState, action: GameAction): DispatchResult {
   }
 }
 
-/**
- * Passa `dtHours` de tempo de jogo. O Sol e o clima espacial vêm do chamador (sunlit, weather).
- * Tempestade reduz a geração dos painéis; radiação para o robô. Para ao fim da partida.
- */
-/**
- * Passo interno da simulação, em horas de jogo. Fixo: o resultado não depende de como o tempo
- * é repartido entre chamadas (6 h de uma vez = seis de 1 h = 24 de 0,25 h).
- */
+/** Grade global fixa: particionar advance() não pode mudar o resultado; sobras ficam em pendingHours. */
 export const SUBSTEP_HOURS = 0.05;
 /** Fronteira em que as ações do jogador entram em vigor (decisão de 15/11, DT-02). Múltipla de SUBSTEP_HOURS. */
 export const ACTION_HOURS = 0.25;
 /** Tolerância para fechar a partida na hora 708 (erro de ponto flutuante). */
 const END_SNAP_HOURS = 1e-6;
 
-/** Luz e clima: valor fixo ou função da hora de jogo (usada pelo laço de tela e pelos testes de partida). */
 export type SunlitAt = boolean | ((hour: number) => boolean);
 export type WeatherAt = SpaceWeatherSample | ((hour: number) => SpaceWeatherSample);
 
@@ -232,8 +214,6 @@ export function advance(state: GameState, dtHours: number, sunlit: SunlitAt, wea
   }
   const sunAt = typeof sunlit === 'function' ? sunlit : () => sunlit;
   const wxAt = typeof weather === 'function' ? weather : () => weather;
-  // Integração sempre em passos fixos de SUBSTEP_HOURS, do início da partida: o tamanho da chamada não muda o resultado (DT-02).
-  // O tempo que sobra (menos de um passo) fica em pendingHours e entra na próxima chamada.
   let current = state;
   let total = state.pendingHours + dtHours;
   const EPS = 1e-9;
@@ -257,11 +237,8 @@ export function advance(state: GameState, dtHours: number, sunlit: SunlitAt, wea
 
 function advanceStep(state: GameState, step: number, sunlit: boolean, weather: SpaceWeatherSample): GameState {
 
-  // Radiação de partículas solares para o robô: ele não trabalha enquanto ela durar.
-  // Decisão 'outside': o jogador aceita o risco e a equipe continua fora; senão a radiação abriga a todos.
   const exposed = weather.radiation && state.crewOrder === 'outside';
   const shelterRad = weather.radiation && !exposed;
-  // Modo seguro (safe-mode.ts): longe da base, o rover volta; na volta com carga, termina o trajeto; na base, espera.
   let robotNow = state.robot;
   const head = robotNow.queue[0];
   if (shelterRad && head && isAway(head)) robotNow = startSafeMode(robotNow);
@@ -272,8 +249,6 @@ function advanceStep(state: GameState, step: number, sunlit: boolean, weather: S
   const flow = deriveFlow(state.vitals, state.installation, sunlit, working || driving, calibrationFactor(state.calibrationLeft), state.crop);
   const drained = applyFlow(state.vitals, flow, state.installation, step);
 
-  // Com a tripulação livre, o astronauta ajuda na viagem de gelo (D-06).
-  // Ajuda só com um astronauta livre (sem tarefa e descansado): quem está ocupado não ajuda (D-06, E05).
   const helpAvailable = state.crewOrder === 'auto' && crewAvailableForHelp(state.crew, shelterRad) && state.agents.some(isAvailable);
   const progress = working
     ? progressRobot(robotNow, step, helpAvailable ? ICE_HELP_SPEED : 1)
@@ -287,9 +262,8 @@ function advanceStep(state: GameState, step: number, sunlit: boolean, weather: S
     if (kind === 'ice') water = Math.min(100, water + ICE_WATER_PER_TRIP);
     if (kind === 'panel') installation = { ...installation, panels: installation.panels + 1 };
   }
-  // Astronautas: a tarefa anda no tempo de jogo; radiação ou ordem de abrigo a suspende (eles ficam no abrigo).
   const sheltered = shelterRad || state.crewOrder === 'shelter';
-  // Sem água, a cultura não cresce (E04): a estufa só trabalha com água no início do passo.
+  // A disponibilidade de água é avaliada no início do subpasso.
   let crop = stepCrop(state.crop, step, flow.greenhouseOn && state.vitals.water > 0);
   let agentTasksDone = state.agentTasksDone;
   let calibrationLeft = Math.max(0, state.calibrationLeft - step);
@@ -321,7 +295,6 @@ function advanceStep(state: GameState, step: number, sunlit: boolean, weather: S
     vitalZeroHours -= HOURS_PER_HEART_LOSS;
   }
 
-  // Tripulação: quem está fora quando a radiação começa leva 1 hora para entrar; cada 12 h de exposição tira 1 coração.
   const outsideNow = crewOutside(state.installation, state.vitals, state.robot, state.crewOrder).map((out, i) => out || (state.agents[i] ? isOutside(state.agents[i]) : false));
   const crewStep = exposed ? exposeCrew(state.crew, outsideNow, step) : advanceCrew(state.crew, outsideNow, weather.radiation, step);
   hearts = Math.max(0, hearts - crewStep.heartsLost);
@@ -340,7 +313,6 @@ function advanceStep(state: GameState, step: number, sunlit: boolean, weather: S
     agentTasksDone,
     calibrationLeft,
     antennaTuneLeft,
-    // A decisão de ficar fora vale só durante o evento.
     crewOrder: state.crewOrder === 'outside' && !weather.radiation ? 'auto' : state.crewOrder,
     missionsDone,
   };

@@ -50,7 +50,7 @@ describe('partida com tripulação exposta', () => {
     const g0 = createGame({ installation: inst });
     const g1 = advance(g0, 1, true, { kp: 0, radiation: true });
     expect(g1.crew.exposureHours).toBeCloseTo(1);
-    expect(g1.hearts).toBe(3); // 1 hora de exposição não custa coração
+    expect(g1.hearts).toBe(3);
   });
 
   it('sem radiação, a partida não mexe na tripulação', () => {

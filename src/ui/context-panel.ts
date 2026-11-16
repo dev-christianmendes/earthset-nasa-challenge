@@ -1,7 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Painel contextual (D-18): abre ao tocar um objeto da base na cena 3D. Mostra estado, ações, custos e progresso.
-// Nenhuma regra mora aqui: a disponibilidade de cada ação vem de uma simulação em seco no motor (dispatch),
-// então o motivo exibido é sempre o do motor. O painel só desenha e repassa as ordens.
 import {
   AGENT_TASK_KINDS,
   GREENHOUSE_TASKS,
@@ -40,16 +37,13 @@ import type { SelectableId } from '../render/picking';
 import type { Tool } from './hud';
 import { reasonText } from './action-reason';
 
-/** O que a interface sabe do mundo fora do estado do motor (clima, luz, aviso de tempestade, velocidade). */
 export interface ContextInfo {
   radiation: boolean;
   lit: boolean;
   speed: number;
-  /** Horas até a próxima tempestade avisada pela antena (null: sem aviso). */
   alert: AlertView;
   /** Horas de jogo até a radiação atual passar (0 sem radiação). */
   radiationLeft: number;
-  /** Previsão da água com a fila atual (ROV-04). */
   water: WaterForecast;
 }
 
@@ -57,14 +51,11 @@ export interface ContextHandlers {
   act(action: GameAction): void;
   /** Abre um painel de ferramenta (e fecha este). */
   openTool(tool: Tool): void;
-  /** Volta para a visão geral da base. */
   overview(): void;
-  /** Foco de câmera no objeto selecionado. */
   focus(id: SelectableId): void;
-  /** Troca o objeto selecionado (ex.: de um astronauta para o outro). */
   select(id: SelectableId): void;
   close(): void;
-  /** Previsão da água se a ação for aceita agora (ROV-04); calculada e guardada pelo main. */
+  /** Previsão com a ação aceita, sem alterar a partida. */
   forecast(action: GameAction): WaterForecast;
 }
 
@@ -123,7 +114,6 @@ function heading(text: string): HTMLElement {
   return make('h3', undefined, text);
 }
 
-/** Simula a ordem no motor: devolve null se vale, ou o texto do motivo da recusa. */
 function whyNot(state: GameState, action: GameAction): string | null {
   const r = dispatch(state, action);
   return r.ok ? null : reasonText(r.reason);
@@ -167,7 +157,6 @@ function taskButton(state: GameState, kind: AgentTaskKind, agent?: number): HTML
 
 const GREENHOUSE_MODES: readonly GreenhouseMode[] = ['off', 'surplus', 'always'];
 
-/** Modo de operação da estufa (antes só no painel lateral antigo). */
 function modeControl(current: GreenhouseMode): HTMLElement {
   const wrap = make('div', 'ctx-care');
   wrap.append(make('div', 'ctx-care-label', t('gh2.mode')));
@@ -204,7 +193,6 @@ function careControl(
   return wrap;
 }
 
-/** Bloco de acompanhamento da tarefa de um astronauta: estado, barra de progresso e cancelamento. */
 function agentProgress(index: number, who: string): HTMLElement {
   const box = make('div', 'ctx-progress');
   const line = make('div', 'ctx-progress-line');
@@ -224,8 +212,6 @@ function agentProgress(index: number, who: string): HTMLElement {
   });
   return box;
 }
-
-// ---------- Visões ----------
 
 interface View {
   title: string;
@@ -313,7 +299,6 @@ function crewView(state: GameState, index: number): View {
       const swap = make('button', 'ctx-link', t('ctx.otherCrew', { who: t(`ctx.crew${other}`) }));
       swap.type = 'button';
       swap.addEventListener('click', () => handlers.select(other === 0 ? 'crew0' : 'crew1'));
-      // Acompanhar com a câmera, como no rover (a câmera desvia sozinha de estruturas: director.ts).
       const follow = make('button', 'ctx-link', t('ctx.crew.follow'));
       follow.type = 'button';
       follow.addEventListener('click', () => handlers.focus(index === 0 ? 'crew0' : 'crew1'));
@@ -331,13 +316,11 @@ function phaseLabel(phase: MissionPhase, kind: TaskKind): string {
 }
 
 function missionDetail(kind: TaskKind, state: GameState): string {
-  // Horas e água vêm do motor (TASK_HOURS, ICE_HELP_HOURS): o texto não fica para trás quando a regra muda.
   const hours = Math.round(TASK_HOURS[kind]);
   if (kind === 'panel') return t('mission.panel.count', { panelH: hours, n: state.installation.panels, max: MAX_PANELS });
   return t(`mission.${kind}.time`, { iceH: hours, antennaH: hours, help: Math.round(ICE_HELP_HOURS) });
 }
 
-/** Etapas da missão em andamento: cinco barras (preparo, ida, operação, volta, entrega) e o texto da etapa. */
 function missionSteps(): HTMLElement {
   const box = make('div', 'ctx-mission');
   const bars = make('div', 'phases');
@@ -363,7 +346,6 @@ function missionSteps(): HTMLElement {
     const waiting = radiationNow || s.vitals.battery <= 0;
     label.classList.toggle('waiting', waiting);
     label.textContent = waitText(s) ?? (waiting ? t(radiationNow ? 'phase.wait.radiation' : 'phase.wait.battery') : phaseLabel(phase, task.kind));
-    // Esperando: diz quanto falta para começar, não só a duração da tarefa (antes parecia que andaria em segundos).
     const h = Math.ceil(task.hoursLeft);
     if (waiting && radiationNow) eta.textContent = t('ctx.wait.radiation', { s: Math.max(1, Math.round(world.radiationLeft / speedNow)), speed: speedNow, h });
     else if (waiting) eta.textContent = t('ctx.wait.battery', { h });
@@ -372,7 +354,6 @@ function missionSteps(): HTMLElement {
   return box;
 }
 
-/** Texto do modo seguro do rover (voltando, na base, sem energia), ou null fora dele. */
 function waitText(state: GameState): string | null {
   const status = safeStatus(state.robot, state.vitals.battery);
   return status ? t(`phase.safe.${status}`) : null;
@@ -392,7 +373,6 @@ function roverView(state: GameState): View {
           v.textContent = !task ? t('ctx.rover.idle') : waitText(st) ?? (radiationNow ? t('phase.wait.radiation') : st.vitals.battery <= 0 ? t('phase.wait.battery') : phaseLabel(missionPhase(task), task.kind));
         }),
       );
-      // ROV-04: aviso de água enquanto a fila deixar a base sem água antes do próximo gelo.
       const warn = make('p', 'ctx-warn');
       warn.setAttribute('role', 'status');
       updaters.push(() => {
@@ -439,7 +419,6 @@ function roverView(state: GameState): View {
   };
 }
 
-/** Fluxo por hora agora (energia, ar, água e comida), com o mesmo cálculo do motor. */
 function flowNow(state: GameState): ReturnType<typeof deriveFlow> {
   const working = isWorking(state.robot, state.vitals.battery) && !radiationNow;
   const solar = calibrationFactor(state.calibrationLeft);
@@ -626,8 +605,6 @@ function viewFor(id: SelectableId, state: GameState): View {
   return storageView(state);
 }
 
-// ---------- API ----------
-
 export function mountContext(element: HTMLElement, h: ContextHandlers): void {
   root = element;
   handlers = h;
@@ -654,10 +631,6 @@ export function showContext(id: SelectableId | null): void {
   root.hidden = id === null;
 }
 
-/**
- * Painel enxuto (UX-06): em cada lista de tarefas, as possíveis ficam à vista; as indisponíveis vão para um grupo
- * recolhido, cada uma com o motivo. Se nenhuma está disponível, o grupo abre sozinho para explicar por quê.
- */
 function groupBlocked(root: HTMLElement): void {
   for (const list of root.querySelectorAll<HTMLElement>('.ctx-tasks')) {
     const blocked = [...list.querySelectorAll<HTMLButtonElement>(':scope > button.ctx-task:disabled')];
@@ -670,7 +643,6 @@ function groupBlocked(root: HTMLElement): void {
   }
 }
 
-/** Atualiza o painel: reconstrói só quando algo discreto mudou; barras e números mudam no lugar. */
 export function renderContext(state: GameState, info: ContextInfo): void {
   if (!selected) return;
   world = info;

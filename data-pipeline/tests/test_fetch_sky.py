@@ -1,5 +1,4 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-"""Efemérides, transformação de referencial e catálogo: testes offline contra brutos preservados."""
 import json
 import math
 import sys
@@ -14,7 +13,6 @@ from fetch_sky import (ROOT, RAW, CATALOG_RAW, BODIES, build, parse_rows, parse_
                        unit, local, rotation, transform, angular_error, params, pack, Scenario)
 from observer import grid_azimuth, site_observer
 import fetch_sky
-
 
 def assert_close(tc, a, b, path='raiz'):
     """Compara estruturas JSON: chaves e formas exatas; números com tolerância de 2 unidades inteiras
@@ -139,7 +137,6 @@ class SkyPipelineTests(unittest.TestCase):
                     else:
                         value += delta
                         self.assertLessEqual(abs(value/packed['scale']-original[key]), 0.00000051)
-
 
 if __name__ == '__main__':
     unittest.main()

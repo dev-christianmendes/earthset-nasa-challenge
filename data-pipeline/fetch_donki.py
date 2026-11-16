@@ -1,9 +1,7 @@
 # Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
 """Clima espacial de um dia lunar de cenário, pela API NASA DONKI.
 
-Cenário (decisão D1 em docs/arquitetura.md): a janela de 708 h começa em 2024-10-09 00:00 UTC,
-com Sol acima do horizonte no polo sul em 706 das 709 horas (ver fetch_sun.py); a tempestade geomagnética G4 de 10 a 11/10/2024 cai dentro da janela (a confirmar na DONKI). A partida é um cenário
-histórico, rotulado como tal na tela. Não é previsão.
+Janela histórica definida por START_UTC e HOURS. Não é previsão.
 
 Fontes (NASA DONKI, https://api.nasa.gov/):
   GST  tempestades geomagnéticas, com o índice Kp de 3 em 3 horas (NOAA).
@@ -58,16 +56,11 @@ RAW_DIR = ROOT / "data-pipeline" / "raw"
 OUT_PATH = ROOT / "src" / "data" / "space-weather.json"
 EVENTS_PATH = ROOT / "src" / "data" / "space-weather-events.json"
 
-
 def parse_time(text: str) -> datetime:
-    """Horário da DONKI, por exemplo '2024-10-09T18:00Z'."""
     return datetime.strptime(text.replace("Z", ""), "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc)
 
-
 def hour_index(moment: datetime) -> int:
-    """Índice da hora de jogo (0 = início da janela), com floor."""
     return int((moment - START_UTC).total_seconds() // 3600)
-
 
 def first_full_hour(moment: datetime) -> int:
     """Primeira hora inteira de jogo que começa em ou depois do instante.
@@ -76,7 +69,6 @@ def first_full_hour(moment: datetime) -> int:
     nunca antes. Com floor, o jogo mostraria radiação antes da evidência publicada.
     """
     return math.ceil((moment - START_UTC).total_seconds() / 3600)
-
 
 def build_samples(gst: list[dict], sep: list[dict]) -> list[dict]:
     """Tabela horária: kp (máximo na hora) e radiação (booleano), para HOURS + 1 pontos."""
@@ -102,22 +94,17 @@ def build_samples(gst: list[dict], sep: list[dict]) -> list[dict]:
 
     return [{"kp": round(kp[i], 2), "radiation": radiation[i]} for i in range(HOURS + 1)]
 
-
 def parse_activity_id(activity_id: str) -> tuple[datetime, str]:
-    """Horário (UTC) e tipo de um ID da DONKI, por exemplo '2024-10-09T01:25:00-FLR-001'."""
     stamp, kind = activity_id.rsplit("-", 2)[0], activity_id.rsplit("-", 2)[1]
     moment = datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
     return moment, kind
-
 
 def hours_since_start(moment: datetime) -> float:
     """Horas (com fração) desde o início da janela; negativo se for antes."""
     return round((moment - START_UTC).total_seconds() / 3600, 2)
 
-
 def utc_text(moment: datetime) -> str:
     return moment.strftime("%Y-%m-%dT%H:%MZ")
-
 
 def linked_events(record: dict, onset: datetime) -> list[dict]:
     result = []
@@ -135,7 +122,6 @@ def linked_events(record: dict, onset: datetime) -> list[dict]:
         )
     return sorted(result, key=lambda item: item["time_utc"])
 
-
 def alerts_of(record: dict, onset: datetime) -> list[dict]:
     result = []
     for note in record.get("sentNotifications") or []:
@@ -150,7 +136,6 @@ def alerts_of(record: dict, onset: datetime) -> list[dict]:
             }
         )
     return sorted(result, key=lambda item: item["issued_utc"])
-
 
 def radiation_episodes(sep_events: list[dict]) -> list[dict]:
     """Une as janelas de 24 h dos SEP que se sobrepõem ou se tocam (regra de jogo)."""
@@ -174,9 +159,7 @@ def radiation_episodes(sep_events: list[dict]) -> list[dict]:
         for episode in episodes
     ]
 
-
 def build_events(gst: list[dict], sep: list[dict]) -> dict:
-    """Catálogo de eventos do cenário: SEP e GST como a DONKI os registrou, mais episódios de radiação."""
     events: list[dict] = []
     for record in sep:
         onset = parse_time(record["eventTime"])
@@ -225,9 +208,7 @@ def build_events(gst: list[dict], sep: list[dict]) -> dict:
         "radiation_episodes": radiation_episodes(sep_events),
     }
 
-
 def fetch_json(endpoint: str, api_key: str) -> list[dict]:
-    """Consulta a DONKI para a janela do cenário."""
     end = START_UTC + timedelta(hours=HOURS)
     query = urllib.parse.urlencode(
         {
@@ -239,7 +220,6 @@ def fetch_json(endpoint: str, api_key: str) -> list[dict]:
     with urllib.request.urlopen(f"{API}/{endpoint}?{query}", timeout=60) as response:
         return json.loads(response.read().decode("utf-8"))
 
-
 def download(api_key: str) -> tuple[list[dict], list[dict]]:
     gst = fetch_json("GST", api_key)
     sep = fetch_json("SEP", api_key)
@@ -247,7 +227,6 @@ def download(api_key: str) -> tuple[list[dict], list[dict]]:
     (RAW_DIR / "donki_gst.json").write_text(json.dumps(gst, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (RAW_DIR / "donki_sep.json").write_text(json.dumps(sep, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return gst, sep
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -270,7 +249,6 @@ def main(argv: list[str] | None = None) -> int:
     print(f"gravado: {EVENTS_PATH}", file=sys.stderr)
     print(f"gravado: {OUT_PATH}", file=sys.stderr)
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

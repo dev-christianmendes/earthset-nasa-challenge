@@ -1,5 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// ROV-04: previsão da água pelas regras do motor, para avisar antes de a fila deixar a base sem água.
 import { describe, expect, it } from 'vitest';
 import { createGame, dispatch, type GameState } from '../../src/engine/game';
 import { forecastWater, forecastWithAction } from '../../src/engine/forecast';

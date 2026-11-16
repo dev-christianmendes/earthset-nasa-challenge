@@ -24,7 +24,6 @@ function enqueue(g: GameState, kind: TaskKind): GameState {
   return r.ok ? r.state : g;
 }
 
-/** Mesmo plano de referência de partida.test.ts. */
 function planHour(g: GameState): GameState {
   const queued = (k: TaskKind): number => g.robot.queue.filter((t) => t.kind === k).length;
   let s = g;
@@ -97,7 +96,6 @@ describe('capítulos da Operação Último Horizonte', () => {
 
 describe('fases da missão (apresentação derivada do motor)', () => {
   it('as fases seguem o progresso real da tarefa', () => {
-    // Fases em horas (TASK_PHASE_HOURS, D-22): preparo, ida, operação, volta, entrega.
     const [prep, travel, operate, ret] = TASK_PHASE_HOURS.ice;
     const total = TASK_HOURS.ice;
     const at = (elapsed: number) => ({ kind: 'ice' as const, hoursLeft: total - elapsed });

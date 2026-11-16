@@ -1,8 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Locomoção visual da tripulação (sem three.js, testada no Vitest). Separa o "onde" do "como":
-//  - deslocamento: distância percorrida no caminho, com aceleração limitada, chegada desacelerada e giro progressivo;
-//  - passada: fase do ciclo sincronizada com o chão (pé apoiado não desliza) e voo balístico na gravidade lunar.
-// O motor decide QUANDO (fração da fase da tarefa); aqui só se decide como o corpo chega lá.
 // Modelo ilustrativo: números escolhidos para leitura visual, guiados pelo número de Froude (v² / g·L), não medidos.
 import { sampleInto, type PolyPath } from './crew-nav';
 
@@ -25,7 +21,6 @@ export const GAIT_SWITCH_SPEED = Math.sqrt(0.5 * MOON_GRAVITY * 0.9);
  */
 export const LOPE_BLEND = 0.55;
 
-/** Perfil de um clipe de locomoção, medido nos ossos dos pés quando o modelo carrega. */
 export interface GaitProfile {
   /** Duração do clipe (s). */
   readonly duration: number;
@@ -38,10 +33,6 @@ export interface GaitProfile {
   readonly flightLen: Float32Array;
 }
 
-/**
- * Mede o perfil a partir de amostras uniformes da altura (y) e do avanço (z) de cada pé ao longo do clipe.
- * Sem pés reconhecíveis (modelos simples), devolve um perfil sem voo com a velocidade nominal dada.
- */
 export function buildGaitProfile(duration: number, ly: ArrayLike<number>, lz: ArrayLike<number>, ry: ArrayLike<number>, rz: ArrayLike<number>): GaitProfile {
   const n = ly.length;
   const minL = Math.min(...Array.from(ly));
@@ -87,7 +78,6 @@ export function buildGaitProfile(duration: number, ly: ArrayLike<number>, lz: Ar
   return { duration, plant: plantIdx / n, footSpeed: Math.max(0.2, footSpeed), flightStart, flightLen };
 }
 
-/** Perfil genérico para modelos sem ossos de pé: sem voo, velocidade nominal. */
 export function nominalProfile(duration: number, nominalSpeed: number): GaitProfile {
   return { duration, plant: 0, footSpeed: nominalSpeed / duration, flightStart: new Float32Array(1), flightLen: new Float32Array(1) };
 }
@@ -103,9 +93,7 @@ export interface Walker {
   /** Aceleração filtrada (m/s²), para a inclinação do tronco. */
   accel: number;
   path: PolyPath | null;
-  /** Distância percorrida no caminho. */
   s: number;
-  /** Distância-alvo anterior (rastreamento do motor) e velocidade-alvo filtrada. */
   prevTarget: number;
   targetSpeed: number;
   /** Fase do ciclo da passada (0 a 1, 0 = pé esquerdo apoia). */
@@ -133,14 +121,12 @@ export function createWalker(x: number, z: number, heading = 0): Walker {
  */
 export type Drive = { readonly kind: 'track'; readonly fraction: number } | { readonly kind: 'goto'; readonly cruise: number } | { readonly kind: 'hold' };
 
-/** Troca o caminho mantendo velocidade e direção (sem salto de posição nem de giro). */
 export function setPath(w: Walker, path: PolyPath, startFraction = 0): void {
   w.path = path;
   w.s = 0;
   w.prevTarget = startFraction * path.length;
 }
 
-/** Distância que falta até o fim do caminho. */
 export function remaining(w: Walker): number {
   return w.path ? Math.max(0, w.path.length - w.s) : 0;
 }
@@ -170,7 +156,6 @@ export function stepWalker(w: Walker, dt: number, drive: Drive, rate: number, fa
   const steps = Math.max(1, Math.ceil(dt / MAX_SUBSTEP));
   const h = dt / steps;
   const length = w.path?.length ?? 0;
-  // Velocidade-alvo do rastreamento: derivada filtrada da distância pedida pelo motor (que avança em degraus).
   let target = 0;
   if (drive.kind === 'track') {
     target = Math.min(1, Math.max(0, drive.fraction)) * length;
@@ -188,7 +173,6 @@ export function stepWalker(w: Walker, dt: number, drive: Drive, rate: number, fa
     let want = 0;
     if (drive.kind === 'track') want = w.targetSpeed + 1.6 * r * (target - w.s);
     else if (drive.kind === 'goto') want = drive.cruise * r;
-    // Chegada: frenagem progressiva até parar exatamente no fim do caminho.
     want = Math.min(Math.max(0, want), vMax, Math.sqrt(2 * decel * left));
     const dv = Math.min(accel * h, Math.max(-decel * h, want - w.speed));
     w.speed = Math.max(0, w.speed + dv);
@@ -213,7 +197,6 @@ export function stepWalker(w: Walker, dt: number, drive: Drive, rate: number, fa
     w.yawRate = Math.min(maxYaw, Math.max(-maxYaw, w.yawRate));
     w.heading = wrapAngle(w.heading + w.yawRate * h);
   }
-  // Tronco: leve inclinação para a frente com a velocidade (mochila do traje), mais na aceleração e para trás na frenagem.
   // Na Lua a inclinação de equilíbrio seria atan(a / g), grande; limitada para não virar caricatura.
   const vn = w.speed / r;
   const pitchWant = Math.min(0.2, Math.max(-0.14, 0.05 * Math.min(vn, 2.2) + 0.1 * (w.accel / (r * r)) / MOON_GRAVITY));
@@ -233,7 +216,6 @@ function sampleIndex(p: GaitProfile, clipPhase: number): number {
   return Math.min(n - 1, Math.floor(clipPhase * n));
 }
 
-/** Fase do clipe correspondente à fase comum do ciclo. */
 export function clipPhase(p: GaitProfile, phase: number): number {
   return (((phase + p.plant) % 1) + 1) % 1;
 }

@@ -2,7 +2,7 @@
 """Gera os modelos 3D do Earthset em GLB, a partir de geometria procedural no Blender.
 
 Autoria: geometria escrita neste script (formas arredondadas por biséis, curvas e esferas),
-materiais na paleta do projeto. Nenhuma imagem ou modelo de IA, nenhum
+materiais na paleta de a paleta do projeto. Nenhuma imagem ou modelo de IA, nenhum
 ativo de terceiros.
 
 Convenção: unidades em metros. Escala no Blender = tamanho total (cubo de tamanho 1 com escala 2 mede 2 m; cilindro de profundidade 1 com escala r, h mede raio r e comprimento h). Z é a altura no Blender; o exportador glTF converte para Y-up
@@ -26,7 +26,6 @@ import bpy
 
 OUT_DIR = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "public/models"
 
-# Paleta do projeto
 HABITAT_WHITE = "#E8E5DA"
 LIFE_TEAL = "#56B9A4"
 SOLAR_AMBER = "#F3A847"
@@ -36,14 +35,11 @@ LUNAR_GRAY = "#78818B"
 HATCH_DARK = "#2A2C33"
 PANEL_BLUE = "#2F5E8E"
 
-
 def hex_rgb(h: str) -> tuple:
     h = h.lstrip("#")
     return tuple(int(h[i : i + 2], 16) / 255 for i in (0, 2, 4)) + (1.0,)
 
-
 _MATS: dict = {}
-
 
 def material(name: str, color: str, metallic: float = 0.0, rough: float = 0.5,
              alpha: float = 1.0, emission: str | None = None, emission_strength: float = 0.0):
@@ -63,18 +59,15 @@ def material(name: str, color: str, metallic: float = 0.0, rough: float = 0.5,
     _MATS[key] = m
     return m
 
-
 def bevel(obj, width: float = 0.04, segments: int = 2) -> None:
     mod = obj.modifiers.new("Bevel", "BEVEL")
     mod.width = width
     mod.segments = segments
     mod.limit_method = "ANGLE"
 
-
 def paint(obj, mat) -> None:
     obj.data.materials.clear()
     obj.data.materials.append(mat)
-
 
 def add(kind: str, name: str, location=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 1, 1)):
     if kind == "cube":
@@ -91,7 +84,6 @@ def add(kind: str, name: str, location=(0, 0, 0), rotation=(0, 0, 0), scale=(1, 
     o.scale = scale
     return o
 
-
 def half_dome(radius: float, name: str, location=(0, 0, 0), upper: bool = True):
     o = add("sphere", name, location)
     o.scale = (radius, radius, radius)
@@ -104,7 +96,6 @@ def half_dome(radius: float, name: str, location=(0, 0, 0), upper: bool = True):
     bm.free()
     o.data.update()
     return o
-
 
 def arc_tube(points, radius: float, name: str):
     cu = bpy.data.curves.new(name, "CURVE")
@@ -122,11 +113,9 @@ def arc_tube(points, radius: float, name: str):
     bpy.ops.object.convert(target="MESH")
     return bpy.context.active_object
 
-
 def clear_scene() -> None:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     _MATS.clear()
-
 
 def export(objects, filename: str) -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -144,8 +133,6 @@ def export(objects, filename: str) -> None:
     )
     print("EXPORTED", path, os.path.getsize(path))
 
-
-# ---------- Habitat: casco modular com cúpulas, anéis, faixa, escotilha, janelas e radiadores ----------
 def build_habitat() -> None:
     clear_scene()
     white = material("habitat_white", HABITAT_WHITE, metallic=0.2, rough=0.45)
@@ -163,7 +150,6 @@ def build_habitat() -> None:
     paint(hull, white)
     parts.append(hull)
 
-    # Cúpulas nas extremidades (não tampas chatas): meias-esferas apontando para fora.
     import mathutils
 
     for x, rot in ((3.0, math.radians(90)), (-3.0, math.radians(-90))):
@@ -174,7 +160,6 @@ def build_habitat() -> None:
         paint(dome, white)
         parts.append(dome)
 
-    # Anéis de costura (ribs) a cada 2 m: leitura de módulo pressurizado.
     for x in (-2.0, 0.0, 2.0):
         ring = add("cylinder", f"seam_{x:+.0f}", location=(x, 0, 0), rotation=(0, math.radians(90), 0),
                    scale=(2.27, 2.27, 0.12))
@@ -182,7 +167,6 @@ def build_habitat() -> None:
         paint(ring, seam)
         parts.append(ring)
 
-    # Faixa de cor central (teal) e tampas de costura.
     band = add("cylinder", "habitat_band", rotation=(0, math.radians(90), 0), scale=(2.24, 2.24, 0.5))
     bpy.ops.object.transform_apply(scale=True)
     paint(band, teal)
@@ -200,7 +184,6 @@ def build_habitat() -> None:
     paint(hatch, dark)
     parts.append(hatch)
 
-    # Janelas emissivas: três na frente, três na traseira.
     for i, x in enumerate((-1.6, 0.0, 1.6)):
         for side, y in (("f", -2.22), ("b", 2.22)):
             win = add("cube", f"window_{side}{i}", location=(x, y, 0.9), scale=(0.9, 0.04, 0.56))
@@ -208,7 +191,6 @@ def build_habitat() -> None:
             paint(win, glass)
             parts.append(win)
 
-    # Radiadores no teto: placas com células azuis.
     for x in (-2.0, 0.0, 2.0):
         plate = add("cube", f"radiator_{x:+.0f}", location=(x, 0, 2.36), scale=(1.5, 1.2, 0.06))
         bpy.ops.object.transform_apply(scale=True)
@@ -218,8 +200,6 @@ def build_habitat() -> None:
 
     export(parts, "habitat.glb")
 
-
-# ---------- Rover: chassi, sensores, painel no topo, rodas com cubo; rodas giram ----------
 def build_rover() -> None:
     clear_scene()
     body_mat = material("rover_amber", SOLAR_AMBER, metallic=0.1, rough=0.4)
@@ -237,7 +217,6 @@ def build_rover() -> None:
     paint(chassis, body_mat)
     parts.append(chassis)
 
-    # Painel solar pequeno no topo do chassi.
     pad = add("cube", "rover_pad", location=(-0.15, 0, 0.6), scale=(0.5, 0.5, 0.03))
     bpy.ops.object.transform_apply(scale=True)
     paint(pad, cell)
@@ -258,7 +237,6 @@ def build_rover() -> None:
             paint(hub, hub_mat)
             parts.append(hub)
 
-    # Mastro com câmera (lente) e sensor LIDAR no topo.
     mast = add("cylinder", "mast", location=(0.3, 0, 1.05), scale=(0.03, 0.03, 0.5))
     bpy.ops.object.transform_apply(scale=True)
     paint(mast, mast_mat)
@@ -288,8 +266,6 @@ def build_rover() -> None:
 
     export(parts, "rover.glb")
 
-
-# ---------- Painel solar: suporte, moldura e grade de células; a grade inclina junto ----------
 def build_solar_panel() -> None:
     clear_scene()
     post_mat = material("panel_post", HABITAT_WHITE, metallic=0.4, rough=0.4)
@@ -330,8 +306,6 @@ def build_solar_panel() -> None:
 
     export(parts, "solar_panel.glb")
 
-
-# ---------- Estufa: cúpula translúcida, nervuras e plantas visíveis dentro ----------
 def build_greenhouse() -> None:
     clear_scene()
     glass = material("greenhouse_glass", GROWTH_GREEN, rough=0.1, alpha=0.35)
@@ -361,7 +335,6 @@ def build_greenhouse() -> None:
         paint(rib, rib_mat)
         parts.append(rib)
 
-    # Plantas: folhagem em elipsoides sobre o solo, em duas fileiras.
     for i in range(10):
         a = math.radians(36 * i)
         r = 1.3 if i % 2 == 0 else 1.9
@@ -373,8 +346,6 @@ def build_greenhouse() -> None:
 
     export(parts, "greenhouse.glb")
 
-
-# ---------- Antena: base, mastro, prato com aro ----------
 def build_antenna() -> None:
     clear_scene()
     mast_mat = material("antenna_mast", HABITAT_WHITE, metallic=0.4, rough=0.4)
@@ -409,8 +380,6 @@ def build_antenna() -> None:
 
     export(parts, "antenna.glb")
 
-
-# ---------- Astronauta genérico: corpo, capacete com viseira, mochila e membros articulados ----------
 def limb(name: str, joint: tuple, length: float, radius: float, mat):
     """Membro com a origem no ponto de articulação (topo); a geometria desce `length` metros."""
     import mathutils
@@ -424,7 +393,6 @@ def limb(name: str, joint: tuple, length: float, radius: float, mat):
     bevel(o, radius * 0.4, 2)
     paint(o, mat)
     return o
-
 
 def build_astronaut() -> None:
     clear_scene()
@@ -461,14 +429,12 @@ def build_astronaut() -> None:
     paint(bag, pack)
     parts.append(bag)
 
-    # Membros: origem na articulação, para o balanço da caminhada girar em torno do ombro/quadril.
     parts.append(limb("arm_L", (0.25, 0, 1.36), 0.55, 0.06, suit))
     parts.append(limb("arm_R", (-0.25, 0, 1.36), 0.55, 0.06, suit))
     parts.append(limb("leg_L", (0.1, 0, 0.8), 0.8, 0.08, suit))
     parts.append(limb("leg_R", (-0.1, 0, 0.8), 0.8, 0.08, suit))
 
     export(parts, "astronaut.glb")
-
 
 if __name__ == "__main__":
     build_habitat()

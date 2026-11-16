@@ -76,12 +76,14 @@ Atalhos de captura (só `npm run dev`): `?autostart=cadet&hour=24&task=ice&after
 | Astronomia | `src/astronomy/` | Cálculos de céu sobre as tabelas de efemérides (posição, visibilidade, situação da Terra). Sem three.js |
 | Cena | `src/render/` | Three.js. Só **lê** o estado; não recalcula regra |
 | Interface | `src/ui/` | DOM. Lê o estado e envia **ações** validadas pelo motor |
+| Diagnóstico | `src/dev/` | Inspeção de estado, câmera e modelos, instalada apenas com `import.meta.env.DEV` |
 | Dados | `src/data/` | Tabelas JSON geradas por `data-pipeline/`. Não editar à mão |
 | Entrada | `src/main.ts`, `src/i18n.ts`, `src/school.ts` | Laço do jogo e ligação entre as camadas |
 | Testes | `tests/` | Vitest. `tests/engine/partida.test.ts` roda partidas completas |
 | Pipelines | `data-pipeline/*.py` | Python, offline, com testes em `data-pipeline/tests/` |
 | Assets | `assets-src/` (fontes e scripts Blender), `public/` (arquivos servidos) | Ver `docs/ART_ASSET_PIPELINE.md` |
 
+O carregamento de GLB em `src/render/assets.ts` compartilha um recurso por nome entre cena e animações. Os limites de alerta de som, HUD e cena vêm de `src/engine/resource-alerts.ts`. O monitor opcional `?perf=1` fica em `src/ui/performance.ts`; ele recebe a informação do renderizador, sem possuir o estado da partida.
 
 ### 4.1 Modelo do motor
 

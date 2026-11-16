@@ -24,23 +24,19 @@ TITLES = {
     'pt': ['Base', 'Rover', 'Astronauta 1', 'Painéis solares', 'Estufa', 'Missões', 'Ciência'],
 }
 
-
 def check(name, condition, evidence=None):
     RESULTS.append({'check': name, 'passed': bool(condition), 'evidence': evidence})
     (OUT / 'results.json').write_text(json.dumps(RESULTS, ensure_ascii=False, indent=2) + '\n')
     assert condition, f'{name}: {evidence}'
     print('PASS', name, flush=True)
 
-
 def screenshot(page, name):
     page.screenshot(path=str(OUT / f'{name}.png'))
-
 
 def menu(page):
     page.goto(f'http://127.0.0.1:{PORT}/')
     expect(page.locator('#menu')).to_be_visible(timeout=60000)
     assert page.title().startswith('Earthset')
-
 
 def start(page):
     menu(page)
@@ -49,7 +45,6 @@ def start(page):
     expect(page.locator('#hud')).to_be_visible()
     page.wait_for_timeout(750)  # saída da introdução, não avanço artificial do relógio
 
-
 def language(page, lang):
     page.locator('#pause-btn').click()
     page.locator('#pause [data-open=settings]').click()
@@ -57,7 +52,6 @@ def language(page, lang):
         page.locator('#settings [data-lang-toggle]').click()
     page.locator('#settings [data-back]').click()
     page.locator('#resume').click()
-
 
 def non_overlapping(page, label):
     # Interseção da área realmente pintada, incluindo o recorte da coluna rolável.
@@ -84,13 +78,11 @@ def non_overlapping(page, label):
                 collisions.append([a['id'], b['id']])
     check(label, not collisions, {'boxes': boxes, 'collisions': collisions})
 
-
 with sync_playwright() as p:
     browser = p.chromium.launch(args=['--no-sandbox', '--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist'])
     print('Chromium', browser.version, flush=True)
     page = None
     try:
-        # Menu completo, rolagem real, teclado, mouse/toque e alinhamento à esquerda.
         for w, h in [(1920, 924), (1280, 800), (780, 493), (844, 390), (320, 568)]:
             ctx = browser.new_context(viewport={'width': w, 'height': h}, has_touch=w < 760, is_mobile=w < 760, reduced_motion='reduce')
             page = ctx.new_page()
@@ -150,7 +142,6 @@ with sync_playwright() as p:
         page.keyboard.press('Escape')
         check('UXR-03 retomar restaura Pausa e libera HUD', page.evaluate("()=>document.activeElement?.id==='pause-btn'&&!document.getElementById('hud').inert"))
 
-        # Cada painel fica aberto durante a mudança de idioma, nos dois sentidos.
         for i, tool in enumerate(TOOLS):
             page.locator(f'#toolbar [data-tool={tool}]').click()
             for lang in ['pt', 'en']:
@@ -163,7 +154,6 @@ with sync_playwright() as p:
             else:
                 page.locator('#side-close').click()
 
-        # Nomes acessíveis não dependem dos <small> visuais, inclusive com badge.
         for lang in ['pt', 'en']:
             language(page, lang)
             page.set_viewport_size({'width': 390, 'height': 844})
@@ -171,7 +161,6 @@ with sync_playwright() as p:
                 expect(page.locator('#toolbar').get_by_role('button', name=name, exact=True)).to_have_count(1)
             check(f'UXR-02 sete nomes móveis em {lang}, fila com badge', True, NAMES[lang])
 
-        # Só texto DOM, com relógio pausado; não muda recursos ou regras do motor.
         page.locator('#pause-btn').click()
         original = page.locator('.chip b').all_text_contents()
         for w, h in [(320, 568), (390, 844), (412, 915), (667, 375), (844, 390)]:
@@ -194,7 +183,6 @@ with sync_playwright() as p:
             page.locator('#pause-btn').click()
         ctx.close()
 
-        # Primeira partida móvel: dica genérica, orientação, recibo e alerta sem sobreposição.
         ctx = browser.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, has_touch=True, is_mobile=True, reduced_motion='reduce')
         page = ctx.new_page()
         start(page)

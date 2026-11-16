@@ -1,6 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Regressão geral do motor (P4): ações aleatórias (com semente fixa) por 708 h e invariantes que nunca podem quebrar.
-// Cobre repetição de ordens, cancelamentos, abrigo, velocidades diferentes e determinismo.
 import { describe, expect, it } from 'vitest';
 import { AGENT_COUNT, AGENT_TASK_KINDS } from '../../src/engine/astronaut';
 import { MATCH_HOURS } from '../../src/engine/clock';
@@ -11,7 +9,6 @@ import type { Installation } from '../../src/engine/resources';
 
 const INST: Installation = { rank: 'explorador', site: 'peak', panels: 4, batteryCapacity: 1000, greenhouse: 'surplus' };
 
-/** Gerador pseudoaleatório pequeno e determinístico (mulberry32). */
 function rng(seed: number): () => number {
   let a = seed;
   return () => {
@@ -57,7 +54,6 @@ function assertInvariants(s: GameState): void {
     expect(a.restLeft).toBeGreaterThanOrEqual(0);
     if (a.task) expect(a.task.hoursLeft).toBeGreaterThanOrEqual(0);
   }
-  // Uma tarefa de cada tipo por vez.
   const kinds = s.agents.flatMap((a) => (a.task ? [a.task.kind] : []));
   expect(new Set(kinds).size).toBe(kinds.length);
 }

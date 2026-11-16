@@ -11,27 +11,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RADIUS_M = 1737400.0
 
-
 def inverse(x, y):
     rho = math.hypot(x, y)
     if rho == 0:
         raise ValueError('No polo exato, longitude/azimute geográfico são indeterminados')
     return math.degrees(math.atan2(x, y)) % 360, -90 + math.degrees(2 * math.atan(rho / (2 * RADIUS_M)))
 
-
 def forward(lon, lat):
     rho = 2 * RADIUS_M * math.tan(math.radians(90 + lat) / 2)
     return rho * math.sin(math.radians(lon)), rho * math.cos(math.radians(lon))
-
 
 def site_observer(site='peak'):
     # Arquivo pequeno versionado: não exige o DEM bruto para refazer efemérides.
     return json.loads((ROOT/'data-pipeline/observers.json').read_text())[site]
 
-
 def grid_azimuth(true_azimuth, observer):
     return (true_azimuth + observer.get('grid_north_rotation_deg', 0)) % 360
-
 
 def observers_from_dem(raw):
     """Reproduz também as alturas, sem refazer seleção de sites ou malha da cena."""
@@ -49,7 +44,6 @@ def observers_from_dem(raw):
                         'x_m': x, 'y_m': y,
                         'source': 'https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.LBL'}
     return result
-
 
 if __name__ == '__main__':
     import argparse

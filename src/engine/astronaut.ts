@@ -1,15 +1,9 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Astronautas com tarefas reais (D-18). Motor puro, determinístico.
-// Cada astronauta é uma máquina de estados pequena: o estado exibido deriva da fase da tarefa.
-//   idle → assigned (preparo) → walking → working → returning → resting → idle
-//   sheltering: radiação ou ordem de abrigo; a tarefa fica suspensa e retoma depois.
-// Todas as durações são horas de JOGO: a animação deriva do progresso e acompanha pausa e velocidade.
 
 export const AGENT_COUNT = 2;
 
 export type AgentTaskKind = 'inspect' | 'harvest' | 'maintain' | 'calibrate' | 'tune';
 export const AGENT_TASK_KINDS: readonly AgentTaskKind[] = ['inspect', 'harvest', 'maintain', 'calibrate', 'tune'];
-/** Tarefas feitas na estufa (o painel da estufa só oferece estas). */
 export const GREENHOUSE_TASKS: readonly AgentTaskKind[] = ['inspect', 'harvest', 'maintain'];
 
 export type AgentPhase = 'prep' | 'out' | 'work' | 'back';
@@ -18,23 +12,17 @@ export type AgentStatus = 'idle' | 'assigned' | 'walking' | 'working' | 'returni
 export interface AgentTask {
   readonly kind: AgentTaskKind;
   readonly phase: AgentPhase;
-  /** Horas de jogo que faltam para terminar a fase atual. */
   readonly hoursLeft: number;
 }
 
 export interface AgentState {
   readonly task: AgentTask | null;
-  /** Horas de descanso que faltam depois de uma tarefa. */
   readonly restLeft: number;
 }
 
 /** Horas de jogo (ilustrativas; equilíbrio, não dado científico). */
 export const PREP_HOURS = 0.25;
-/**
- * Cada trecho de ida ou volta até a estufa, em horas de jogo (1 h = 1 s a 1×). Escolhido para o astronauta
- * percorrer a rota real (~9 a 12 m, contornando o habitat) a ~1,8 m/s, um passo lunar crível (pedido do autor, 15/11:
- * a 1 h ele cruzava a base a 8–12 m/s). Ilustrativo: equilíbrio e apresentação, não dado científico.
- */
+/** Ida/volta ilustrativa ajustada à rota e ao passo de ~1,8 m/s. */
 export const TRAVEL_HOURS = 6.5;
 /** Trecho por tarefa, proporcional à rota até o posto (antena ~12 m, campo solar ~20 m). Ver src/render/crew-nav.ts. */
 export const TRAVEL_HOURS_BY_KIND: Record<AgentTaskKind, number> = { inspect: TRAVEL_HOURS, harvest: TRAVEL_HOURS, maintain: TRAVEL_HOURS, calibrate: 11, tune: 7 };
@@ -42,9 +30,7 @@ export const REST_HOURS = 1;
 export const WORK_HOURS: Record<AgentTaskKind, number> = { inspect: 2, harvest: 3, maintain: 5, calibrate: 4, tune: 3 };
 /** Custo imediato de energia (unidades da bateria) ao ordenar a tarefa. */
 export const TASK_ENERGY_COST: Record<AgentTaskKind, number> = { inspect: 0, harvest: 0, maintain: 15, calibrate: 10, tune: 5 };
-/** Desgaste removido ao concluir (inspeção) ou zerado (manutenção). */
 export const INSPECT_WEAR_RELIEF = 20;
-/** Só vale a manutenção a partir deste desgaste. */
 export const MAINTAIN_MIN_WEAR = 10;
 
 const PHASE_ORDER: readonly AgentPhase[] = ['prep', 'out', 'work', 'back'];
@@ -63,7 +49,6 @@ export function newTask(kind: AgentTaskKind): AgentTask {
   return { kind, phase: 'prep', hoursLeft: PREP_HOURS };
 }
 
-/** Disponível para uma ordem: sem tarefa e já descansado. */
 export function isAvailable(agent: AgentState): boolean {
   return agent.task === null && agent.restLeft <= 0;
 }
@@ -91,7 +76,6 @@ export function phaseFraction(task: AgentTask): number {
   return Math.min(1, Math.max(0, 1 - task.hoursLeft / total));
 }
 
-/** Fração concluída da tarefa inteira (0 a 1), para a barra de progresso. */
 export function taskFraction(task: AgentTask): number {
   let done = 0;
   let total = 0;

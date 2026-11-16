@@ -1,7 +1,4 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Previsão da água (ROV-04): simula as próximas horas com as próprias regras do motor (consumo, fila do rover, ajuda
-// da tripulação, Sol, radiação) e diz quando a água zera e quando chega a próxima entrega de gelo.
-// Não muda regra nem estado: trabalha numa cópia. Motor puro.
 import { advance, dispatch, outcomeOf, type GameAction, type GameState, type SunlitAt, type WeatherAt } from './game';
 
 /** Horizonte da previsão em horas de jogo (uma missão de painel inteira cabe nele). */
@@ -16,7 +13,6 @@ export interface WaterForecast {
   readonly risk: boolean;
 }
 
-/** Simula `horizon` horas, de hora em hora, a partir de uma cópia do estado. */
 export function forecastWater(state: GameState, sunlit: SunlitAt, weather: WeatherAt, horizon = FORECAST_HOURS): WaterForecast {
   let s = state;
   let zeroIn: number | null = state.vitals.water <= 0 ? 0 : null;
@@ -32,7 +28,6 @@ export function forecastWater(state: GameState, sunlit: SunlitAt, weather: Weath
   return { zeroIn, iceIn, risk };
 }
 
-/** Previsão se a ação for aceita agora (para avisar antes de enfileirar). Ação recusada: previsão do estado atual. */
 export function forecastWithAction(state: GameState, action: GameAction, sunlit: SunlitAt, weather: WeatherAt, horizon = FORECAST_HOURS): WaterForecast {
   const r = dispatch(state, action);
   return forecastWater(r.ok ? r.state : state, sunlit, weather, horizon);
