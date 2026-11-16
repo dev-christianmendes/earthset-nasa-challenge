@@ -197,3 +197,13 @@ Explorador → `rank: 'cadete'` (× 0,75), Cadete Lunar → `rank: 'explorador'`
 - **Ciência:** só o desenho muda. Sol, horizonte e clima vêm de tabelas próprias e não usam a malha. A tela e `docs/data-sources.md` dizem que a base é aplainada, junto do exagero vertical.
 - **Resultado medido:** inclinação média na base 11° → 0,1° (máxima 1,6°); enterramento máximo por objeto 0,94 m → 0,04 m; a rampa chega a no máximo a inclinação do relevo natural.
 
+## D-27. Câmera: teclado, limites por plano, câmera livre e recuperação automática (15/11/2026, noite)
+
+- **Problema:** o jogo tinha um único limite global de zoom (4 a 120 m) e de inclinação, nenhum teclado, nenhuma câmera livre explícita, e nada tratava o alvo sumir (o astronauta entra no abrigo) nem ficar atrás do painel lateral.
+- **Teclado:** setas giram e inclinam em torno do alvo, `+` e `−` aproximam e afastam (também no teclado numérico), `Shift` acelera, `O` ou `Home` voltam à visão geral, `C` alterna a câmera livre. Independente do FPS. Só vale com o jogo na tela (sem tela aberta, fora de campos de texto, sem Ctrl, Alt ou Meta); a janela que perde o foco solta as teclas. Os atalhos `1` a `9` e `Esc` seguem como antes.
+- **Limites por plano:** acompanhar o astronauta 2,4 a 26 m, o rover 3,5 a 40 m, foco em equipamento 4 a 60 m, visão geral 14 a 120 m, todos com inclinação de 10° a 80°; câmera livre 3 a 150 m e 5° a 88°. O jogo nunca solta a câmera sozinho: a livre só entra por `C` ou pelo botão.
+- **Botão de câmera** no topo (40×40 px, com ponto de cor fora da visão geral): visão geral ↔ câmera livre; acompanhando ou em foco, volta à visão geral. O texto de ajuda diz o modo e o que o toque faz.
+- **Recuperação automática:** quem é acompanhado fica fora de vista por mais de 1,5 s (o astronauta entra no abrigo): a câmera volta à visão geral e avisa por um toast. O alvo da câmera não passa de 70 m da base; valores inválidos ou câmera abaixo do chão voltam a um enquadramento válido.
+- **Margem diante dos painéis:** quando um painel cobre parte da tela, a vista é deslocada (`camera.setViewOffset`, suavizada) para o alvo aparecer no centro da área livre. Painel à direita desloca na horizontal, folha de baixo (celular em pé) na vertical, no máximo um terço da tela. A seleção por toque continua exata.
+- **Defeito achado pelo teste de teclado e corrigido:** com o astronauta parado junto ao processador, o desvio de obstrução levantava a câmera só o bastante para caber 3 m e travava a distância aí, de modo que o `−` não afastava (3,4 m contra o máximo de 26). Agora procura a menor elevação que dê espaço livre de verdade (até 14 m).
+

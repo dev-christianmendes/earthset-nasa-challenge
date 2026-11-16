@@ -25,7 +25,8 @@ import { surfaceHeight } from './render/terrain-height';
 import { pickAt, setHighlight, updateHighlight, type SelectableId } from './render/picking';
 import { mountContext, renderContext, selectedObject, showContext, type ContextInfo } from './ui/context-panel';
 import { warningAhead } from './engine/facilities';
-import { followingShot, goTo, isFollowing, lookAtSky, setDirectorEnabled, setReducedMotion, stopFollow, updateDirector, type Shot } from './render/director';
+import { cameraMode, clearCameraKeys, followingShot, goFree, goTo, isFollowing, lookAtSky, setCameraKey, setCameraNotice, setDirectorEnabled, setReducedMotion, setViewInset, stopFollow, toggleFree, updateDirector, type Shot } from './render/director';
+import { CAMERA_KEYS, cameraCommand, insetFor, type Rect } from './render/camera-rules';
 import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updateCinematic } from './render/cinematic';
 import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
 import { initLuma, pushLumaEvents, relabelLuma, resetLuma, updateLuma } from './ui/luma';
@@ -590,6 +591,76 @@ window.addEventListener('keydown', (event) => {
   else if (screen && screen !== 'menu' && screen !== 'loading' && screen !== 'end') popScreen();
 });
 
+// ---------- Câmera: teclado, botão e margem livre dos painéis (CAM-01, CAM-02) ----------
+
+/** Teclas de câmera só valem com o jogo na tela, fora de campos de texto e sem atalhos do sistema. */
+function cameraKeysAllowed(event: KeyboardEvent): boolean {
+  if (event.ctrlKey || event.metaKey || event.altKey) return false;
+  const target = event.target as HTMLElement | null;
+  if (target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable)) return false;
+  return started && !ended && currentScreen() === null && !cinematicRunning();
+}
+window.addEventListener('keydown', (event) => {
+  if (!cameraKeysAllowed(event)) return;
+  const command = cameraCommand(event.key);
+  if (command) {
+    if (event.repeat) return;
+    if (command === 'overview') goTo('overview', performance.now(), 1.0);
+    else toggleFree(performance.now());
+    renderCamBtn();
+    return;
+  }
+  if (CAMERA_KEYS.has(event.key)) {
+    event.preventDefault();
+    setCameraKey(event.key, true, event.shiftKey);
+  }
+});
+window.addEventListener('keyup', (event) => setCameraKey(event.key, false, event.shiftKey));
+window.addEventListener('blur', clearCameraKeys);
+
+const SHOT_WHO: Partial<Record<Shot, string>> = { crew: 'ctx.crew0', crew1: 'ctx.crew1', rover: 'ctx.rover' };
+const whoOf = (shot: Shot | null): string => t(SHOT_WHO[shot ?? 'crew'] ?? 'ctx.crew0');
+
+/** Botão de câmera: o ícone fica o mesmo e o texto diz o modo e o que o toque faz (visão geral ↔ câmera livre). */
+function renderCamBtn(): void {
+  const btn = document.getElementById('cam-btn');
+  if (!btn) return;
+  if (!btn.firstChild) {
+    const icon = document.createElement('span');
+    icon.dataset.icon = 'camera';
+    btn.append(icon);
+    mountIcons(btn);
+  }
+  const mode = cameraMode();
+  const label = t(`camctl.${mode}`, { who: whoOf(followingShot()) });
+  if (btn.getAttribute('aria-label') !== label) {
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+  }
+  btn.dataset.mode = mode;
+  btn.setAttribute('aria-pressed', String(mode === 'free'));
+}
+document.getElementById('cam-btn')?.addEventListener('click', () => {
+  if (cameraMode() === 'overview') goFree();
+  else goTo('overview', performance.now(), 1.0);
+  renderCamBtn();
+});
+// Quem estava sendo acompanhado saiu de vista (entrou no abrigo): a câmera volta sozinha e o jogador é avisado.
+setCameraNotice((lost) => showToast(t('camctl.lost.small'), t('camctl.lost', { who: whoOf(lost) })));
+
+/** Painéis abertos cobrem parte da tela: desloca a vista para o alvo ficar na área livre (camera-rules.ts). */
+function updateViewInset(): void {
+  const rects: Rect[] = [];
+  for (const id of ['ctx', 'side']) {
+    const el = document.getElementById(id);
+    if (!el || el.hidden) continue;
+    const r = el.getBoundingClientRect();
+    rects.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
+  }
+  const inset = insetFor({ width: window.innerWidth, height: window.innerHeight }, rects);
+  setViewInset(inset.x, inset.y);
+}
+
 // ---------- Laço ----------
 
 let last: number | null = null;
@@ -642,7 +713,11 @@ function frame(now: number): void {
   if (started) placeTags(squadEntries, { crew0: tagPoint(crewObject(0), 2.2), crew1: tagPoint(crewObject(1), 2.2), rover: tagPoint(robot, 2.6) });
   if (now >= hudDueAt) {
     if (currentTool() !== null && selectedObject()) selectObject(null);
-    if (started) renderNow(now);
+    if (started) {
+      renderNow(now);
+      renderCamBtn();
+      updateViewInset();
+    }
     updateHorizon(game.clock.hour);
     if (screen === 'science') {
       updateScienceHorizon(game.clock.hour);
@@ -776,6 +851,22 @@ function maybeAutostart(): void {
         next[key] = value && typeof value === 'object' && !Array.isArray(value) && current && typeof current === 'object' ? { ...(current as object), ...(value as object) } : value;
       }
       game = next as unknown as GameState;
+    },
+    /** Estado real da câmera (dev): posição, alvo, distância, ângulos e limites em vigor. */
+    cameraState(): Record<string, unknown> {
+      const off = camera.position.clone().sub(controls.target);
+      const dist = off.length();
+      return {
+        pos: camera.position.toArray().map((v) => Math.round(v * 100) / 100),
+        target: controls.target.toArray().map((v) => Math.round(v * 100) / 100),
+        dist: Math.round(dist * 100) / 100,
+        theta: Math.round(Math.atan2(off.x, off.z) * 1000) / 1000,
+        polarDeg: Math.round((Math.acos(Math.min(1, Math.max(-1, off.y / dist))) * 180) / Math.PI * 10) / 10,
+        limits: [controls.minDistance, controls.maxDistance, Math.round((controls.minPolarAngle * 180) / Math.PI), Math.round((controls.maxPolarAngle * 180) / Math.PI)],
+        mode: cameraMode(),
+        following: followingShot(),
+        viewOffset: camera.view?.enabled ? [camera.view.offsetX, camera.view.offsetY] : null,
+      };
     },
     /** Posiciona a câmera de verificação (dev): desliga a direção e esconde o HUD. */
     view(cx: number, cy: number, cz: number, tx: number, ty: number, tz: number): void {

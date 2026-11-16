@@ -966,3 +966,15 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Não feito:** escuta humana dos sons; medição em aparelho físico; irrigação visível (PER-05).
 - **Git:** commits locais, sem push.
 
+## 15/11/2026 · Câmera: teclado, limites, câmera livre e recuperação (CAM-01, CAM-02, D-27)
+
+- **Arquivos:** novos `src/render/camera-rules.ts` e `tests/render/camera-rules.test.ts` (11 testes); alterados `src/render/director.ts`, `src/main.ts`, `index.html`, `src/ui/styles.css`, `src/ui/icons.ts`, `src/i18n.ts`, `docs/INTERACOES.md`, `README.md`. Outra sessão editava `main.ts`, `index.html`, `styles.css`, `hud.ts`, `context-panel.ts`, `squad.ts` e `screens.ts` ao mesmo tempo (teste exploratório de UX); no commit separei só os meus trechos.
+- **Navegador (Chromium com GPU, 1280×800):** setas giram (theta +1,15 rad em 0,8 s) e inclinam (57,8° → 26,9°); `+` e `−` param exatamente nos limites (visão geral 14 e 120 m, inclinação máxima 80°); câmera livre abre os limites (3 m, 88°); `O` volta à visão geral idêntica à inicial; `Shift` acelera (1,38 rad em 0,5 s); a tecla `4` ainda seleciona. Pausa aberta e janela sem foco com tecla apertada: a câmera não se move.
+- **Acompanhar:** rover 3,5 a 40 m, astronauta 2,4 a 26 m, depois da correção do desvio. Antes: o astronauta parado junto ao processador não afastava (3,44 m contra 26). Viagem de 27 s em volta do habitat com o zoom no máximo: 0 entradas da câmera em estruturas em 110 amostras.
+- **Perda do alvo:** na hora 1 a tripulação vai ao abrigo; a câmera voltou à visão geral em 1,3 s com o aviso "Astronaut 1 is out of sight". Meu primeiro teste foi inválido (a recuperação disparou antes dos `+`/`−`); refeito com a hora 60 para os limites e a hora 1 para a perda.
+- **Margem diante dos painéis:** desktop, painel começa em x = 928; o rover ficou em x = 464, exatamente no centro da área livre (464); fecha ao dispensar o painel (`viewOffset` nulo). Celular em pé: folha de baixo começa em y = 319 e o rover ficou em y = 171 (centro da área livre 160).
+- **Botão de câmera:** 40×40 px em 1280×800, 667×375, 915×412 e 412×915, dentro do topo, sem rolagem horizontal. Toque alterna visão geral ↔ câmera livre em todos.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run` 287 de 287 (32 arquivos); `npm run build` passou; `npm audit --omit=dev` 0 vulnerabilidades; toque em três tamanhos e fluxo integrado sem erros de página.
+- **Não feito:** CAM-03 (medir a troca astronauta ↔ rover); escolha por dispositivo físico; controle de câmera por gamepad.
+- **Git:** commit local, sem push.
+

@@ -61,7 +61,12 @@ Cultura de 0 a 100, amadurece em 12 h com cuidado normal e estufa ligada. Irriga
 |---|---|
 | Toque ou clique num objeto | seleciona e abre o painel contextual |
 | Teclas 1 a 9 | habitat, estufa, rover, astronauta 1 e 2, painéis, antena, processador, armazenamento |
-| Arrastar, roda | gira e aproxima a câmera (arrastar não seleciona) |
+| Arrastar, roda, pinça | gira e aproxima a câmera (arrastar não seleciona); o zoom e a inclinação têm limites por plano (D-27) |
+| Setas | giram a câmera em volta do alvo (←→) e a inclinam (↑↓); Shift acelera |
+| + e − (também do teclado numérico) | aproximam e afastam a câmera, parando nos limites do plano |
+| O ou Home | volta à visão geral |
+| C | alterna a câmera livre (limites largos, sem seguir ninguém) |
+| Botão de câmera (topo) | visão geral ↔ câmera livre; acompanhando alguém ou em foco, volta à visão geral |
 | Esc | fecha o painel; sem painel, pausa; durante a introdução, pula |
 | Tab, Enter | navega e aciona os botões do painel (o foco vai ao painel pelas teclas 1 a 9) |
 | Botões 1×, 2×, 4× e pausa | velocidade e pausa |

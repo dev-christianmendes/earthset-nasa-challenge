@@ -77,7 +77,7 @@ Concluídos e fora desta lista: DT-01 (teste do rover verificado: `npm run typec
 
 ## 6a. Auditoria integrada de gameplay, câmera, interface e som (pedido do autor, 15/11)
 
-Já entregue (D-20 a D-26; não repetir): módulo da estufa e sons por equipamento (D-25), plataforma aplainada (D-26), locomoção e navegação da tripulação, espera explicada na ordem, câmera de acompanhamento sem obstrução, painel persistente e cabos por painel (DT-11), carga de regolito e aquecimento no processador, celular deitado, som sintetizado com silenciar. Abaixo, só o que falta. Ordem: P0 → P1 → P2.
+Já entregue (D-20 a D-27; não repetir): câmera com teclado, limites, câmera livre e margem diante dos painéis (D-27), módulo da estufa e sons por equipamento (D-25), plataforma aplainada (D-26), locomoção e navegação da tripulação, espera explicada na ordem, câmera de acompanhamento sem obstrução, painel persistente e cabos por painel (DT-11), carga de regolito e aquecimento no processador, celular deitado, som sintetizado com silenciar. Abaixo, só o que falta. Ordem: P0 → P1 → P2.
 
 **Medição e latência**
 - [ ] **INS-01 · P1** Instrumentação de latência no repositório (hoje as sondas Playwright ficaram fora dele): marcas de comando, resposta visual, início do movimento e execução no gancho de desenvolvimento, e um script de medição versionado. **Aceite:** relatório reproduzível em 1×, 2× e 4×, para astronauta e rover.
@@ -87,9 +87,7 @@ Já entregue (D-20 a D-26; não repetir): módulo da estufa e sons por equipamen
 - [ ] **UX-09 · P1 · Medium** Contraste, legibilidade, estados de carregamento e mensagens de erro (verificação WCAG AA dos textos do HUD e dos painéis). **Aceite:** medição registrada; correções nos casos abaixo de 4,5:1.
 - [ ] **UX-03 · P1 · Medium** Celular em pé: o painel cobre metade da cena. Painéis recolhíveis por arraste ou aviso claro para girar o aparelho. **Aceite:** teste com toque em 412×915.
 
-**Câmera**
-- [ ] **CAM-01 · P1 · Medium** Controle por teclado (setas para orbitar, +/− para zoom, tecla para voltar à visão geral) e dica de gestos na primeira partida.
-- [ ] **CAM-02 · P1 · Medium** Limites de zoom e inclinação por plano, câmera livre explícita e recuperação automática de enquadramento inválido (alvo fora da tela ou atrás do painel lateral). **Aceite:** testado em 1280×800, 915×412 e 412×915.
+**Câmera** · entregue em 15/11 (D-27): CAM-01 teclado e CAM-02 limites por plano, câmera livre e recuperação automática.
 - [ ] **CAM-03 · P2 · Low** Medir a transição astronauta ↔ rover (duração, interrupção pelo jogador) e ajustar se passar de ~1 s.
 
 **Interações persistentes**

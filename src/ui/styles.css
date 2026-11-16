@@ -499,3 +499,8 @@ button.ghost { background: transparent; }
 .ctx-warn { margin: 8px 0 4px; padding: 8px 10px; border: 1px solid rgba(228, 119, 103, 0.6); border-radius: 10px; background: rgba(228, 119, 103, 0.1); color: var(--text); font-size: 12.5px; line-height: 1.4; }
 .ctx-warn[hidden] { display: none; }
 .ctx-task em.warn { color: var(--alert-coral); }
+
+/* Botão de câmera (CAM-02): ponto de cor quando a câmera não está na visão geral. */
+#cam-btn { position: relative; }
+#cam-btn[data-mode="follow"]::after, #cam-btn[data-mode="focus"]::after, #cam-btn[data-mode="free"]::after { content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--life-teal); }
+#cam-btn[data-mode="free"]::after { background: var(--solar-amber); }

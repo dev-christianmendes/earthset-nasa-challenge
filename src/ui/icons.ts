@@ -27,6 +27,7 @@ const P: Record<string, string> = {
   chart: '<path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/>',
   sound: '<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
   soundOff: '<path d="M4 9v6h4l5 4V5L8 9zM17 9l5 6M22 9l-5 6"/>',
+  camera: '<path d="M4 8h3l1.5-2h7L17 8h3v11H4zM12 17a3.6 3.6 0 1 0 0-.01"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
 };
 

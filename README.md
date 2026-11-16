@@ -89,7 +89,8 @@ Barra inferior: atalhos para Base, Rover, Crew, Energy, Greenhouse, Missions e S
 
 - **Tocar ou clicar** num objeto da base abre o painel contextual dele. Rover, estufa, habitat, painéis, antena, processador, armazenamento e cada astronauta são selecionáveis.
 - **Teclas 1 a 9:** habitat, estufa, rover, astronauta 1, astronauta 2, painéis, antena, processador e armazenamento.
-- **Arrastar** gira a câmera; a **roda** aproxima e afasta. Arrastar não seleciona.
+- **Arrastar** gira a câmera; a **roda** (ou a pinça no celular) aproxima e afasta. Arrastar não seleciona.
+- **Setas** giram e inclinam a câmera, **+** e **−** aproximam e afastam, **O** volta à visão geral e **C** solta a câmera (também pelo botão de câmera no topo).
 - **Esc** fecha o painel; sem painel aberto, pausa o jogo.
 - **Tab** e **Enter** navegam pelos botões do painel.
 - **Pausa** pelo botão ou pela tecla Esc.
