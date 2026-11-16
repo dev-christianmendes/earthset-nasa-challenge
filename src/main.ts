@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { ACTION_HOURS, advance, createGame, dispatch, outcomeOf, type GameAction, type GameState } from './engine/game';
 import type { GreenhouseMode, Installation } from './engine/resources';
 import type { TaskKind } from './engine/robot';
-import { ICE_HELP_HOURS, ICE_WATER_PER_TRIP, MAX_PANELS, MAX_QUEUE, TASK_HOURS } from './engine/robot';
+import { ICE_HELP_HOURS, ICE_WATER_PER_TRIP, TASK_HOURS } from './engine/robot';
 import { createClock, MATCH_HOURS } from './engine/clock';
 import { isSunlit } from './engine/sun';
 import { radiationHoursLeft, weatherAt, type SpaceWeatherSample } from './engine/space-weather';
@@ -28,14 +28,15 @@ import { warningAhead } from './engine/facilities';
 import { cameraMode, clearCameraKeys, followingShot, goFree, goTo, isFollowing, lookAtSky, setCameraKey, setCameraNotice, setDirectorEnabled, setReducedMotion, setViewInset, stopFollow, toggleFree, updateDirector, type Shot } from './render/director';
 import { CAMERA_KEYS, cameraCommand, insetFor, type Rect } from './render/camera-rules';
 import { cinematicRunning, freezeCinematic, skipCinematic, startCinematic, updateCinematic } from './render/cinematic';
-import { applyLanguage, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
+import { applyLanguage, clearToast, currentTool, greenhouseFrom, onLanguage, openPanel, renderChapters, renderEnd, renderHud, setLightMap, setTool, showToast, ui, type Tool } from './ui/hud';
 import { initLuma, pushLumaEvents, relabelLuma, resetLuma, updateLuma } from './ui/luma';
 import { currentScreen, loadSettings, popScreen, pushScreen, saveSettings, showScreen, type ScreenId } from './ui/screens';
 import { getVolume, initAudio, isMuted, play, setLoop, setMuted, setVolume } from './ui/audio';
 import { soundCues } from './engine/sound-events';
 import { isGreenhouseOn } from './engine/resources';
 import { mountIcons } from './ui/icons';
-import { coachEvent, mountSquad, mountTags, placeTags, relabelCoach, relabelSquad, renderSquad, startCoach, type SquadId } from './ui/squad';
+import { reasonText } from './ui/action-reason';
+import { coachActive, coachEvent, mountSquad, mountTags, placeTags, relabelCoach, relabelSquad, renderSquad, startCoach, type SquadId } from './ui/squad';
 import { mountHorizonPanel } from './ui/horizon-panel';
 import { mountSpacePanel } from './ui/space-panel';
 import { mountSkyPanel, skyLongExposure } from './ui/sky-panel';
@@ -128,11 +129,6 @@ const scheduled: { at: number; action: GameAction }[] = [];
 
 /** Horas de jogo já recebidas (integradas ou ainda pendentes no motor). */
 const grantedHours = (): number => game.clock.hour + game.pendingHours;
-
-function reasonText(reason: string): string {
-  const vars: Record<string, number> = reason === 'queue-full' ? { max: MAX_QUEUE } : reason === 'panel-limit' ? { max: MAX_PANELS } : {};
-  return t(`reason.${reason}`, vars);
-}
 
 function act(action: GameAction): string | null {
   // Validação imediata: a mensagem de recusa aparece na hora, como antes.
@@ -469,6 +465,7 @@ function resetGame(): void {
   paused = false;
   resetScenePresentation();
   resetLuma();
+  clearToast();
   setTool(null);
   if (currentTool()) setTool(null);
   selectObject(null);
@@ -509,13 +506,13 @@ function beginPlay(): void {
   goTo('overview', performance.now(), 1.2);
   ui.hud.hidden = false;
   started = true;
-  showToast(t('toast.chapter', { n: 1 }), t('chapter.1'));
   startCoach(document.getElementById('coach') as HTMLElement);
+  if (!coachActive()) showToast(t('toast.chapter', { n: 1 }), t('chapter.1'));
   renderNow(performance.now());
   if (MODES[mode].luma === 'full') openPanel('rover');
   // Descoberta: a cena é clicável. Aparece depois do aviso do capítulo.
   window.setTimeout(() => {
-    if (started && !ended && !selectedObject()) showToast(t('toast.hint.small'), t('toast.hint'));
+    if (started && !ended && !coachActive() && !selectedObject()) showToast(t('toast.hint.small'), t('toast.hint'));
   }, 5000);
 }
 

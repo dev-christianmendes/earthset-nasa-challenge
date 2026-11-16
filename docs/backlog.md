@@ -110,6 +110,20 @@ Já entregue (D-20 a D-27; não repetir): câmera com teclado, limites, câmera 
 **Validação**
 - [ ] **VAL-01 · P1** Matriz final integrada (seção 7 do pedido) em desktop e celular depois de UX-04 a UX-07, com evidências. Aparelho físico: ver AST-PERF-02.
 
+## 6b. Teste exploratório de uso e UX (15/11)
+
+Relatório e evidências: `docs/UX_PLAYTEST_2026-11-15.md` e `docs/ux-review-evidence.json`. Os sete casos da auditoria em **6c1755c** foram corrigidos e revalidados localmente em 15/11: **67/67 verificações de navegador**, typecheck, **291 testes/33 arquivos** e build passando. A cópia estável testada coincide com os nove arquivos de produto alterados nesta correção (manifesto em `.scratch-agent/ux-fixes/source-manifest.json`). Roteiros: `scripts/e2e-ux-review.py` (diagnóstico original) e `scripts/e2e-ux-regression.py` (aceite). Não confundir estes IDs com UX-01 a UX-09 da seção 6a. Aparelho físico e outras dívidas continuam em seus itens próprios.
+
+- [x] **UXR-01 · P1 · Medium** Menu com rolagem própria e rodapé no fluxo; alinhamento à esquerda restaurado após a captura do autor. **Validado:** mouse, toque e teclado em 1920×924, 1280×800, 780×493, 844×390 e 320×568; idioma, Créditos e retorno por Escape alcançáveis.
+- [x] **UXR-02 · P1 · Medium** Sete botões de sistemas com nomes acessíveis EN/PT independentes dos rótulos visuais. Contador visual preservado. **Validado:** seleção por papel/nome no móvel nas duas línguas, inclusive com fila cheia.
+- [x] **UXR-03 · P1 · Medium** Telas com foco inicial, ciclo de Tab/Shift+Tab, fundo inerte e restauração de foco. **Validado:** 48 passos em Configurações; Voltar/Enter/Escape; retomada devolve foco a Pausa; velocidade/hora não mudam na pausa.
+- [x] **UXR-04 · P1 · Medium** Comunicação em coluna rolável, com prioridade de alertas; recibo substitui temporariamente o coach; dica genérica suprimida durante a orientação. **Validado:** três passos, confirmação e histórico no móvel, sem interseção das áreas pintadas; alertas consultáveis após concluir/minimizar; mensagens antigas limpas ao reiniciar.
+- [x] **UXR-05 · P2 · Low** Recursos com linha própria no móvel, controles separados em 320 px e relógio compacto deitado. Etiquetas 3D ficam atrás do HUD. **Validado:** 20 casos numéricos em cinco tamanhos (0, 9, 99, 100, incluindo %); menor separação entre números de 32 CSS px; relógio, recursos, vidas e botões sem colisão.
+- [x] **UXR-06 · P2 · Low** Tradução única dos motivos de recusa, com os limites do motor. **Validado:** fila cheia em EN/PT no navegador e quatro testes de integração das recusas reais do motor (fila e limite de painéis); sem `{max}` literal.
+- [x] **UXR-07 · P2 · Low** Cabeçalho do painel aberto atualizado ao trocar idioma. **Validado:** os sete painéis mantidos abertos em EN→PT e PT→EN, com os títulos corretos.
+
+A espera inicial por radiação já é explicada na versão revalidada (D-21–23); não abrir como nova falha de latência. Confirmar compreensão com jogadores novatos continua sendo hipótese de UX, não bug confirmado.
+
 ## 7. Achados de código fora do escopo documental
 
 Não corrigidos nesta higienização, que não altera código.

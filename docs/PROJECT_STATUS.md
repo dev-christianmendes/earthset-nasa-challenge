@@ -131,3 +131,18 @@ O plano de referência nos testes (`tests/engine/partida.test.ts`), com o Sol e 
 - E2E de visibilidade: normal0 pixels acima do limiar no campo fixo; longa187 desktop/306 celular emulado, direção/intensidade solar e hash das posições iguais ao alternar. Capturas conferidas.
 - Sol ainda usa amostras horárias em degraus: em3,107s/187frames (~60FPS), apenas3 alterações de~0,508°, separadas por1s em1×. Intensidade binária e custo das sombras sob FPS baixo são fatores distintos. AST-VIS-02 pendente; próxima mudança deve alinhar amostragem contínua disco/luz/horizonte/energia e testar partidas.
 - Typecheck,220 testes/24 arquivos, build e36 verificações astronômicas passaram nesta revisão. Detalhes/limites em `SCENE_SKY_REVIEW.md`; histórico em `execution-log.md`. Código local não commitado por esta atividade.
+
+## Teste exploratório posterior — uso e UX (15/11)
+
+- Partida pelo fluxo normal, sem atalhos de estado, até a hora 78/capítulo 5: gelo, dois painéis adicionais (quatro no total), antena, tripulação/estufa/ciência, pausa, velocidades e EN→PT. Não foi uma partida completa.
+- Sete problemas reproduzidos em cópia estável de **6c1755c**: menu recortado em janela baixa; sete botões móveis sem nome acessível; foco fora de Configurações; tutorial/toast sobrepostos; números dos recursos colados; `{max}` literal na fila cheia; cabeçalho do painel sem tradução após trocar idioma. Quatro Medium e três Low. **Corrigidos e revalidados localmente na etapa seguinte (UXR-01 a UXR-07, seção 6b do backlog).**
+- A espera do rover pela radiação já aparece explicada nessa versão. A confirmação de ordem no DOM foi medida em 6,5–14,8 ms nos ensaios locais; não equivale a latência de apresentação nem a medição em aparelho físico.
+- Evidências, limites e testes de aceite: `docs/UX_PLAYTEST_2026-11-15.md`, `docs/ux-review-evidence.json`; roteiro repetível `scripts/e2e-ux-review.py`. Capturas em desktop, janela compacta e celular emulado. Sem pesquisa com usuários reais ou aparelho móvel físico; sem alterações de produto, commit, push ou deploy nesta atividade.
+
+## Correções posteriores — UXR-01 a UXR-07 (15/11)
+
+- Menu rolável e alinhado à esquerda, incluindo o problema da captura enviada pelo autor; nomes acessíveis dos sete sistemas em EN/PT; foco contido/restaurado nas telas e HUD inerte durante a pausa.
+- Comunicação da LUMA, orientação e recibos em fluxo, com prioridade de alertas e rolagem quando a altura é curta. A confirmação substitui temporariamente o coach. Nenhuma dica genérica concorre com ele. A posição acompanha as dimensões reais do HUD/equipe via ResizeObserver, fora do laço 3D.
+- Recursos separados dos controles no móvel, incluindo 320 px; relógio compacto em tela deitada; etiquetas 3D atrás das barras do HUD. Motivos de recusa centralizados com limites do motor; títulos dos painéis acompanham idioma sem fechar a seleção. Regras do motor e dados científicos não foram alterados.
+- **Validação:** typecheck, **291 testes/33 arquivos**, build e **67/67 verificações de navegador** com `scripts/e2e-ux-regression.py`. Menu em cinco tamanhos; nomes EN/PT com badge; teclado/modal; sete painéis nos dois sentidos de idioma; 20 fixtures numéricas de 0 a 100 em cinco tamanhos (só DOM pausado); confirmação/orientação/histórico por toque em 390×844. Menor separação dos números: 32 CSS px. Capturas desktop/móvel/deitado vistas.
+- Teste em cópia estável com manifesto `.scratch-agent/ux-fixes/source-manifest.json`; os nove arquivos de produto dessa correção coincidem com o workspace ao finalizar. Navegador emulado, sem medição em aparelho físico. Relatório atualizado em `docs/UX_PLAYTEST_2026-11-15.md`; tarefas encerradas no backlog. Sem commit, push ou deploy por esta atividade.

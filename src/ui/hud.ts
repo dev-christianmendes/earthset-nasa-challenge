@@ -17,6 +17,7 @@ import type { ModeConfig } from '../engine/modes';
 import { EXPLANATIONS, HINT_TITLES } from '../school';
 import { applyStatic, getLang, loadLang, setLang, t, type Lang } from '../i18n';
 import { iconSvg, mountIcons } from './icons';
+import { mountHudLayout } from './hud-layout';
 
 export type Tool = 'base' | 'rover' | 'crew' | 'energy' | 'greenhouse' | 'missions' | 'science';
 
@@ -71,6 +72,7 @@ export function applyLanguage(lang: Lang): void {
   setLang(lang);
   applyStatic();
   mountIcons();
+  if (openTool) ui.sideTitle.textContent = t(`tool.${openTool}`);
   invalidate();
   for (const fn of langListeners) fn();
 }
@@ -455,6 +457,12 @@ export function renderHud(state: GameState, ctx: HudContext): void {
 
 /** Aviso grande e curto no topo (capítulo novo). */
 let toastTimer = 0;
+export function clearToast(): void {
+  window.clearTimeout(toastTimer);
+  ui.toast.hidden = true;
+  ui.toast.replaceChildren();
+}
+
 export function showToast(small: string, big: string): void {
   ui.toast.innerHTML = '';
   const s = document.createElement('small');
@@ -504,3 +512,4 @@ export function greenhouseFrom(button: HTMLElement): GreenhouseMode | null {
 
 // Ao carregar: idioma guardado (padrão inglês) e ícones.
 applyLanguage(loadLang());
+mountHudLayout();

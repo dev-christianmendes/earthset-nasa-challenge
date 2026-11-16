@@ -38,6 +38,7 @@ import { safeStatus } from '../engine/safe-mode';
 import { t } from '../i18n';
 import type { SelectableId } from '../render/picking';
 import type { Tool } from './hud';
+import { reasonText } from './action-reason';
 
 /** O que a interface sabe do mundo fora do estado do motor (clima, luz, aviso de tempestade, velocidade). */
 export interface ContextInfo {
@@ -125,7 +126,7 @@ function heading(text: string): HTMLElement {
 /** Simula a ordem no motor: devolve null se vale, ou o texto do motivo da recusa. */
 function whyNot(state: GameState, action: GameAction): string | null {
   const r = dispatch(state, action);
-  return r.ok ? null : t(`reason.${r.reason}`);
+  return r.ok ? null : reasonText(r.reason);
 }
 
 const hours = (n: number): string => String(Math.round(n * 10) / 10);

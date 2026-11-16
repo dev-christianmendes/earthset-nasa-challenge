@@ -201,6 +201,11 @@ type CoachStep = 'select' | 'order' | 'camera' | 'done';
 let coachStep: CoachStep = 'done';
 let coachEl: HTMLElement | null = null;
 
+/** Evita dicas redundantes enquanto a orientação inicial está ativa. */
+export function coachActive(): boolean {
+  return coachStep !== 'done';
+}
+
 function coachDone(): boolean {
   try {
     return localStorage.getItem(COACH_KEY) === 'done';

@@ -56,18 +56,18 @@ button.ghost { background: transparent; }
 .wordmark.small { font-size: 34px; }
 .wordmark.tiny { font-size: 15px; letter-spacing: 0.26em; }
 
-.screen-menu { place-items: stretch; padding: 0; }
+.screen-menu { display: flex; flex-direction: column; align-items: stretch; padding: 0; overflow-y: auto; overscroll-behavior: contain; }
 .menu-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3, 5, 10, 0.92) 0%, rgba(3, 5, 10, 0.55) 38%, rgba(3, 5, 10, 0) 62%), linear-gradient(0deg, rgba(3, 5, 10, 0.85) 0%, rgba(3, 5, 10, 0) 30%); pointer-events: none; }
-.menu-col { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 34px; padding: 6vh 0 12vh 7vw; max-width: 640px; }
+.menu-col { position: relative; display: flex; flex: 1 0 auto; flex-direction: column; justify-content: center; gap: 34px; padding: 6vh 24px 6vh 7vw; max-width: 640px; }
 .logo-block { animation: rise 0.9s var(--ease) both; }
 .logo-mark { width: 120px; height: 60px; display: block; margin-bottom: 10px; }
 .tagline { color: var(--muted); font-size: clamp(15px, 1.4vw, 19px); margin: 14px 0 0; letter-spacing: 0.04em; }
-.menu-list { display: flex; flex-direction: column; gap: 8px; width: min(340px, 86vw); animation: rise 0.9s 0.15s var(--ease) both; }
+.menu-list { display: flex; flex-direction: column; gap: 8px; width: min(340px, 100%); animation: rise 0.9s 0.15s var(--ease) both; }
 .menu-btn { text-align: left; background: rgba(9, 14, 22, 0.55); border-color: var(--line); padding: 12px 18px; font-size: 15px; letter-spacing: 0.02em; display: flex; flex-direction: column; gap: 2px; }
 .menu-btn small { font-size: 12px; font-weight: 500; opacity: 0.75; }
 .menu-btn.primary { font-size: 17px; padding: 14px 18px; }
 .menu-btn:hover:not(:disabled) { transform: translateX(4px); }
-.menu-facts { position: absolute; left: 7vw; right: 7vw; bottom: 26px; display: flex; flex-wrap: wrap; gap: 8px 28px; list-style: none; margin: 0; padding: 0; font-size: 12px; color: var(--muted); animation: fade-in 1.2s 0.4s both; }
+.menu-facts { position: relative; flex: none; display: flex; flex-wrap: wrap; gap: 8px 28px; list-style: none; margin: 0 7vw 26px; padding: 0; font-size: 12px; color: var(--muted); animation: fade-in 1.2s 0.4s both; }
 .menu-facts li { display: flex; gap: 6px; }
 .menu-facts b { color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; font-size: 11px; }
 
@@ -321,16 +321,21 @@ button.ghost { background: transparent; }
 }
 /* ---------- Celular ---------- */
 @media (max-width: 760px) {
-  .topbar { grid-template-columns: 1fr auto; top: 8px; left: 8px; right: 8px; gap: 8px; padding: 6px 8px; }
+  .topbar { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "clock controls" "resources resources"; top: 8px; left: 8px; right: 8px; gap: 6px 8px; padding: 6px 8px; }
   .tb-left { display: none; }
-  .tb-center { flex-direction: column; align-items: stretch; gap: 6px; }
-  .res { justify-content: space-between; }
-  .chip { flex: 1; justify-content: center; gap: 4px; padding: 4px; }
-  .chip { flex-direction: column; align-items: center; gap: 2px; }
+  .tb-center { display: contents; }
+  .tb-center .clock { grid-area: clock; }
+  .tb-center .res { grid-area: resources; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .tb-right { grid-area: controls; gap: 4px; }
+  .tb-right .hearts { gap: 3px; }
+  .tb-right .hearts span { width: 14px; height: 14px; }
+  .speed-btn { min-width: 40px; padding: 0 6px; }
+  .chip { flex-direction: column; align-items: center; gap: 2px; padding: 4px; min-width: 0; }
   .chip [data-icon] { width: 14px; height: 14px; }
-  .chip > div { width: 100%; }
+  .chip > div { width: 100%; grid-template-columns: minmax(0, 1fr); }
+  .chip .mini { grid-column: 1 / -1; }
   .toast { top: 118px; }
-  .chip b { font-size: 14px; text-align: center; }
+  .chip b { font-size: 14px; text-align: center; white-space: nowrap; }
   .clock-label, .clock-of { display: none; }
   .clock { min-width: 0; }
   .alert-chip { display: none; }
@@ -339,9 +344,9 @@ button.ghost { background: transparent; }
   .toolbar button small { display: none; }
   .side { top: auto; left: 8px; right: 8px; bottom: 76px; width: auto; max-height: 56vh; }
   .luma { left: 8px; right: 8px; width: auto; bottom: 76px; }
-  .side:not([hidden]) ~ .luma { display: none; }
-  .menu-col { padding: 8vh 24px 24vh; }
-  .menu-facts { left: 24px; right: 24px; bottom: 16px; gap: 4px 14px; }
+  .side:not([hidden]) ~ .guidance .luma { display: none; }
+  .menu-col { padding: 32px 24px; }
+  .menu-facts { margin: 0 24px 16px; gap: 4px 14px; }
   .menu-facts li:nth-child(n + 4) { display: none; }
   .sheet { padding: 22px 18px; }
   .end-stats { grid-template-columns: 1fr; }
@@ -419,7 +424,7 @@ button.ghost { background: transparent; }
   .toolbar button small { display: none; }
   .luma { left: 66px; right: auto; bottom: 6px; width: min(320px, 40vw); padding: 8px 10px; font-size: 13px; }
   .side, .ctx { top: 60px; bottom: 6px; left: auto; right: 6px; width: min(340px, 44vw); max-height: none; }
-  .side:not([hidden]) ~ .luma { display: none; }
+  .side:not([hidden]) ~ .guidance .luma { display: none; }
 }
 
 /* Painel enxuto (UX-06): tarefas indisponíveis recolhidas, com o motivo. */
@@ -429,7 +434,7 @@ button.ghost { background: transparent; }
 .ctx-blocked .ctx-task { margin-top: 6px; width: 100%; }
 
 /* ---------- Equipe (UX-04), etiquetas na cena (UX-05) e primeiros passos (UX-07) ---------- */
-.squad { position: absolute; top: 88px; left: 12px; width: 240px; display: flex; flex-direction: column; gap: 6px; z-index: 4; }
+.squad { position: absolute; top: var(--squad-top, 88px); left: 12px; width: 240px; display: flex; flex-direction: column; gap: 6px; z-index: 4; }
 .squad-card { position: relative; display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 8px; min-height: 48px; padding: 7px 10px 9px; text-align: left; background: var(--glass); border: 1px solid var(--line); border-radius: 12px; color: var(--text); overflow: hidden; }
 .squad-card:hover { border-color: var(--line-strong); }
 .squad-card.selected { border-color: var(--solar-amber); box-shadow: 0 0 0 1px rgba(243, 168, 71, 0.35); }
@@ -464,7 +469,7 @@ button.ghost { background: transparent; }
 .coach-actions button { min-height: 40px; padding: 6px 14px; }
 
 @media (max-width: 760px) {
-  .squad { top: 104px; left: 8px; right: 8px; width: auto; flex-direction: row; gap: 4px; }
+  .squad { top: var(--squad-top, 104px); left: 8px; right: 8px; width: auto; flex-direction: row; gap: 4px; }
   .squad-card { flex: 1; grid-template-columns: 1fr; gap: 0; min-height: 44px; padding: 5px 7px 8px; }
   .squad-icon { display: none; }
   .squad-text b { font-size: 12px; }
@@ -474,7 +479,7 @@ button.ghost { background: transparent; }
   .side:not([hidden]) ~ .coach, .ctx:not([hidden]) ~ .coach { top: 160px; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  .squad { top: 60px; left: 66px; right: auto; width: auto; max-width: calc(56vw - 72px); flex-direction: row; gap: 4px; }
+  .squad { top: var(--squad-top, 60px); left: 66px; right: auto; width: auto; max-width: calc(56vw - 72px); flex-direction: row; gap: 4px; }
   .squad-card { flex: 1; grid-template-columns: 1fr; gap: 0; min-height: 42px; padding: 4px 7px 7px; }
   .squad-icon { display: none; }
   .squad-text small { font-size: 10.5px; }
@@ -483,12 +488,19 @@ button.ghost { background: transparent; }
   .coach p { font-size: 12.5px; margin: 4px 0 6px; }
   /* O capítulo já aparece em aviso no início de cada um; sem o selo, o topo cabe em 667 a 900 px. */
   .tb-left { display: none; }
-  .topbar { grid-template-columns: 1fr auto; }
+  .topbar { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: none; }
   .alert-chip { max-width: 130px; font-size: 11px; }
   /* Topo em uma linha também em larguras de até 760 px (as regras do celular em pé o empilhariam em duas). */
-  .tb-center { flex-direction: row; align-items: center; gap: 8px; }
-  .res { flex: 1; justify-content: flex-start; gap: 4px; }
-  .chip { flex: none; flex-direction: row; align-items: center; gap: 4px; padding: 3px 7px; }
+  .tb-center { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+  .tb-center { justify-content: flex-start; }
+  .clock { flex: 0 0 100px; min-width: 0; }
+  .clock-label, .clock-of { display: none; }
+  .tb-right { gap: 6px; }
+  .tb-right, .tb-center .clock, .tb-center .res { grid-area: auto; }
+  .tb-center .res { display: flex; flex: 1; justify-content: flex-start; gap: 4px; }
+  .chip { flex: none; flex-direction: row; align-items: center; gap: 4px; padding: 3px 4px; }
+  .chip [data-icon] { width: 14px; height: 14px; }
+  .chip b { font-size: 14px; }
   .chip > div { width: auto; }
   /* Primeiros passos e LUMA ocupam o mesmo canto: durante a orientação a LUMA informativa se esconde; alerta continua e fica por cima. */
   .coach:not([hidden]) ~ .luma:not(.warning):not(.critical) { display: none; }
@@ -499,6 +511,33 @@ button.ghost { background: transparent; }
 .ctx-warn { margin: 8px 0 4px; padding: 8px 10px; border: 1px solid rgba(228, 119, 103, 0.6); border-radius: 10px; background: rgba(228, 119, 103, 0.1); color: var(--text); font-size: 12.5px; line-height: 1.4; }
 .ctx-warn[hidden] { display: none; }
 .ctx-task em.warn { color: var(--alert-coral); }
+
+/* UXR-04: comunicação em fluxo, sem dois avisos na mesma âncora. O alerta tem prioridade e pode ser rolado
+   em telas baixas; histórico e minimizar continuam disponíveis. O restante da coluna deixa a cena clicável. */
+#hud > .guidance { position: absolute; left: 12px; top: var(--guidance-top, 160px); bottom: max(96px, var(--guidance-panel-limit, 0px)); width: min(360px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; z-index: 7; pointer-events: none; }
+/* Etiquetas de objetos da cena não cobrem recursos nem os controles permanentes. */
+.topbar, .toolbar { z-index: 5; }
+.guidance > * { flex: none; pointer-events: auto; }
+.notices { display: flex; flex-direction: column; gap: 8px; }
+.guidance .coach, .guidance .toast, .guidance .luma { position: relative; inset: auto; transform: none; width: 100%; max-width: none; margin: 0; }
+.guidance .toast { padding: 10px 14px; }
+.guidance .toast b { font-size: 16px; }
+.guidance .luma { margin-top: auto; }
+.guidance .luma.warning, .guidance .luma.critical { order: -1; margin-top: 0; }
+/* A confirmação substitui temporariamente a orientação; ao terminar, o passo atualizado reaparece. */
+.notices:has(.toast:not([hidden])) .coach { display: none; }
+@media (max-width: 760px) {
+  #hud > .guidance { left: 8px; right: 8px; width: auto; bottom: max(76px, var(--guidance-panel-limit, 0px)); }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  /* Inclui o botão de câmera: em 320 px, recursos e controles têm linhas próprias. */
+  .topbar { grid-template-columns: minmax(0, 1fr); grid-template-areas: "clock" "resources" "controls"; }
+  .tb-right { justify-content: space-between; }
+  .clock-label, .clock-of { display: inline; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  #hud > .guidance { left: 66px; right: auto; width: min(380px, calc(56vw - 72px)); bottom: max(6px, var(--guidance-panel-limit, 0px)); }
+}
 
 /* Botão de câmera (CAM-02): ponto de cor quando a câmera não está na visão geral. */
 #cam-btn { position: relative; }

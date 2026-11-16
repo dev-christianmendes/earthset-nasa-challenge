@@ -6,7 +6,11 @@ export type ScreenId = 'loading' | 'menu' | 'modes' | 'story' | 'howto' | 'scien
 
 const ALL: readonly ScreenId[] = ['loading', 'menu', 'modes', 'story', 'howto', 'science', 'settings', 'credits', 'pause', 'end'];
 /** Telas abertas por cima de outra (voltar retorna à anterior). */
-const stack: ScreenId[] = [];
+interface ScreenFrame {
+  id: ScreenId;
+  returnFocus: HTMLElement | null;
+}
+const stack: ScreenFrame[] = [];
 const listeners: Array<(id: ScreenId | null) => void> = [];
 
 function node(id: ScreenId): HTMLElement {
@@ -15,34 +19,85 @@ function node(id: ScreenId): HTMLElement {
   return found;
 }
 
-function render(): void {
-  const top = stack[stack.length - 1] ?? null;
-  for (const id of ALL) node(id).hidden = id !== top;
+const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]';
+
+function canFocus(element: HTMLElement): boolean {
+  return element.isConnected && !element.closest('[hidden], [inert]')
+    && !element.matches(':disabled') && element.getClientRects().length > 0;
+}
+
+function focusables(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)]
+    .filter((element) => element.tabIndex >= 0 && canFocus(element));
+}
+
+function render(restore: HTMLElement | null = null): void {
+  const top = currentScreen();
+  for (const id of ALL) {
+    const screen = node(id);
+    screen.hidden = id !== top;
+    screen.inert = id !== top;
+    if (screen.classList.contains('screen-panel')) {
+      screen.setAttribute('role', 'dialog');
+      screen.setAttribute('aria-modal', String(id === top));
+    }
+  }
+  // O HUD continua visível atrás da pausa, mas não recebe foco/cliques ou atalhos de tecnologia assistiva.
+  for (const background of document.querySelectorAll<HTMLElement>('#hud, #cine, canvas')) background.inert = top !== null;
   document.body.dataset.screen = top ?? 'game';
   for (const fn of listeners) fn(top);
+  if (restore && canFocus(restore) && (!top || node(top).contains(restore))) {
+    restore.focus({ preventScroll: true });
+  } else if (top) {
+    const screen = node(top);
+    screen.tabIndex = -1;
+    (focusables(screen)[0] ?? screen).focus({ preventScroll: true });
+  } else {
+    const resumeTarget = document.getElementById('pause-btn');
+    if (resumeTarget && canFocus(resumeTarget)) resumeTarget.focus({ preventScroll: true });
+    else if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  }
 }
+
+// Tab fica na tela ativa, inclusive quando o último controle é Voltar. Escape é tratado pelo fluxo em main.ts.
+document.addEventListener('keydown', (event) => {
+  const top = currentScreen();
+  if (!top || event.key !== 'Tab') return;
+  const screen = node(top);
+  const controls = focusables(screen);
+  const active = document.activeElement;
+  const first = controls[0] ?? screen;
+  const last = controls[controls.length - 1] ?? screen;
+  if (!screen.contains(active) || active === screen || (event.shiftKey ? active === first : active === last)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  }
+});
 
 /** Troca a tela de base (zera a pilha). null = nenhuma tela: a partida aparece. */
 export function showScreen(id: ScreenId | null): void {
+  const restore = stack[0]?.returnFocus ?? null;
   stack.length = 0;
-  if (id) stack.push(id);
-  render();
+  if (id) stack.push({ id, returnFocus: null });
+  render(id ? null : restore);
 }
 
 /** Abre uma tela por cima da atual. */
 export function pushScreen(id: ScreenId): void {
-  if (stack[stack.length - 1] !== id) stack.push(id);
+  if (currentScreen() === id) return;
+  const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  stack.push({ id, returnFocus });
   render();
 }
 
 /** Volta à tela anterior. */
 export function popScreen(): void {
-  stack.pop();
-  render();
+  const frame = stack.pop();
+  render(frame?.returnFocus ?? null);
 }
 
 export function currentScreen(): ScreenId | null {
-  return stack[stack.length - 1] ?? null;
+  return stack[stack.length - 1]?.id ?? null;
 }
 
 export function onScreenChange(fn: (id: ScreenId | null) => void): void {

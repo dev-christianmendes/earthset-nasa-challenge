@@ -230,16 +230,15 @@
       <p id="flows" class="flows" hidden></p>
       <nav id="squad" class="squad" data-i18n-aria="squad.label" aria-label="Team"></nav>
       <div id="tags" class="tags" aria-hidden="true"></div>
-      <div id="coach" class="coach" role="status" aria-live="polite" hidden></div>
 
       <nav id="toolbar" class="toolbar" aria-label="Systems">
-        <button type="button" data-tool="base"><span data-icon="home"></span><small data-i18n="tool.base">Base</small></button>
-        <button type="button" data-tool="rover"><span data-icon="rover"></span><small data-i18n="tool.rover">Rover</small><i class="badge" id="rover-badge" hidden></i></button>
-        <button type="button" data-tool="crew"><span data-icon="crew"></span><small data-i18n="tool.crew">Crew</small></button>
-        <button type="button" data-tool="energy"><span data-icon="bolt"></span><small data-i18n="tool.energy">Energy</small></button>
-        <button type="button" data-tool="greenhouse"><span data-icon="leaf"></span><small data-i18n="tool.greenhouse">Greenhouse</small></button>
-        <button type="button" data-tool="missions"><span data-icon="flag"></span><small data-i18n="tool.missions">Missions</small></button>
-        <button type="button" data-tool="science"><span data-icon="orbit"></span><small data-i18n="tool.science">Science</small></button>
+        <button type="button" data-tool="base" data-i18n-aria="tool.base" aria-label="Base"><span data-icon="home"></span><small data-i18n="tool.base">Base</small></button>
+        <button type="button" data-tool="rover" data-i18n-aria="tool.rover" aria-label="Rover"><span data-icon="rover"></span><small data-i18n="tool.rover">Rover</small><i class="badge" id="rover-badge" aria-hidden="true" hidden></i></button>
+        <button type="button" data-tool="crew" data-i18n-aria="tool.crew" aria-label="Crew"><span data-icon="crew"></span><small data-i18n="tool.crew">Crew</small></button>
+        <button type="button" data-tool="energy" data-i18n-aria="tool.energy" aria-label="Energy"><span data-icon="bolt"></span><small data-i18n="tool.energy">Energy</small></button>
+        <button type="button" data-tool="greenhouse" data-i18n-aria="tool.greenhouse" aria-label="Greenhouse"><span data-icon="leaf"></span><small data-i18n="tool.greenhouse">Greenhouse</small></button>
+        <button type="button" data-tool="missions" data-i18n-aria="tool.missions" aria-label="Missions"><span data-icon="flag"></span><small data-i18n="tool.missions">Missions</small></button>
+        <button type="button" data-tool="science" data-i18n-aria="tool.science" aria-label="Science"><span data-icon="orbit"></span><small data-i18n="tool.science">Science</small></button>
       </nav>
 
       <aside id="side" class="side" hidden aria-labelledby="side-title">
@@ -334,7 +333,12 @@
         </header>
         <div class="side-body" id="ctx-body"></div>
       </aside>
-      <aside id="luma" class="luma" aria-live="polite">
+      <div id="guidance" class="guidance">
+        <div class="notices">
+          <div id="coach" class="coach" role="status" aria-live="polite" hidden></div>
+          <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+        </div>
+        <aside id="luma" class="luma" aria-live="polite">
         <div class="luma-head">
           <span class="luma-avatar" aria-hidden="true"><i></i></span>
           <div class="luma-id"><b data-i18n="luma.name">LUMA</b><small data-i18n="luma.role">Station support system</small></div>
@@ -344,9 +348,8 @@
         <p id="luma-text" class="luma-text"></p>
         <button type="button" id="luma-action" class="luma-action" hidden></button>
         <ol id="luma-history" class="luma-history" hidden></ol>
-      </aside>
-
-      <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+        </aside>
+      </div>
       <p id="footnote" class="footnote" data-i18n="footnote">Real NASA data: Sun, terrain, space weather. Story, rover and consumption: game.</p>
     </div>
 
