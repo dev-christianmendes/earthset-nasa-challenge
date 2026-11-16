@@ -1,5 +1,5 @@
 // Desenvolvido com auxílio de IA. Ver AI_DISCLOSURE.md.
-// Astronautas com tarefas reais (D-18, docs/DECISOES.md). Motor puro, determinístico.
+// Astronautas com tarefas reais (D-18). Motor puro, determinístico.
 // Cada astronauta é uma máquina de estados pequena: o estado exibido deriva da fase da tarefa.
 //   idle → assigned (preparo) → walking → working → returning → resting → idle
 //   sheltering: radiação ou ordem de abrigo; a tarefa fica suspensa e retoma depois.

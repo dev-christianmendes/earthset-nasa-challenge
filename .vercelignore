@@ -1,0 +1,14 @@
+# O build da Vercel usa só src/, public/, index.html e a configuração do TypeScript e do pacote.
+# Estas pastas são grandes ou de trabalho local e não entram no upload:
+node_modules
+dist
+.git
+.github
+.scratch-agent
+.playwright-mcp
+.serena
+.vscode
+data-pipeline
+assets-src
+scripts
+docs

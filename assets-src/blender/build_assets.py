@@ -2,7 +2,7 @@
 """Gera os modelos 3D do Earthset em GLB, a partir de geometria procedural no Blender.
 
 Autoria: geometria escrita neste script (formas arredondadas por biséis, curvas e esferas),
-materiais na paleta de docs/VISUAL_DIRECTION.md. Nenhuma imagem ou modelo de IA, nenhum
+materiais na paleta do projeto. Nenhuma imagem ou modelo de IA, nenhum
 ativo de terceiros.
 
 Convenção: unidades em metros. Escala no Blender = tamanho total (cubo de tamanho 1 com escala 2 mede 2 m; cilindro de profundidade 1 com escala r, h mede raio r e comprimento h). Z é a altura no Blender; o exportador glTF converte para Y-up
@@ -26,7 +26,7 @@ import bpy
 
 OUT_DIR = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "public/models"
 
-# Paleta (docs/VISUAL_DIRECTION.md)
+# Paleta do projeto
 HABITAT_WHITE = "#E8E5DA"
 LIFE_TEAL = "#56B9A4"
 SOLAR_AMBER = "#F3A847"

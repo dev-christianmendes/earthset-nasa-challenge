@@ -150,4 +150,4 @@ Resultados, limites e hashes de preservação: [EARTHSET_VALIDATION_ROADMAP.md](
 
 ## Apresentação estelar revisada (15/11/2026)
 
-Exposição longa agora ativa por padrão, com ganho artístico36 e resposta dos pontos de1,8–3,6px CSS adaptada ao pixel ratio do renderer. Alpha cobre o disco do ponto; não reaplica a atenuação do fluxo. Não são diâmetros físicos ou um modelo de sensor. Fonte, posições, magnitudes relativas, movimento próprio e horizonte do catálogo permanecem os mesmos. O botão de enquadramento olha a45° acima do horizonte, sem inventar um corpo celeste. Comparação e limites em `SCENE_SKY_REVIEW.md`.
+Exposição longa agora ativa por padrão, com ganho artístico36 e resposta dos pontos de1,8–3,6px CSS adaptada ao pixel ratio do renderer. Alpha cobre o disco do ponto; não reaplica a atenuação do fluxo. Não são diâmetros físicos ou um modelo de sensor. Fonte, posições, magnitudes relativas, movimento próprio e horizonte do catálogo permanecem os mesmos. O botão de enquadramento olha a45° acima do horizonte, sem inventar um corpo celeste. Comparação e limites em `o registro de revisão do céu (fora do repositório)`.

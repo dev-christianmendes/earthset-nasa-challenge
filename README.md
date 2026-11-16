@@ -1,364 +1,261 @@
-# Earthset · Base no polo sul da Lua
+# Earthset · A Base at the Lunar South Pole
 
-![Base no polo sul da Lua ao amanhecer](docs/img/09-base-dia.jpg)
+![The base at sunrise on the lunar south pole](docs/img/09-base-dia.jpg)
 
-Jogo de gestão em 3D, no navegador, para o **NASA Space Apps Challenge 2026** (desafio *Junior Astronaut Mission Trainer*). O jogador administra uma base no polo sul da Lua durante um **dia lunar de 708 horas**. Vence chegando à hora 708 com pelo menos 1 coração. Perde quando os 3 corações acabam.
+**Earthset** is a browser-based 3D base-management game built for the **NASA Space Apps Challenge 2026**, challenge *Junior Astronaut Mission Trainer*. You run a small base on the lunar south pole through one lunar day: **708 hours**. Keep the crew alive, keep the power on, and reach hour 708 with at least one heart left.
 
-> *One mission. One base. 708 hours to survive.*
-
-- **Autor:** Christian Mendes (`dev-christianmendes`), projeto solo.
-- **Início do projeto:** 14/11/2026. **Prazo de envio:** 15/11/2026, 23h59 (horário local).
-- **Idiomas:** inglês (padrão) e português do Brasil, com botão na interface.
-- **Uso de IA:** declarado em [`AI_DISCLOSURE.md`](AI_DISCLOSURE.md) (Claude Code e Codex).
-- **Licença:** MIT, ver [`LICENSE`](LICENSE).
-
-Status atual, pendências e inventário completo: [`docs/ESTADO_PROJETO_2026-11-15.pdf`](docs/ESTADO_PROJETO_2026-11-15.pdf).
+- **Play:** https://earthset-nasa-challenge.vercel.app (or run it locally, [section 5](#5-run-it-locally))
+- **Author:** Christian Mendes (`dev-christianmendes`), solo project
+- **Languages:** English (default) and Brazilian Portuguese, switchable in the interface
+- **License:** MIT, see [`LICENSE`](LICENSE)
+- **AI use:** declared in [`AI_DISCLOSURE.md`](AI_DISCLOSURE.md)
 
 ---
 
-## Sumário
+## Contents
 
-1. [Telas iniciais](#1-telas-iniciais)
-2. [Introdução e história](#2-introdução-e-história)
-3. [A base](#3-a-base)
-4. [Controles e seleção](#4-controles-e-seleção)
-5. [Painéis de cada objeto](#5-painéis-de-cada-objeto)
-6. [Recursos e regras](#6-recursos-e-regras)
-7. [Alertas de radiação e clima espacial](#7-alertas-de-radiação-e-clima-espacial)
-8. [LUMA, o guia da base](#8-luma-o-guia-da-base)
-9. [Modos de experiência e modo escola](#9-modos-de-experiência-e-modo-escola)
-10. [Fim de partida](#10-fim-de-partida)
-11. [Ciência e dados reais](#11-ciência-e-dados-reais)
-12. [Como rodar e verificar](#12-como-rodar-e-verificar)
-13. [Estrutura do código](#13-estrutura-do-código)
-14. [Limitações conhecidas](#14-limitações-conhecidas)
+1. [The mission](#1-the-mission)
+2. [Screens](#2-screens)
+3. [The base and its systems](#3-the-base-and-its-systems)
+4. [Controls](#4-controls)
+5. [Run it locally](#5-run-it-locally)
+6. [Deploy](#6-deploy)
+7. [Science behind the game](#7-science-behind-the-game)
+8. [Illustrative vs. measured](#8-illustrative-vs-measured)
+9. [Project structure](#9-project-structure)
+10. [Tests and verification](#10-tests-and-verification)
+11. [Known limitations](#11-known-limitations)
+12. [Credits and references](#12-credits-and-references)
 
 ---
 
-## 1. Telas iniciais
+## 1. The mission
 
-| | |
-|---|---|
-| ![Menu inicial](docs/img/01-menu.jpg) | **Menu.** Nova missão, Como jogar, Modos de jogo, Explore the science, Configurações, Créditos e idioma. |
-| ![Escolha de modo](docs/img/02-modos.jpg) | **Modos de jogo.** Explorer, Lunar Cadet e Commander, com o mesmo núcleo científico. Ver [seção 9](#9-modos-de-experiência-e-modo-escola). |
-| ![Como jogar](docs/img/03-como-jogar.jpg) | **Como jogar.** Resumo das regras: tempo, recursos, missões, ciência, clima espacial e controles. |
-| ![Explore the science](docs/img/04-ciencia-menu.jpg) | **Explore the science.** Explica o Sol no polo, o horizonte medido pelo LOLA, o gelo, o clima espacial e o que é ilustrativo. |
-| ![Configurações](docs/img/05-configuracoes.jpg) | **Configurações.** Intro antes de cada missão, movimento reduzido, explicações ao lado dos recursos, sombras de alta qualidade e idioma. |
-| ![Créditos](docs/img/06-creditos.jpg) | **Créditos e fontes.** Dados científicos, ativos de arte e software, com a nota de que a história é ficcional. |
-| ![História](docs/img/07-historia.jpg) | **Briefing da missão** "Operation Last Horizon", com os cinco capítulos. |
+The base sits on a plateau near the lunar south pole. The sun stays low over the horizon, and terrain blocks it for long stretches, so solar power comes and goes. Solar storms bring radiation that sends the crew into shelter. Water, air and food run down while you work.
 
-No celular, o menu se adapta à tela:
+The match is one lunar day of **708 game hours**.
 
-![Menu no celular](docs/img/27-celular-menu.jpg)
+- **You win** by reaching hour 708 with at least one heart.
+- **You lose** when all three hearts are gone. A heart is lost after six consecutive hours with a vital resource at zero.
 
-## 2. Introdução e história
+The story is told in five chapters that follow the real state of the base, not a fixed script:
 
-A missão começa com uma introdução animada de cerca de 16 segundos: pouso do módulo, base, astronauta e a LUMA. Pode ser pulada com **Esc** ou pelo botão *Skip intro*. A opção *Play the intro before each new mission* a desliga, e o movimento reduzido remove os voos de câmera.
-
-![Introdução](docs/img/08-introducao.jpg)
-
-A história tem cinco capítulos, derivados do estado real da base (não de um roteiro fixo):
-
-1. **First Contact:** a base online e a primeira missão do rover concluída.
-2. **Power to Survive:** quatro painéis solares instalados.
-3. **Critical Reserves:** duas viagens de gelo concluídas.
-4. **Communication and Protection:** antena instalada.
-5. **The Last Horizon:** chegar à hora 708.
-
-O enredo é ficcional. Fatos da missão não são apresentados como medição da NASA.
-
-## 3. A base
-
-A base é composta por áreas: habitação, energia, ciência, logística, comunicação e pouso. Está apoiada no relevo medido do morro LOLA, com cabos, trilhas e luzes operacionais.
-
-| | |
-|---|---|
-| ![Base de dia](docs/img/09-base-dia.jpg) | **Dia.** O Sol aparece no céu conforme a efeméride JPL Horizons. A barra superior mostra hora, fase, recursos, corações e velocidade. |
-| ![Base à noite](docs/img/10-base-noite.jpg) | **Noite.** Sem Sol, os painéis param e a base depende da bateria. As sombras são duras, como na Lua. |
-| ![Base em português](docs/img/11-base-pt.jpg) | **Português.** Toda a interface, inclusive a LUMA, tem versão em português do Brasil. |
-
-No celular (390 × 844), a base se adapta à tela e não tem rolagem horizontal, o que o teste de celular verifica:
-
-![Base no celular](docs/img/26-celular-base.jpg)
-
-Barra superior: nome da base, capítulo atual, tempo de missão (hora / 708), fase do Sol (*Sunlit* ou *Night*), bateria, ar, água, comida, corações, clima espacial e velocidade (1×, 2×, 4×) com pausa.
-
-Barra inferior: atalhos para Base, Rover, Crew, Energy, Greenhouse, Missions e Science.
-
-## 4. Controles e seleção
-
-- **Tocar ou clicar** num objeto da base abre o painel contextual dele. Rover, estufa, habitat, painéis, antena, processador, armazenamento e cada astronauta são selecionáveis.
-- **Teclas 1 a 9:** habitat, estufa, rover, astronauta 1, astronauta 2, painéis, antena, processador e armazenamento.
-- **Arrastar** gira a câmera; a **roda** (ou a pinça no celular) aproxima e afasta. Arrastar não seleciona.
-- **Setas** giram e inclinam a câmera, **+** e **−** aproximam e afastam, **O** volta à visão geral e **C** solta a câmera (também pelo botão de câmera no topo).
-- **Esc** fecha o painel; sem painel aberto, pausa o jogo.
-- **Tab** e **Enter** navegam pelos botões do painel.
-- **Pausa** pelo botão ou pela tecla Esc.
-
-Exemplo, com a seleção de cada objeto:
-
-| | |
-|---|---|
-| ![Selecionar habitat](docs/img/19-selecao-habitat.jpg) | **Habitat.** Astronautas livres, ordens de abrigo, consumo e exposição à radiação. |
-| ![Selecionar rover](docs/img/20-selecao-rover.jpg) | **Rover.** Lista de missões com custo, duração e motivo de recusa, quando houver. |
-| ![Selecionar astronauta](docs/img/21-selecao-astronauta.jpg) | **Astronauta.** Estado, tarefa atual e tarefas disponíveis (inspecionar, colher, manutenção, calibrar, ajustar antena). |
-
-Pausa e menu da pausa:
-
-| | |
-|---|---|
-| ![Pausa](docs/img/24-pausa.jpg) | **Pausa.** Retomar, Como jogar, Configurações ou menu principal. |
-
-## 5. Painéis de cada objeto
-
-Cada painel mostra o estado do objeto e só oferece ações válidas. Quando uma ação não está disponível, o motivo aparece no próprio botão, vindo do motor.
-
-### 5.1 Rover (missões de gelo, painéis e antena)
-
-![Painel do rover](docs/img/12-painel-rover.jpg)
-
-- Fila de até **4 missões**: *Lunar ice extraction* (gelo), *Solar array installation* (painel) e *Antenna repair* (antena).
-- Cada missão passa por etapas: preparo, ida, escavação ou instalação, volta e entrega.
-- O gelo entregue vira **+12 de água**. Cada painel instalado soma **+1 painel** (até 12).
-- A antena, uma vez instalada, habilita o aviso de radiação (ver [seção 7](#7-alertas-de-radiação-e-clima-espacial)).
-- Radiação ou bateria zerada suspendem a missão e o painel mostra o motivo.
-- O botão *Follow the rover* faz a câmera acompanhar o rover durante a viagem.
-
-![Rover selecionado](docs/img/20-selecao-rover.jpg)
-
-### 5.2 Estufa
-
-![Painel da estufa](docs/img/13-painel-estufa.jpg)
-
-- **Cultivo:** a cultura cresce de 0 a 100 em cerca de 12 horas com cuidado normal. Estágios: muda, planta desenvolvida e pronta para colheita.
-- **Irrigação** (baixa, normal, alta): troca água por ritmo de crescimento.
-- **Iluminação** (baixa, normal, alta): troca energia por ritmo de crescimento.
-- **Desgaste:** sobe com o tempo e reduz a eficiência. Inspeção alivia; manutenção zera.
-- **Modo da estufa:** *Off*, *Only with surplus* (liga com bateria acima de 50%) ou *Always on* (liga com bateria acima de 10%).
-- **Colheita:** um astronauta colhe a cultura pronta e entrega **+10 de comida**.
-
-### 5.3 Tripulação
-
-![Painel da tripulação](docs/img/14-painel-tripulacao.jpg)
-
-- **Dois astronautas.** Cada um tem estado (*Free*, *Outside*, *In the shelter*), tarefa e descanso.
-- **Ordem da tripulação:** *Auto* (cuidam da estufa e ajudam o rover no gelo) ou *Shelter* (ficam no habitat).
-- **Tarefas:** inspecionar a estufa, colher, manutenção da estufa, calibrar painéis e ajustar a antena. Uma tarefa de cada tipo por vez.
-- **Exposição:** quem está fora do habitat durante radiação conta como exposto. A tarefa é suspensa e retomada depois.
-- *Focus camera on the astronaut* leva a câmera ao astronauta.
-
-Tarefas no painel de astronauta:
-
-![Tarefas do astronauta](docs/img/21-selecao-astronauta.jpg)
-
-### 5.4 Energia (painéis solares)
-
-![Painel de energia](docs/img/15-painel-energia.jpg)
-
-- **Bateria** com capacidade de 1000 unidades e fluxo líquido por hora.
-- **Painéis:** instalados e em uso; cada um gera energia só com Sol.
-- **Luz do dia:** mostra o estado do Sol e quando começa a noite longa (*Long night starts in X h*).
-- **Calibrar painéis:** aumenta a geração em até 12%, por tempo limitado.
-
-### 5.5 Antena
-
-![Antena ajustada](docs/img/22-antena-selecionada.jpg)
-
-- A antena recebe avisos NASA DONKI de erupções e CMEs, com alcance de cerca de 6 horas, ou 12 horas depois de ajustada.
-- **Ajustar antena** dura 150 horas de jogo e aumenta o aviso para 12 horas.
-- Sem antena instalada, a base só percebe a tempestade quando ela já começou.
-
-### 5.6 Habitat
-
-![Painel do habitat](docs/img/19-selecao-habitat.jpg)
-
-- Estado de pressurização, ar, água, comida, consumo e exposição à radiação.
-- Ordem de abrigo para os astronautas.
-
-### 5.7 Processador de gelo e armazenamento
-
-- **Processador:** transforma o gelo em água. Estado e missão de gelo aparecem no painel.
-- **Armazenamento:** estoques de cada recurso e autonomia estimada.
-
-### 5.8 Missões
-
-![Painel de missões](docs/img/16-painel-missoes.jpg)
-
-Lista de capítulos e missões, com progresso de cada uma.
-
-## 6. Recursos e regras
-
-Quatro recursos vão de 0 a 100 (bateria vai de 0 até a capacidade):
-
-| Recurso | Como sobe | Como cai |
+| # | Chapter | Done when |
 |---|---|---|
-| **Energia** | painéis com Sol (0,9 por painel por hora) | base (0,8), aquecimento, estufa, eletrólise, tarefas |
-| **Ar** | eletrólise (+2 por hora) | consumo da tripulação (−1 por hora, ajustado pela patente) |
-| **Água** | gelo processado (+12 por viagem), eletrólise | consumo e estufa |
-| **Comida** | colheita (+10) e estufa ligada (+0,38 por hora) | consumo da tripulação |
+| 1 | First contact | The rover completes its first mission |
+| 2 | Power up | Solar panels are installed |
+| 3 | Ice run | Enough ice trips are delivered |
+| 4 | Signal | The antenna is installed |
+| 5 | One lunar day | The base reaches hour 708 with a living crew |
 
-- **Equipamentos automáticos:** estufa e eletrólise ligam e desligam sozinhos conforme a bateria e o ar. O **modo economia** (bateria abaixo de 40%) desliga a estufa.
-- **Corações:** a base começa com 3. Cada 6 horas seguidas com energia, ar, água ou comida zerados tira 1 coração. Sem bateria, a base esfria e perde corações.
-- **Patentes:** Lunar Cadet, Explorer e Commander mudam o consumo da tripulação (×0,75, ×1 e ×1,15).
-- **Vitória:** chegar à hora 708 com pelo menos 1 coração.
-- **Derrota:** os três corações acabam.
+![The base in the lunar night](docs/img/10-base-noite.jpg)
 
-Os números completos e os que são ajustáveis estão em [`docs/regras-recursos.md`](docs/regras-recursos.md).
+## 2. Screens
 
-## 7. Alertas de radiação e clima espacial
-
-Os eventos de radiação vêm do catálogo histórico da NASA DONKI (partículas solares e tempestades geomagnéticas, em 9 de outubro de 2024). Para cada evento, a base passa por estados:
-
-**NORMAL → MONITORAMENTO → ALERTA → ABRIGO → RECUPERAÇÃO**
-
-![Alerta de radiação](docs/img/18-tempestade-alerta.jpg)
-
-Na tela de alerta, a LUMA diz o que fazer e o botão *Open crew orders* leva à ordem de abrigo. O painel Science mostra o histórico e a proveniência de cada evento.
-
-Durante o abrigo, astronautas e rover voltam ao habitat. Tarefas são suspensas e recomeçam depois.
-
-## 8. LUMA, o guia da base
-
-A LUMA é o sistema de apoio da base. Ela dá dicas, comenta eventos e avisa de alertas. Funciona por **regras**, sem IA generativa em tempo de jogo.
+**Menu and modes.** Start a new mission, read how to play, explore the science, or change settings. Three modes share the same rules and science; they differ in how much help the guide gives.
 
 | | |
 |---|---|
-| ![LUMA com histórico](docs/img/23-luma-historico.jpg) | **Histórico.** Botão de histórico lista os avisos recentes. Minimizar recolhe a LUMA no canto. |
+| ![Main menu](docs/img/01-menu.jpg) | ![Mode selection](docs/img/02-modos.jpg) |
+| The main menu: new mission, how to play, modes, science, settings, credits and language. | Mode selection: Explorer, Lunar Cadet and Commander. |
 
-A LUMA também abre atalhos: *Open rover missions*, *Open crew orders*, e outros conforme a situação.
+**Learning the game.** A short "how to play" screen summarises time, resources, missions, science, space weather and controls. The science screen explains the sun at the pole, the horizon measured by LOLA, the ice and the space weather.
 
-## 9. Modos de experiência e modo escola
-
-Três modos com o mesmo núcleo científico. Só mudam o apoio ao jogador e o consumo da tripulação:
-
-| Modo | Para quem | Diferença |
-|---|---|---|
-| **Explorer** | iniciantes | LUMA guia cada passo, linguagem simples, explicações visuais, tripulação consome 25% menos |
-| **Lunar Cadet** | jogo casual | gestão completa de recursos, alertas contextuais, equilíbrio de referência |
-| **Commander** | experientes | HUD técnico com fluxos por hora, LUMA só com alertas críticos, tripulação consome 15% mais |
-
-**Modo escola.** Nas configurações, *Show explanations next to resources* ativa uma explicação curta ao lado de cada recurso. O painel de energia e o da base mostram o que cada item faz, por que muda e de onde vem o dado.
-
-![Modo escola: energia](docs/img/28-modo-escola-energia.jpg)
-
-![Modo escola: base](docs/img/29-modo-escola-base.jpg)
-
-## 10. Fim de partida
-
-A partida termina em vitória (chegar à hora 708 com pelo menos 1 coração) ou em derrota (os três corações acabam). A tela de fim mostra o resumo: modo, hora alcançada, corações restantes, cargas de gelo entregues, painéis instalados e capítulos concluídos, com os botões *Play again* e *Main menu*.
-
-![Fim de partida](docs/img/25-fim-partida.jpg)
-
-A captura acima é uma derrota: a base foi perdida na hora 117, por falta de recursos, porque a partida foi avançada até a hora 708 sem nenhuma ação. A tela de vitória ainda não tem captura automática.
-
-## 11. Ciência e dados reais
-
-| Dado | Fonte | Uso no jogo |
-|---|---|---|
-| Posição do Sol no polo sul | NASA JPL Horizons | energia, luz e disco solar |
-| Relevo e horizonte do morro | NASA LRO LOLA | pouso da base e horizonte local |
-| Eventos de radiação | NASA DONKI | alertas e abrigo |
-| Céu: 7 corpos e 904 estrelas | JPL Horizons, catálogo BSC5 (NOIRLab) | modo Ciência |
-| Textura da Terra | NASA Blue Marble (domínio público) | Terra na cena |
-
-Dados processados offline pelos pipelines em `data-pipeline/`. O jogo lê arquivos gerados e não consulta a NASA durante a partida. Fontes, método e limites em [`docs/data-sources.md`](docs/data-sources.md). O que é ilustrativo (taxas de consumo, horizonte local por sítio e outros números de jogo) está marcado no código e na tela.
-
-**Painel Science:**
-
-![Painel de ciência](docs/img/17-painel-ciencia.jpg)
-
-**Explore the science (menu):**
-
-![Explore the science](docs/img/04-ciencia-menu.jpg)
-
-## 12. Como rodar e verificar
-
-Pré-requisito: **Node 24** e npm com `package-lock.json`.
-
-```bash
-npm install
-npm run dev         # servidor de desenvolvimento
-npm run typecheck   # tsc --noEmit, modo strict
-npm run test        # Vitest: motor, partidas completas, astronomia, i18n e modo escola
-npm run build       # typecheck + build estático em dist/
-```
-
-Pipeline de dados e testes Python:
-
-```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s data-pipeline/tests
-```
-
-Testes de interface (Playwright em Python, contra o servidor de desenvolvimento):
-
-```bash
-npx vite --port 5182 --strictPort &
-python3 scripts/e2e-contexto.py 5182      # painel contextual, ordens, rover e teclado
-python3 scripts/e2e-tempestade.py 5182    # cenário de radiação, abrigo e recuperação
-python3 scripts/e2e-astronomy.py 5182     # Sol, Terra, céu e modo Ciência
-python3 scripts/e2e-descoberta.py 5182 saida.png   # caminho do jogador pelo menu (exige GPU)
-```
-
-Capturas desta página:
-
-```bash
-python3 scripts/capturas-readme.py 5190 docs/img
-```
-
-### Resultado da última verificação (15/11/2026)
-
-| Verificação | Resultado |
+| | |
 |---|---|
-| `npm run typecheck` | sem erros |
-| `npm run test` (Vitest) | 208 testes em 23 arquivos, todos passando |
-| `scripts/e2e-contexto.py` | 38 verificações, nenhuma falha |
-| `scripts/e2e-tempestade.py` | 37 verificações, nenhuma falha |
-| `scripts/e2e-astronomy.py` | 32 verificações, nenhuma falha |
-| `scripts/e2e-descoberta.py` | 20 verificações; uma execução com 1 falha (*aba Missions segue como painel lateral*) e outra sem falhas. Instável, investigação pendente |
-| `scripts/capturas-readme.py` | 29 capturas geradas sem erro de página |
+| ![How to play](docs/img/03-como-jogar.jpg) | ![Explore the science](docs/img/04-ciencia-menu.jpg) |
+| How to play: the rules in one screen. | Explore the science: what is measured and what is illustrative. |
 
-Os testes de interface rodaram em renderização por software (SwiftShader). Por isso, o desempenho medido por `e2e-astronomy.py` nesse ambiente não representa uma GPU real. As medições de desempenho em GPU estão em [`docs/execution-log.md`](docs/execution-log.md).
+**Settings and credits.** Intro before each mission, reduced motion, explanations next to each resource, shadow quality and language. The credits list every data source, art asset and software library.
 
-## 13. Estrutura do código
-
-| Pasta | Conteúdo |
+| | |
 |---|---|
-| `src/engine/` | Regras do jogo em TypeScript puro: tempo, recursos, robô, astronautas, estufa, instalações, alertas, modos, capítulos e LUMA |
-| `src/render/` | Cena Three.js: base, luz, sombras, céu, câmera, introdução e seleção por toque |
-| `src/astronomy/` | Modelo do céu: corpos, estrelas e horizonte |
-| `src/ui/` | HUD, painéis, telas, menus e LUMA |
-| `src/data/` | Dados gerados pelos pipelines, lidos pelo motor |
-| `data-pipeline/` | Pipelines Python offline e seus testes |
-| `tests/` | Testes Vitest do motor, astronomia, i18n e modo escola |
-| `scripts/` | Testes e capturas de interface com Playwright |
-| `assets-src/` | Fontes Blender e pacotes de terceiros, com licença |
-| `public/` | Modelos GLB e texturas servidos ao navegador |
-| `docs/` | Documentação e capturas (`docs/img/`) |
+| ![Settings](docs/img/05-configuracoes.jpg) | ![Credits and sources](docs/img/06-creditos.jpg) |
+| Settings. | Credits and sources. |
 
-**Regra de fronteira:** `src/engine/` não importa three.js e não usa DOM nem `window`. O CI verifica isso no job `boundary`.
+**Mission briefing and intro.** Each match opens with a short animated intro, then the briefing for the five chapters.
 
-Índice da documentação: [`AGENTS.md`](AGENTS.md) (ponto de entrada), [`docs/PLANO_V4.md`](docs/PLANO_V4.md) (plano vigente), [`docs/backlog.md`](docs/backlog.md), [`docs/INTERACOES.md`](docs/INTERACOES.md), [`docs/regras-recursos.md`](docs/regras-recursos.md), [`docs/data-sources.md`](docs/data-sources.md), [`docs/event-rules.md`](docs/event-rules.md), [`docs/execution-log.md`](docs/execution-log.md).
+| | |
+|---|---|
+| ![Mission briefing](docs/img/07-historia.jpg) | ![Intro](docs/img/08-introducao.jpg) |
+| Briefing, with the five chapters. | Intro: the lander, the base, an astronaut and LUMA. |
 
-## 14. Limitações conhecidas
+**In the base.** The base is a 3D scene with a daylight and a night view. The top bar shows time, mission hour, power, air, water, food, lives and the speed control. The bottom bar switches between the views of the base, rover, crew, energy, greenhouse, missions and science.
 
-- A tela de vitória ainda não tem captura automática.
-- O rover segue rota fixa e não desvia de obstáculos.
-- A calibração dos painéis vale para o campo solar inteiro, sem escolher um painel.
-- A base passiva perde por volta da hora 117 sem ações do jogador.
-- `scripts/e2e-descoberta.py` está instável: o teste da aba *Missions* falhou em uma de duas execuções.
-- O tamanho do JS de produção passa de 500 kB (three.js inteiro) e há carregamento inicial com tarefas longas; ainda sem divisão de pacote.
-- O mapeamento de astrometria estelar e a validação do ponto de observação contra o morro LOLA ainda estão em aberto (DT-16 e AST-P1).
+| | |
+|---|---|
+| ![Base at day](docs/img/09-base-dia.jpg) | ![Base at night](docs/img/10-base-noite.jpg) |
+| The base in daylight. | The base at night, with the lights on. |
 
-Lista completa de pendências: [`docs/ESTADO_PROJETO_2026-11-15.pdf`](docs/ESTADO_PROJETO_2026-11-15.pdf).
+![The interface in Portuguese](docs/img/11-base-pt.jpg)
 
-## Uso de IA
+Panels open when you select an object in the scene or a tool from the bottom bar. Each one shows the state, the actions you can take, what they cost, and why an action is not available right now.
 
-Desenvolvido com auxílio de Claude Code e Codex. Modelos e ferramentas em [`AI_DISCLOSURE.md`](AI_DISCLOSURE.md). Nenhum conteúdo gerado por IA é usado como ativo do jogo. A LUMA funciona por regras.
+| | |
+|---|---|
+| ![Rover panel](docs/img/12-painel-rover.jpg) | ![Greenhouse panel](docs/img/13-painel-estufa.jpg) |
+| **Rover:** ice trips, solar panel installation and the antenna. | **Greenhouse:** crop growth, wear and care. |
+| ![Crew panel](docs/img/14-painel-tripulacao.jpg) | ![Energy panel](docs/img/15-painel-energia.jpg) |
+| **Crew:** the two astronauts, their tasks and radiation shelter. | **Energy:** solar panels, battery and power use. |
+| ![Missions panel](docs/img/16-painel-missoes.jpg) | ![Science panel](docs/img/17-painel-ciencia.jpg) |
+| **Missions:** the queue and the status of each task. | **Science:** the sky, the sun and the space weather, with their sources. |
 
-## Marcas e direitos
+**Alerts.** A solar storm shows up as a warning before the radiation starts, so the crew can shelter in time.
 
-O projeto não usa logotipo, insígnia, bandeira ou patch da NASA. Dados da NASA e do JPL são usados com as fontes de [`docs/data-sources.md`](docs/data-sources.md). Ativos de terceiros estão em `assets-src/` com a licença de cada um.
+![Space weather alert](docs/img/18-tempestade-alerta.jpg)
 
-## Licença
+**Selection.** Tap the habitat, the rover, an astronaut or the antenna in the scene to open its panel.
 
-MIT, ver [`LICENSE`](LICENSE).
+| | |
+|---|---|
+| ![Habitat selected](docs/img/19-selecao-habitat.jpg) | ![Rover selected](docs/img/20-selecao-rover.jpg) |
+| Habitat selected. | Rover selected. |
+| ![Astronaut selected](docs/img/21-selecao-astronauta.jpg) | ![Antenna selected](docs/img/22-antena-selecionada.jpg) |
+| Astronaut selected. | Antenna selected. |
+
+**LUMA, the base guide.** LUMA explains what to do next and what is at risk. Its hints follow fixed rules, not a language model. A history panel keeps the recent messages.
+
+![LUMA history](docs/img/23-luma-historico.jpg)
+
+**Pause and end of match.** You can pause at any time. At the end, the summary shows the hours survived, lives left, ice loads, solar arrays and chapters completed.
+
+| | |
+|---|---|
+| ![Pause](docs/img/24-pausa.jpg) | ![End of match](docs/img/25-fim-partida.jpg) |
+| Pause menu. | End of match: the summary of a finished mission. |
+
+**Mobile.** The layout adapts to phones: panels can be collapsed, the team bar sits at the top, and the bottom bar stays in reach.
+
+| | |
+|---|---|
+| ![Base on a phone](docs/img/26-celular-base.jpg) | ![Menu on a phone](docs/img/27-celular-menu.jpg) |
+| The base on a phone. | The menu on a phone. |
+
+**School mode.** The game has a simplified vocabulary for classroom use: the resources are called Energy, Air, Water and Food, and the panels, robot tasks, greenhouse and ice are labelled in plain language.
+
+| | |
+|---|---|
+| ![School mode: energy](docs/img/28-modo-escola-energia.jpg) | ![School mode: base](docs/img/29-modo-escola-base.jpg) |
+| School mode: the energy view. | School mode: the base view. |
+
+> The screenshots come from the 15/11/2026 build. Some interface details changed after that date.
+
+## 3. The base and its systems
+
+- **Solar panels** produce power when the sun is above the local horizon. The battery stores the surplus and carries the night. Each panel adds output, and the base holds up to 12.
+- **Greenhouse** grows food. A crop goes from seedling to developed to ready. Wear lowers its efficiency over time, and the care setting trades yield against wear. It needs power and water.
+- **Life support** keeps air, water and food within range. A vital resource at zero costs hearts if it stays there for six hours.
+- **Crew.** Two astronauts. They shelter during radiation and take tasks you assign.
+- **Rover.** Runs the missions: ice trips to the ice deposit, solar panel installation and the antenna. Its trips follow a planned route with timings from the rover model, and it only works while the base battery has power. The queue holds up to four tasks.
+- **Antenna.** Warns of storms ahead of time and must be installed for chapter 4.
+- **Ice processor.** Turns delivered ice into water.
+
+The base starts with two solar panels, a battery, a greenhouse and a site on the peak, which has the most sun exposure of the three candidate sites. Those starting values are a game balance choice, not a measurement; see [section 8](#8-illustrative-vs-measured).
+
+## 4. Controls
+
+- **Click or tap** a structure, an astronaut or the rover to open its panel.
+- **Bottom bar:** switch between the views of the base, rover, crew, energy, greenhouse, missions and science.
+- **Drag** to orbit the camera. **Arrow keys** move the camera; **`+` and `-`** zoom.
+- **Earth button** (top bar): lights up when Earth is above the local horizon and moves the camera toward it. The position comes from the JPL Horizons ephemeris. From the pole, Earth stays near the horizon, so it is visible only for part of the lunar day.
+- **Speed button:** 1×, 2× or 4×.
+- **Pause** stops the clock; the view and panels stay available.
+
+On a phone, use taps and drag. The bottom bar and the team bar stay on screen, and the panels can be collapsed with the button in their header.
+
+## 5. Run it locally
+
+Requirements: **Node.js 24** (the CI uses 24) and npm.
+
+```bash
+npm ci
+npm run dev        # development server at http://localhost:5173
+npm run typecheck  # TypeScript, strict mode
+npm test           # unit and full-match tests (Vitest)
+npm run build      # typecheck and production build into dist/
+```
+
+The data pipelines are in Python and run offline on the raw downloads. Their tests:
+
+```bash
+python3 -B -m unittest discover -s data-pipeline/tests
+```
+
+## 6. Deploy
+
+The project is configured for **Vercel** with [`vercel.json`](vercel.json):
+
+- framework: Vite
+- install: `npm ci`
+- build: `npm run build` (typecheck, then build)
+- output: `dist/`
+
+To deploy: import this repository in Vercel and keep the defaults above, with Node.js 24 in the project settings. Or run `npx vercel` in the project folder.
+
+**Live deployment:** https://earthset-nasa-challenge.vercel.app (production, published with the Vercel CLI).
+
+## 7. Science behind the game
+
+| What | Source | How it is used |
+|---|---|---|
+| Sun, Earth, Mercury, Venus, Mars, Jupiter and Saturn: positions, apparent diameters and illumination | NASA/JPL Horizons, DE441 ephemeris | Hourly sky over the 708-hour window (2024-10-09 09:00 to 2024-11-07 21:00 UTC) |
+| Lunar south pole terrain and the local horizon | LRO LOLA LDEM_80S_20M elevation model (NASA PDS) | Measured horizon at three candidate sites (peak, slope, rim) and the terrain mesh in the scene |
+| Solar storms | NASA DONKI (geomagnetic storm and solar energetic particle records) | Historical space-weather scenario from October and November 2024; the particle events drive the radiation rule |
+| Stars | Yale Bright Star Catalogue 5 (CDS V/50, NOIRLab mirror) | Star field in the sky |
+| Ice on the Moon | Peer-reviewed and mission sources, listed in [`docs/data-sources.md`](docs/data-sources.md) (section 4b) | Basis of the ice mission |
+
+The horizon matters. At the peak site, the measured horizon reaches 4.3° in some directions, so the sun rises and sets behind terrain for parts of the day. The slope and rim sites are more shadowed, with horizons up to 25° and 55°.
+
+## 8. Illustrative vs. measured
+
+The game separates three kinds of content, and marks each one in the code and on screen:
+
+- **Measured data:** the ephemerides, horizons, space-weather records and star catalogue. Values and sources are in [`docs/data-sources.md`](docs/data-sources.md).
+- **Game rules:** resource rates, robot speed, heart losses and the starting base are balance choices. They are documented in [`docs/regras-recursos.md`](docs/regras-recursos.md) and checked by full-match simulations.
+- **Fiction:** the mission name, the crew story and the chapter narrative. They are never presented as NASA measurements.
+
+## 9. Project structure
+
+| Folder | Role |
+|---|---|
+| `src/engine/` | Game rules as pure TypeScript: no three.js, no DOM. Every rule is tested here |
+| `src/astronomy/` | Sky calculations on top of the ephemeris tables (positions, visibility, Earth status) |
+| `src/render/` | three.js scene, camera and terrain. It reads the state and never computes rules |
+| `src/ui/` | HUD, panels, LUMA guide and the mobile layout. It sends validated actions to the engine |
+| `src/data/` | Generated tables (sky, sun, terrain, space weather). Not edited by hand |
+| `data-pipeline/` | Python scripts that fetch and convert the source data |
+| `assets-src/` | Blender scripts that build the 3D models, and third-party asset sources |
+| `public/` | Models, textures and fonts served by the app |
+| `tests/` | Vitest suites for the engine, astronomy, rendering and interface |
+| `docs/` | Data sources, game rules, third-party asset log, performance validation, references |
+
+The engine is separate from the rendering on purpose: a rule change is made once, in the engine, and checked by tests before it reaches the screen.
+
+## 10. Tests and verification
+
+- **Engine:** unit tests for each rule, plus full-match tests that play complete days and check the win and loss conditions.
+- **Astronomy:** tests for sky visibility and the Earth status.
+- **Interface:** tests for the action messages and the language switch.
+- **Data:** Python tests for the pipelines.
+- **Continuous integration:** GitHub Actions runs typecheck, tests and build, and fails if the engine imports three.js or touches the DOM.
+
+## 11. Known limitations
+
+- The game has been checked with automated browser tests and by the author, not with a study of new players.
+- Mobile layouts were tested in browser emulation at 412 × 915 and 320 × 568. They were not tested on a physical phone.
+- The Earth is often dark or only a thin crescent when seen from the pole, because it sits near the horizon and its phase changes.
+- The historical space-weather scenario covers October and November 2024. It is not a forecast for 2026.
+- Frame rate on low-end devices has not been profiled on hardware.
+- This project is not affiliated with or endorsed by NASA. No NASA logo, insignia or patch is used.
+
+## 12. Credits and references
+
+A full list of data sources, libraries, third-party assets and AI tools is in [`docs/references.md`](docs/references.md). The asset provenance log is [`docs/ART_ASSET_PIPELINE.md`](docs/ART_ASSET_PIPELINE.md).
+
+## AI use
+
+The project was built with AI coding agents (Claude Code and Codex). Their use, the models and the boundaries are described in [`AI_DISCLOSURE.md`](AI_DISCLOSURE.md). No generative AI runs inside the game.
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).

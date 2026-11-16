@@ -6,8 +6,8 @@ Projeto: **Earthset · Base no polo sul da Lua**, NASA Space Apps Challenge 2026
 
 | Ferramenta | Uso | Modelo |
 |---|---|---|
-| **Claude Code** (CLI da Anthropic) | Agente de código e documentação neste repositório. Lê `CLAUDE.md`, que importa `AGENTS.md`. | **Pendente** de confirmação pelo autor. Na sessão de 14/11/2026 apareceu `claude-haiku-5-5`. |
-| **Codex** (OpenAI) | Agente de código a partir de 14/11/2026, para o restante do desenvolvimento. Lê `AGENTS.md` e os documentos de `docs/`, em especial `docs/archive/CONTEXTO_CODEX.md` (arquivado em 15/11/2026). | **Pendente**: modelo e provedor a confirmar pelo autor. Ainda sem commits atribuídos. |
+| **Claude Code** (CLI da Anthropic) | Agente de código e documentação neste repositório. Lê `CLAUDE.md`, que importa `AGENTS.md`. | Claude **Haiku**, **Sonnet** e **Opus**, conforme a tarefa (modelos `claude-haiku-5-5`, `claude-sonnet-5-5` e `claude-opus-5-5`). |
+| **Codex** (OpenAI) | Agente de código a partir de 14/11/2026, para o restante do desenvolvimento. Lê `AGENTS.md` e os documentos de `docs/`. | **gpt6-luna** (OpenAI). |
 
 Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes.
 
@@ -31,14 +31,13 @@ Ferramentas **não declaradas**: nenhuma. Se outra for usada, declare aqui antes
 
 ## 4. Declaração em inglês (para a página de envio)
 
-> **Use of Super Intelligence (SI) tools.** This project was developed with AI coding agents. **Claude Code** (Anthropic) was used to read the repository, write and test code, generate Blender scripts for the 3D models and draft documentation. Model versions: [to be confirmed by the author]. Third-party assets (CC0) are listed in the References field. Scientific values are checked against the NASA sources listed in the References field.
+> **Use of Super Intelligence (SI) tools.** This project was developed with AI coding agents. **Claude Code** (Anthropic), using the Claude Haiku, Sonnet and Opus models, and **Codex** (OpenAI, model gpt6-luna) were used to read the repository, write and test code, generate Blender scripts for the 3D models and draft documentation. No generative AI runs inside the game, and no AI-generated image or model is used as a final asset. Third-party assets (CC0) and data sources are listed in the References field. Scientific values are checked against the NASA sources listed in the References field.
 
 ## 5. Pendências
 
-- [ ] Confirmar modelo de Claude Code.
-- [ ] Confirmar modelo e provedor do Codex, e acrescentar à declaração em inglês se for usado no envio.
-- [ ] Preencher a declaração em inglês com os modelos confirmados.
-- [ ] Registro do histórico: commits feitos por outro agente antes do Codex (com trailer próprio) estão no git. Decisão do autor sobre reescrever o histórico (ver `docs/archive/CONTEXTO_CODEX.md` (arquivado em 15/11/2026)).
+- [x] Modelo de Claude Code: Haiku, Sonnet e Opus (informado pelo autor em 15/11/2026).
+- [x] Modelo e provedor do Codex: gpt6-luna, OpenAI (informado pelo autor em 15/11/2026).
+- [x] Declaração em inglês preenchida com os modelos confirmados.
 
 
 ## 6. LUMA (assistente do jogo)

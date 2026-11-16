@@ -1,6 +1,6 @@
 # Validação de desempenho e carregamento — 15/11/2026
 
-Solicitação: observador/azimute, desempenho móvel, carga fria/sessões longas, pacote e expansão astronômica. Estado científico em [data-sources.md](data-sources.md); tarefas em [backlog.md](backlog.md).
+Solicitação: observador/azimute, desempenho móvel, carga fria/sessões longas, pacote e expansão astronômica. Estado científico em [data-sources.md](data-sources.md); tarefas no histórico do git.)
 
 ## Método e alcance
 
