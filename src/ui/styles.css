@@ -9,7 +9,7 @@
   --line-strong: rgba(190, 215, 255, 0.28);
   --text: #eef2f7;
   --muted: #9aa8ba;
-  --dim: #6b7889;
+  --dim: #7f8ca0;
   --habitat-white: #d9dcd6;
   --solar-amber: #f3a847;
   --life-teal: #56b9a4;
@@ -264,7 +264,7 @@ button.ghost { background: transparent; }
 .sky-table th, .sky-table td { text-align: left; padding: 7px 4px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .sky-table th { font-weight: 600; }
 .sky-table button { padding: 5px; font-size: 10px; }
-.sky-table button:disabled { opacity: 0.45; cursor: default; }
+.sky-table button:disabled { opacity: 0.6; cursor: default; }
 .sky-exposure { display: flex; align-items: center; gap: 7px; margin: 12px 0; font-size: 12px; }
 .sky-look { padding: 8px 12px; font-size: 12px; margin-bottom: 8px; }
 .sky-sources { font-size: 12px; }

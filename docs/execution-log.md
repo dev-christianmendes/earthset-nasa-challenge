@@ -1013,3 +1013,13 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Verificação:** `git diff --check` passou; os nove arquivos de produto continuam idênticos à cópia que passou em typecheck, 291 testes, build e 67 verificações de navegador. Nenhuma nova alteração de produto exigiu repetir os testes. `git ls-remote origin refs/heads/main` mostrou `9f13ec5c6cdb5291aefa1f8e08f308cb1fd4282c`, também HEAD antes deste commit.
 - **Comandos de envio:** seleção explícita dos arquivos com `git add`; `git commit -F .scratch-agent/ux-fixes/commit-message.txt`; `git push origin main`. Conferir HEAD contra `git ls-remote origin refs/heads/main` e informar o hash ao autor ao concluir. Sem force push ou deploy manual.
 
+
+## 15/11/2026 · Contraste WCAG AA (UX-09)
+- **Pedido:** próximo item P1 aberto da seção 6a do backlog (UX-09), com aceite de medição registrada e correção abaixo de 4,5:1.
+- **Medição:** `scripts/e2e-ux-contrast.py 5173 .scratch-agent/ux-contrast` (Playwright, Chromium). Lê cada texto visível do menu, do HUD e dos sete painéis (barra de ferramentas), em 1280×800 e 412×915. Cor de fundo composta pelos ancestrais; texto sobre a cena 3D não é medido (canvas). Limiares: 4,5:1 normal; 3:1 grande.
+- **Antes:** 704 textos, 17 abaixo (8 distintos). Causa: `--dim` #6b7889 (4,33:1 em #080d15; 3,86:1 em #111b27) e `.sky-table button:disabled` com opacidade 0,45 (4,09:1 no rótulo "Oculto").
+- **Correção (`src/ui/styles.css`):** `--dim` para #7f8ca0 (mínimo 5,09:1 nos três fundos medidos); botão desabilitado do céu para opacidade 0,6 (6,27:1), mantendo o estado visivelmente inativo.
+- **Depois:** `.scratch-agent/ux-contrast2`: 704 textos, **0 abaixo**, 0 sem fundo opaco.
+- **Comandos:** `npm run typecheck` passou; `npx vitest run` 291/291 em 33 arquivos; `npm run build` passou (aviso de chunk >500 kB permanece, AST-PERF-03).
+- **Limites:** não cobre rótulos 3D na cena, estados de carregamento e mensagens de erro como classe separada, nem aparelho físico. Item UX-09 marcado no backlog com essa ressalva.
+- **Git:** sem commit, push ou deploy.
