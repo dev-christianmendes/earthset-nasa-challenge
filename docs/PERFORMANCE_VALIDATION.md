@@ -87,6 +87,16 @@ E2E visual final no servidor dev: **36 verificações aprovadas**, zero erros JS
 
 **DT-15:** estabilidade de contadores em reinícios pode descartar acúmulo contínuo nesse caminho, mas não prova descarte de todos os provisórios nem cobre falha de asset/context restore. Não encerrar a dívida inteira com esse ensaio.
 
+### Carga fria no build atual, `index-BvcOCQeB.js` (15/11/2026)
+Rodada única: `scripts/validate-performance.py 5189 0`. Build gerado a partir da árvore de trabalho, que incluía alterações não commitadas em `src/main.ts`. GPU Intel Xe emulada; não é aparelho real.
+
+| Perfil | Menu | HUD | Assets concluídos | Maior long task | Maior quadro (janela fria) |
+|---|---:|---:|---:|---:|---:|
+| Desktop | 0,84 s | 2,04 s | 2,06 s | 167 ms | 266,7 ms |
+| Móvel emulado | 12,38 s | 15,49 s | 38,36 s | 534 ms | 749,9 ms |
+
+Sem erros JS e sem perda de contexto WebGL. Sessão longa não rodada (`cycles: 0`). Comparado com a rodada de `index-D0O8Hid3.js`, o pior quadro móvel caiu de 2.816,6 ms para 749,9 ms e a maior long task de 1.870 ms para 534 ms; a conclusão dos assets continua em torno de 38 s, o que indica que o gargalo de carga é de rede e de volume de arquivos. Uma rodada não basta para afirmar melhora: é preciso repetir antes de fechar AST-PERF-01.
+
 ## Reproduzir
 
 ```bash
