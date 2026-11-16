@@ -1,5 +1,7 @@
 # Validação de desempenho e carregamento — 15/11/2026
 
+> **Escopo das medições:** os números móveis e de carga fria abaixo são da build `index-D0O8Hid3.js`. A build atual gera outro hash e não foi medida de novo. Os achados AST-PERF-01 e AST-PERF-02 seguem abertos até a repetição no build atual, em aparelho físico.
+
 Solicitação: observador/azimute, desempenho móvel, carga fria/sessões longas, pacote e expansão astronômica. Estado científico em [data-sources.md](data-sources.md); tarefas no histórico do git.)
 
 ## Método e alcance
@@ -100,7 +102,7 @@ O build e os assets devem permanecer fixos durante cada medição. Se executar b
 
 ## Registro histórico da linha de base (14/11/2026)
 
-Copiado sem alteração de `docs/CONTEXTO_CODEX.md` (arquivado em 15/11/2026), para não perder a evidência:
+Copiado sem alteração de um contexto de trabalho interno (arquivado em 15/11/2026, não publicado neste repositório), para não perder a evidência:
 
 - Não há vazamento contínuo de GPU comprovado: dez reinícios mantiveram 202 geometrias/10 texturas/17 programas. Descarte de provisórios e atribuição a shaders continuam em investigação. A associação Sol–LOLA foi posteriormente confirmada/corrigida em DT-16; ver atualização acima.
 - Relato de demora: separar confirmação da ordem de duração simulada. Linha de base Intel Xe/Vulkan: 4,9 ms até feedback DOM, 263 ms até movimento e 5,315 s até inspeção em 1×. Investigar casos de segundos sem confirmação; não prometer resposta de movimento em 150 ms quando há preparo previsto.
