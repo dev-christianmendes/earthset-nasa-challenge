@@ -87,6 +87,7 @@ with sync_playwright() as p:
             ctx = browser.new_context(viewport={'width': w, 'height': h}, has_touch=w < 760, is_mobile=w < 760, reduced_motion='reduce')
             page = ctx.new_page()
             menu(page)
+            expect(page.locator('#logo-title')).to_be_visible(timeout=10000)
             logo = page.locator('#logo-title').bounding_box()
             check(f'UXR-01 menu à esquerda {w}x{h}', logo['x'] < w * .2, logo)
             screenshot(page, f'menu-{w}x{h}')

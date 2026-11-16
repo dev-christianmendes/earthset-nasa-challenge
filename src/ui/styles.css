@@ -310,6 +310,11 @@ button.ghost { background: transparent; }
   .chip { min-width: 0; padding: 5px 8px; }
   .chip > div { grid-template-columns: auto; }
   .chip small { display: none; }
+  /* Até 1500 px a barra não cabe chip da missão, relógio, recursos, alerta e controles numa linha:
+     o alerta de clima espacial sai da barra (a LUMA mostra o mesmo aviso) e os outros encolhem. */
+  #space { display: none; }
+  .chapter-chip { max-width: 170px; }
+  .clock { min-width: 140px; }
   .alert-chip { max-width: 180px; }
   .footnote { display: none; }
 }
