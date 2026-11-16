@@ -138,6 +138,11 @@ export function updateSky(hour: number, lit: boolean, site: Site, longExposure =
 }
 
 /** Direção do disco solar aparente no referencial da cena (só para verificação em desenvolvimento). */
+/** Direção unitária da Terra no céu, no sistema da cena (para o enquadramento da câmera). */
+export function earthDirection(): number[] {
+  return earth.position.clone().normalize().toArray();
+}
+
 export function apparentSunDirection(): number[] {
   return solarDisc.position.clone().normalize().toArray();
 }

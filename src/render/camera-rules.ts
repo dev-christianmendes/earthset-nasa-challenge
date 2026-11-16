@@ -22,6 +22,8 @@ const FOCUS: CamLimits = { min: 4, max: 60, polarMin: 10, polarMax: 80 };
 
 export const SHOT_LIMITS: Readonly<Record<Shot | 'free', CamLimits>> = {
   overview: { min: 14, max: 120, polarMin: 10, polarMax: 80 },
+  // Terra: o horizonte fica quase na altura da câmera, então o ângulo polar precisa passar de 60°.
+  earth: { min: 6, max: 40, polarMin: 60, polarMax: 120 },
   crew: FOLLOW_CREW,
   crew1: FOLLOW_CREW,
   rover: { min: 3.5, max: 40, polarMin: 10, polarMax: 80 },

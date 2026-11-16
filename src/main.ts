@@ -41,6 +41,7 @@ import { mountHorizonPanel } from './ui/horizon-panel';
 import { mountSpacePanel } from './ui/space-panel';
 import { mountSkyPanel, skyLongExposure } from './ui/sky-panel';
 import { bodyAt, type BodyId } from './astronomy/sky';
+import { earthNow, renderEarthButton } from './ui/earth-button';
 import { SKY } from './data/sky';
 import { apparentSunDirection } from './render/sky';
 import { sampleAt } from './engine/sun';
@@ -308,6 +309,9 @@ for (const b of document.querySelectorAll<HTMLButtonElement>('[data-gh]')) {
 for (const b of document.querySelectorAll<HTMLButtonElement>('[data-cam]')) {
   b.addEventListener('click', () => goTo(b.dataset.cam as Shot, performance.now()));
 }
+// Botão Terra: leva a câmera até a Terra quando ela está acima do horizonte do site (ver earth-status.ts).
+const earthBtn = document.getElementById('earth-btn') as HTMLButtonElement;
+earthBtn.addEventListener('click', () => goTo('earth', performance.now()));
 const speedBtn = document.getElementById('speed-btn') as HTMLButtonElement;
 speedBtn.addEventListener('click', () => {
   speedIndex = (speedIndex + 1) % SPEEDS.length;
@@ -709,6 +713,7 @@ function frame(now: number): void {
   else updateDirector(now);
   if (started) placeTags(squadEntries, { crew0: tagPoint(crewObject(0), 2.2), crew1: tagPoint(crewObject(1), 2.2), rover: tagPoint(robot, 2.6) });
   if (now >= hudDueAt) {
+    renderEarthButton(earthBtn, earthNow(game.clock.hour, game.installation.site));
     if (currentTool() !== null && selectedObject()) selectObject(null);
     if (started) {
       renderNow(now);

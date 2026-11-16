@@ -10,7 +10,9 @@ describe('limites da câmera por plano', () => {
       expect(l.max, name).toBeGreaterThan(l.min);
       expect(l.polarMin, name).toBeGreaterThanOrEqual(5);
       expect(l.polarMax, name).toBeGreaterThan(l.polarMin);
-      expect(l.polarMax, name).toBeLessThanOrEqual(88);
+      // A visão da Terra olha levemente para cima, a partir de 14 m acima da base: o ângulo polar passa de 90°.
+      // Com 120°, a câmera fica cerca de 6 m acima do nível da base (cálculo, não medido na cena).
+      expect(l.polarMax, name).toBeLessThanOrEqual(name === 'earth' ? 120 : 88);
     }
   });
 

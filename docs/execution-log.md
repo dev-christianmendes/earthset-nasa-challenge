@@ -1032,3 +1032,16 @@ Registro de cada etapa técnica: arquivos, comandos, resultados (sucessos e falh
 - **Comandos:** `npm run typecheck` passou; `npx vitest run` 291/291 em 33 arquivos; `npm run build` passou.
 - **Limites:** só toque, sem arraste. Desktop revisado por CSS, sem captura nova. Verificação em aparelho físico continua em AST-PERF-02.
 - **Git:** sem commit, push ou deploy.
+
+## 15/11/2026 · A Terra visível no jogo (opção 1: enquadramento e situação no topo)
+- **Pedido:** a Terra não aparecia no jogo, em incongruência com o nome do projeto. Escolhida a opção 1: enquadrar a câmera para a Terra quando ela está acima do horizonte e mostrar a situação no HUD, sem mudar dados nem o site.
+- **Diagnóstico (dados, não suposição):** `src/data/sky.json` guarda colunas em diferenças entre horas; o decodificador (`src/astronomy/format.ts`) acumula. Com a soma: Terra acima do horizonte do site em 312 de 708 horas (de 171 a 482, máximo +6,5°); diâmetro aparente 6478 a 7368 arcsec, igual ao Horizons bruto (`data-pipeline/raw/sky/earth.txt`). Horizonte medido no site `peak`: até 4,3°. A primeira leitura (Terra sempre abaixo do horizonte) estava errada: li as diferenças como valores absolutos.
+- **Causa da invisibilidade medida:** com a câmera a 1,6 m, a encosta à frente escondia a Terra (captura na hora 300). Com a câmera 14 m acima da base, a Terra aparece no centro da tela, pequena (~34 px a 45° de campo) e escura, com borda azul fina: é a fase real nessa hora.
+- **Mudanças:**
+  - `src/astronomy/earth-status.ts` (novo, puro): situação agora e horas até subir. `tests/astronomy/earth-status.test.ts`: 5 casos.
+  - `src/ui/earth-button.ts` (novo): texto e estado do botão; rótulo curto abaixo de 760 px.
+  - `src/render/sky.ts`: `earthDirection()`. `src/render/director.ts`: plano `earth`, a 14 m acima da base, olhando para a Terra. `src/render/camera-rules.ts`: limites do plano `earth` (polar 60° a 120°).
+  - `index.html`: `#earth-btn` na barra superior. `src/ui/styles.css`: estilo e, no celular, a barra de controles quebra linha. `src/i18n.ts`: textos EN/PT. `src/main.ts`: ligação do botão e atualização a cada atualização do HUD.
+  - `tests/render/camera-rules.test.ts`: o limite de inclinação de 88° vale para todos os planos, menos o da Terra (120°), que olha levemente para cima.
+- **Verificação:** `npm run typecheck` passou; `npx vitest run` 299/299 em 35 arquivos; `npm run build` passou. Capturas em `.scratch-agent/earth-desktop-view2.png` e `.scratch-agent/earth-mobile-view2.png` (Terra visível); `.scratch-agent/earth-mobile-top.png` (barra no celular com o botão, pausa visível).
+- **Limites:** a Terra aparece escura na hora 300 (fase); o disco pode ficar só com a borda iluminada em outras horas. Na barra superior de 412 px, o marcador de "Sunlit" e os corações se sobrepõem; não verifiquei se isso já existia antes desta mudança. Não há commit nem push.

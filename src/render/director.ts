@@ -6,6 +6,7 @@ import { camera, controls, crewObject, robot } from './scene';
 import { FOCUS } from './base-layout';
 import { OBSTACLES } from './crew-nav';
 import { surfaceHeight } from './terrain-height';
+import { earthDirection } from './sky';
 import { CAMERA_KEYS, FOLLOW_LOST_SECONDS, KEY_SPEED, PLAY_AREA, SHOT_LIMITS, clampToArea, keyIntent, type CamMode } from './camera-rules';
 
 // ---------- Obstrução e chão ----------
@@ -104,7 +105,7 @@ function avoidOcclusion(dt: number): void {
   if (camera.position.y < floor) camera.position.y = floor;
 }
 
-export type Shot = 'overview' | 'crew' | 'crew1' | 'rover' | 'ice' | 'energy' | 'antenna' | 'greenhouse' | 'habitat' | 'logistics' | 'showcase';
+export type Shot = 'overview' | 'crew' | 'crew1' | 'rover' | 'ice' | 'energy' | 'antenna' | 'greenhouse' | 'habitat' | 'logistics' | 'showcase' | 'earth';
 
 interface Tween {
   fromPos: THREE.Vector3;
@@ -174,6 +175,12 @@ function shotFor(name: Shot): { pos: THREE.Vector3; target: THREE.Vector3; follo
       return { pos: FOCUS.antenna.clone().add(new THREE.Vector3(8, 5, 9)), target: FOCUS.antenna.clone(), follow: null };
     case 'showcase':
       return { pos: new THREE.Vector3(24, 5.5, 22), target: new THREE.Vector3(-2, 3.2, -6), follow: null };
+    case 'earth': {
+      // Olha do alto da base para a Terra, que no polo fica rente ao horizonte (ver earth-status.ts).
+      const pos = FOCUS.habitat.clone().add(new THREE.Vector3(0, 14, 0));
+      const dir = new THREE.Vector3().fromArray(earthDirection());
+      return { pos, target: pos.clone().add(dir.multiplyScalar(20)), follow: null };
+    }
     default:
       return { pos: OVERVIEW_TARGET.clone().add(OVERVIEW_OFFSET), target: OVERVIEW_TARGET.clone(), follow: null };
   }
